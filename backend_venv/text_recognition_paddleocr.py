@@ -1,11 +1,16 @@
 import os
-import easyocr
+from paddleocr import PaddleOCR
 
-# Initialize the EasyOCR reader for English
-reader = easyocr.Reader(['en'])
+# Initialize the PaddleOCR reader (English as the default language)
+ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
 # Path to the folder containing the images
 screenshots_folder = "screenshots/"
+if not os.path.exists(screenshots_folder): 
+    # if the screenshots_folder directory is not present  
+    # then create it. 
+    os.makedirs(screenshots_folder)
+
 
 # List of keywords to search for
 keywords = ["alert", "keyword1", "keyword2"]  # Replace with your specific keywords
@@ -23,14 +28,13 @@ for filename in os.listdir(screenshots_folder):
         image_path = os.path.join(screenshots_folder, filename)
         
         # Perform OCR on the image
-        result = reader.readtext(image_path, detail=0)  # detail=0 for plain text output
+        result = ocr.ocr(image_path)
         print(result)
-
-        # Join all detected text into a single string
-        detected_text = ' '.join(result)
+        # Extract text from OCR results
+        # detected_text = ' '.join([item[1][0] for line in result for item in line])
         
         # Check if any of the keywords are found
-        if check_for_keywords(detected_text, keywords):
-            print(f"Alert: Keyword found in {filename}")
-        else:
-            print(f"No keyword found in {filename}")
+        # if check_for_keywords(detected_text, keywords):
+        #     print(f"Alert: Keyword found in {filename}")
+        # else:
+        #     print(f"No keyword found in {filename}")
