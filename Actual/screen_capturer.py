@@ -1,4 +1,5 @@
 import cv2
+
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
 '''
