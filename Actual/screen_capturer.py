@@ -24,3 +24,29 @@ class ScreenCapturer:
                 available_devices.append(i)
                 cap.release()
         return available_devices
+    
+    '''
+        Captures a screenshot and saves it in a folder.
+
+        @param device_index The index of the device which the screenshot will be taken.
+    '''
+    def capture_screenshot(self, device_index):
+        # Open the video feed from the USB capture card
+        cap = cv2.VideoCapture(device_index)
+
+        if not cap.isOpened():
+            print(f"Error: Could not open device {device_index}")
+            return
+
+        # Capture one frame
+        ret, frame = cap.read()
+        
+        if ret:
+            # Save the frame as an image
+            cv2.imwrite(self.save_path, frame)
+            print(f"Screenshot saved from device {device_index} to {self.save_path}")
+        else:
+            print(f"Error: Could not capture frame from device {device_index}")
+
+        # Release the video capture object
+        cap.release()
