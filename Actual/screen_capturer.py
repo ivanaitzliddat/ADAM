@@ -8,46 +8,43 @@ class ScreenCapturer:
     def __init__(self, save_folder, device_count):
         self.save_folder = save_folder
         self.device_count = device_count
+        self.available_devices = []
     
     '''
-        Returns the list of available devices.
-        Uses the number of available devices and checks if the capture card is recognised. If it is recognised, the device's index is appended to the available_devices array.
-
-        @param save_folder The file path of the folder where screenshots are saved to.
-        @param device_count The number of capture cards connected to the computer.
-        @return the list of available devices.
+        Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.
     '''
-    def get_available_devices(self):
-        available_devices = []
+    def update_available_devices(self):
         for i in range(self.device_count):
             cap = cv2.VideoCapture(i)
             if cap.isOpened():
-                available_devices.append(i)
+                self.available_devices.append(i)
                 cap.release()
-        return available_devices
     
     '''
-        Captures a screenshot and saves it in a folder.
+        Iterates through the list of available devices and captures a screenshot for every device and saves it in a folder.
 
         @param device_index The index of the device which the screenshot will be taken.
     '''
-    def capture_screenshot(self, device_index):
-        # Open the video feed from the USB capture card
-        cap = cv2.VideoCapture(device_index)
+    def capture_screenshots(self):
 
-        if not cap.isOpened():
-            print(f"Error: Could not open device {device_index}")
-            return
+        while True:
+            for i in self.available_devices:
+                # Open the video feed from the USB capture card
+                cap = cv2.VideoCapture(i)
 
-        # Capture one frame
-        ret, frame = cap.read()
-        
-        if ret:
-            # Save the frame as an image
-            cv2.imwrite(self.save_path, frame)
-            print(f"Screenshot saved from device {device_index} to {self.save_path}")
-        else:
-            print(f"Error: Could not capture frame from device {device_index}")
+                if not cap.isOpened():
+                    print(f"Error: Could not open device {i}")
+                    return
 
-        # Release the video capture object
-        cap.release()
+                # Capture one frame
+                ret, frame = cap.read()
+                
+                if ret:
+                    # Save the frame as an image
+                    cv2.imwrite(self.save_path, frame)
+                    print(f"Screenshot saved from device {i} to {self.save_path}")
+                else:
+                    print(f"Error: Could not capture frame from device {i}")
+
+                # Release the video capture object
+                cap.release()
