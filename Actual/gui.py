@@ -1,4 +1,5 @@
 import tkinter as tk
+import queue
 from tkinter import font
 from alerts_page import AlertsPage
 from settings_page import SettingsPage
@@ -7,7 +8,7 @@ from settings_page import SettingsPage
     Represents a GUI object which allows user to control ADAM.
 '''
 class ADAM:
-    def __init__(self, update_device_count_callback):
+    def __init__(self, update_device_count_callback, status_queue):
         self.master = tk.Tk()
         self.master.title("ADAM")
         self.master.geometry("1600x900")
@@ -41,6 +42,24 @@ class ADAM:
         self.alerts_page = AlertsPage(self.content_frame)  # Create an instance of AlertsPage
         self.settings_page = SettingsPage(self.content_frame, self.update_device_count_callback)  # Create an instance of SettingsPage and pass the callback
         self.show_alerts_page()  # Start with Alerts page
+
+        # Start the queue checking process
+        self.status_queue = status_queue
+        self.check_queue()
+
+    '''
+        Checks if there are any messages that are sent from the screen capturer.
+    '''
+    def check_queue(self):
+        try:
+            while True:
+                message = self.status_queue.get_nowait()
+                self.alerts_page.append_message(message)
+        except queue.Empty:
+            pass
+        finally:
+            # Schedule the next check
+            self.master.after(100, self.check_queue)  # Check again after 100ms
 
     def show_alerts_page(self):
         self.clear_content_frame()

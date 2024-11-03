@@ -2,8 +2,9 @@ from screen_capturer import ScreenCapturer
 from gui import ADAM
 from config import Config
 import threading
+import queue
 
-device_count = 0
+device_count = 2
 
 '''
     Updates the global variable device_count.
@@ -15,8 +16,8 @@ def update_device_count(new_count):
 '''
     Starts the screen capturer.
 '''
-def start_screen_capturer(save_folder):
-    ss_object = ScreenCapturer(save_folder, device_count)
+def start_screen_capturer(save_folder, status_queue):
+    ss_object = ScreenCapturer(save_folder, device_count, status_queue)
     ss_object.update_available_devices()
     try:
         ss_object.capture_screenshots()
@@ -26,8 +27,8 @@ def start_screen_capturer(save_folder):
 '''
     Starts the ADAM GUI application.
 '''
-def run_ADAM(update_callback):
-    app = ADAM(update_callback)
+def run_ADAM(update_callback, status_queue):
+    app = ADAM(update_callback, status_queue)
     try:
         app.run()
     except Exception as e:
@@ -42,22 +43,18 @@ def signal_handler(sig, frame):
 
 if __name__ == "__main__":
     save_folder = "./screenshots"
-
-    # Start the GUI thread
-    gui_thread = threading.Thread(target=run_ADAM, args=(update_device_count,))
-    gui_thread.start()
+    status_queue = queue.Queue()
 
     # Start the screen capturer thread
-    screen_capturer_thread = threading.Thread(target=start_screen_capturer, args=(save_folder,))
+    screen_capturer_thread = threading.Thread(target=start_screen_capturer, args=(save_folder, status_queue))
     screen_capturer_thread.start()
 
-    # Wait for the GUI thread to finish
-    gui_thread.join()
-
-    # Stop the screen capturer if the GUI is closed
-    Config.running = False
-
-    # Wait for the screen capturer to finish
-    screen_capturer_thread.join()
+    try:
+        run_ADAM(update_device_count, status_queue)
+    finally:
+        # Stop the screen capturer if the GUI is closed
+        Config.running = False
+        # Wait for the screen capturer to finish
+        screen_capturer_thread.join()
 
     print("Thank you for using ADAM!")
