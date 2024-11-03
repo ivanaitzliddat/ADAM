@@ -5,11 +5,11 @@ import tkinter as tk
 '''
 class ADAM:
     def __init__(self):
-        self.master = tk.TK()
+        self.master = tk.Tk()
         self.master.title("ADAM")
 
         # Add a label
-        self.label = tk.label(self.master, text = "Welcome to ADAM!")
+        self.label = tk.Label(self.master, text = "Welcome to ADAM!")
         self.label.pack()
 
     '''
