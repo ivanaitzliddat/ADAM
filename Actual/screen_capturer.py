@@ -1,5 +1,6 @@
 import cv2
 import os
+import time
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -45,7 +46,8 @@ class ScreenCapturer:
                     if not os.path.exists(self.save_path):
                         os.makedirs(self.save_path)
                     # Save the frame as an image
-                    cv2.imwrite(self.save_path, frame)
+                    filename = os.path.join(self.save_path, f"screenshot_device_{i}_{int(time.time())}.png")
+                    cv2.imwrite(filename, frame)
                     print(f"Screenshot saved from device {i} to {self.save_path}")
                 else:
                     print(f"Error: Could not capture frame from device {i}")
