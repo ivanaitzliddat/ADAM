@@ -1,17 +1,33 @@
 import cv2
 import os
 import time
+import threading
 from config import Config
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
 '''
 class ScreenCapturer:
+    available_devices = []
+    lock = threading.Lock()
 
-    def __init__(self, save_path, device_count, status_queue):
+    '''
+        Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.
+    '''
+    @staticmethod
+    def update_available_devices(device_count):
+        for i in range(device_count):
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                with ScreenCapturer.lock:
+                    ScreenCapturer.available_devices.append(i)
+                    cap.release()
+            else:
+                return i
+        return -1
+
+    def __init__(self, save_path, status_queue):
         self.save_path = save_path
-        self.device_count = device_count
-        self.available_devices = []
         self.status_queue = status_queue
 
     '''
@@ -19,21 +35,7 @@ class ScreenCapturer:
     '''
     def send_message(self, message):
         print(message)
-        self.status_queue.put(message)
-
-    '''
-        Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.
-    '''
-    def update_available_devices(self):
-        for i in range(self.device_count):
-            cap = cv2.VideoCapture(i)
-            if cap.isOpened():
-                self.available_devices.append(i)
-                cap.release()
-            else:
-                message = f"Device {i} is not found."
-                self.send_message(message)
-                
+        self.status_queue.put(message)         
     
     '''
         Iterates through the list of available devices and captures a screenshot for every device and saves it in a folder.

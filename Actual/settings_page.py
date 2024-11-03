@@ -1,9 +1,10 @@
 import tkinter as tk
+from tkinter import messagebox
+from screen_capturer import ScreenCapturer
 
 class SettingsPage(tk.Frame):
-    def __init__(self, parent, update_device_count_callback):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.update_device_count_callback = update_device_count_callback
         self.device_count_entry = None
         label = tk.Label(self, text="Settings Page Content", font=("Arial", 20))
         label.pack(pady=20, padx=20)
@@ -21,9 +22,11 @@ class SettingsPage(tk.Frame):
     def update_count(self):
         try:
             new_count = int(self.device_count_entry.get())
-            self.update_device_count_callback(new_count)
-
-            # Clear the entry field
-            self.device_count_entry.delete(0, tk.END)
+            device = ScreenCapturer.update_available_devices(new_count)
+            if device == -1:
+                # Clear the entry field
+                self.device_count_entry.delete(0, tk.END)
+            else:
+                messagebox.showwarning("Warning", f"Device {device + 1} is not detected.")
         except ValueError:
-            print("Please enter a valid number.")
+            messagebox.showerror("Please enter a valid number.")

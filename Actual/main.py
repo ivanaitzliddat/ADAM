@@ -5,21 +5,11 @@ import threading
 import queue
 import signal
 
-device_count = 2
-
-'''
-    Updates the global variable device_count.
-'''
-def update_device_count(new_count):
-    global device_count
-    device_count = new_count
-
 '''
     Starts the screen capturer.
 '''
 def start_screen_capturer(save_folder, status_queue):
-    ss_object = ScreenCapturer(save_folder, device_count, status_queue)
-    ss_object.update_available_devices()
+    ss_object = ScreenCapturer(save_folder, status_queue)
     try:
         ss_object.capture_screenshots()
     except Exception as e:
@@ -28,8 +18,8 @@ def start_screen_capturer(save_folder, status_queue):
 '''
     Starts the ADAM GUI application.
 '''
-def run_ADAM(update_callback, status_queue):
-    app = ADAM(update_callback, status_queue)
+def run_ADAM(status_queue):
+    app = ADAM(status_queue)
     try:
         app.run()
     except Exception as e:
@@ -53,7 +43,7 @@ if __name__ == "__main__":
     screen_capturer_thread.start()
 
     try:
-        run_ADAM(update_device_count, status_queue)
+        run_ADAM(status_queue)
     finally:
         print("Gracefully shutting down screen capturer...")
         # Stop the screen capturer if the GUI is closed

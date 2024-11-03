@@ -11,13 +11,10 @@ class ADAM:
     # Class-level variable to keep track of all instances
     instances = []
 
-    def __init__(self, update_device_count_callback, status_queue):
+    def __init__(self, status_queue):
         self.master = tk.Tk()
         self.master.title("ADAM")
         self.master.geometry("1600x900")
-
-        # Stores the callback for updating device count
-        self.update_device_count_callback = update_device_count_callback
 
         ADAM.instances.append(self)
 
@@ -45,7 +42,7 @@ class ADAM:
 
         # Initialize pages
         self.alerts_page = AlertsPage(self.content_frame)  # Create an instance of AlertsPage
-        self.settings_page = SettingsPage(self.content_frame, self.update_device_count_callback)  # Create an instance of SettingsPage and pass the callback
+        self.settings_page = SettingsPage(self.content_frame)  # Create an instance of SettingsPage and pass the callback
         self.show_alerts_page()  # Start with Alerts page
 
         # Start the queue checking process
