@@ -11,3 +11,9 @@ class ADAM:
         # Add a label
         self.label = tk.label(self.master, text = "Welcome to ADAM!")
         self.label.pack()
+
+    '''
+        Starts the GUI.
+    '''
+    def run(self):
+        self.master.mainloop()
