@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import font
+from alerts_page import AlertsPage
+from settings_page import SettingsPage
 
 '''
     Represents a GUI object which allows user to control ADAM.
@@ -14,7 +16,7 @@ class ADAM:
         self.label_font = font.Font(size=24, weight="bold")
 
         # Add a label
-        self.label = tk.Label(self.master, text = "Welcome to ADAM!", font=self.label_font)
+        self.label = tk.Label(self.master, text="Welcome to ADAM!", font=self.label_font)
         self.label.pack()
 
         # Set up the sidebar
@@ -33,30 +35,21 @@ class ADAM:
         self.content_frame.pack(side="right", expand=True, fill="both")
 
         # Initialize pages
-        self.alerts_page = None
-        self.settings_page = None
+        self.alerts_page = AlertsPage(self.content_frame)  # Create an instance of AlertsPage
+        self.settings_page = SettingsPage(self.content_frame)  # Create an instance of SettingsPage
         self.show_alerts_page()  # Start with Alerts page
 
     def show_alerts_page(self):
-        # Clear the content frame and display the alerts page
         self.clear_content_frame()
-
-        # Create the alerts page
-        self.alerts_page = tk.Label(self.content_frame, text="Alerts Page Content")
-        self.alerts_page.pack(pady=20, padx=20)
+        self.alerts_page.pack(expand=True, fill="both")
 
     def show_settings_page(self):
-        # Clear the content frame and display the settings page
         self.clear_content_frame()
-
-        # Create the settings page
-        self.settings_page = tk.Label(self.content_frame, text="Settings Page Content")
-        self.settings_page.pack(pady=20, padx=20)
+        self.settings_page.pack(expand=True, fill="both")
 
     def clear_content_frame(self):
-        # Destroy all widgets in the content frame to refresh the page
         for widget in self.content_frame.winfo_children():
-            widget.destroy()
+            widget.pack_forget()
 
     '''
         Starts the GUI.
