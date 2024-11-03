@@ -78,3 +78,9 @@ class ADAM:
     '''
     def run(self):
         self.master.mainloop()
+
+    '''
+        Stops the GUI.
+    '''
+    def close(self):
+        self.master.destroy()
