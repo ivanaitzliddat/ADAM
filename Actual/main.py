@@ -1,11 +1,17 @@
 from screen_capturer import ScreenCapturer
 from gui import ADAM
 
+device_count = 0
+
+def update_device_count(new_count):
+    global device_count
+    device_count = new_count
+
 if __name__ == "__main__":
-    device_count = 2
     save_folder = "./screenshots"
-    app = ADAM()
+    app = ADAM(update_device_count)
     app.run()
     '''ss_object = ScreenCapturer(save_folder, device_count)
     ss_object.update_available_devices()
     ss_object.capture_screenshots()'''
+    print(f"Updated device count: {device_count}")
