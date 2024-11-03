@@ -11,7 +11,6 @@ if __name__ == "__main__":
     save_folder = "./screenshots"
     app = ADAM(update_device_count)
     app.run()
-    '''ss_object = ScreenCapturer(save_folder, device_count)
+    ss_object = ScreenCapturer(save_folder, device_count)
     ss_object.update_available_devices()
-    ss_object.capture_screenshots()'''
-    print(f"Updated device count: {device_count}")
+    ss_object.capture_screenshots()
