@@ -22,5 +22,8 @@ class SettingsPage(tk.Frame):
         try:
             new_count = int(self.device_count_entry.get())
             self.update_device_count_callback(new_count)
+
+            # Clear the entry field
+            self.device_count_entry.delete(0, tk.END)
         except ValueError:
             print("Please enter a valid number.")
