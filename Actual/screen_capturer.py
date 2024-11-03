@@ -1,6 +1,7 @@
 import cv2
 import os
 import time
+from config import Config
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -26,12 +27,10 @@ class ScreenCapturer:
     
     '''
         Iterates through the list of available devices and captures a screenshot for every device and saves it in a folder.
-
-        @param device_index The index of the device which the screenshot will be taken.
     '''
     def capture_screenshots(self):
 
-        while True:
+        while Config.running:
             for i in self.available_devices:
                 # Open the video feed from the USB capture card
                 cap = cv2.VideoCapture(i)
