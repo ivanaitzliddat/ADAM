@@ -5,8 +5,8 @@ import cv2
 '''
 class ScreenCapturer:
 
-    def __init__(self, save_folder, device_count):
-        self.save_folder = save_folder
+    def __init__(self, save_path, device_count):
+        self.save_path = save_path
         self.device_count = device_count
         self.available_devices = []
     
@@ -40,6 +40,7 @@ class ScreenCapturer:
                 ret, frame = cap.read()
                 
                 if ret:
+
                     # Save the frame as an image
                     cv2.imwrite(self.save_path, frame)
                     print(f"Screenshot saved from device {i} to {self.save_path}")
