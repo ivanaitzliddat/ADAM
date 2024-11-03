@@ -1,4 +1,5 @@
 import cv2
+import os
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -40,7 +41,9 @@ class ScreenCapturer:
                 ret, frame = cap.read()
                 
                 if ret:
-
+                    # Check whether the save_path exists, if not create one
+                    if not os.path.exists(self.save_path):
+                        os.makedirs(self.save_path)
                     # Save the frame as an image
                     cv2.imwrite(self.save_path, frame)
                     print(f"Screenshot saved from device {i} to {self.save_path}")
