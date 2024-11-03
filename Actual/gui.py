@@ -8,6 +8,9 @@ from settings_page import SettingsPage
     Represents a GUI object which allows user to control ADAM.
 '''
 class ADAM:
+    # Class-level variable to keep track of all instances
+    instances = []
+
     def __init__(self, update_device_count_callback, status_queue):
         self.master = tk.Tk()
         self.master.title("ADAM")
@@ -15,6 +18,8 @@ class ADAM:
 
         # Stores the callback for updating device count
         self.update_device_count_callback = update_device_count_callback
+
+        ADAM.instances.append(self)
 
         # Define a larger font
         self.label_font = font.Font(size=24, weight="bold")
@@ -80,7 +85,13 @@ class ADAM:
         self.master.mainloop()
 
     '''
-        Stops the GUI.
+        Stops all instances of the GUI.
     '''
-    def close(self):
-        self.master.destroy()
+    @staticmethod
+    def close():
+        print("Closing all instances of ADAM.")
+        # Close all instances and destroy their main windows
+        for instance in ADAM.instances:
+            instance.master.destroy()
+        ADAM.instances.clear()
+        print("Closed all instances of ADAM.")

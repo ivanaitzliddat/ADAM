@@ -6,7 +6,6 @@ import queue
 import signal
 
 device_count = 2
-app = None
 
 '''
     Updates the global variable device_count.
@@ -30,7 +29,6 @@ def start_screen_capturer(save_folder, status_queue):
     Starts the ADAM GUI application.
 '''
 def run_ADAM(update_callback, status_queue):
-    global app
     app = ADAM(update_callback, status_queue)
     try:
         app.run()
@@ -41,10 +39,7 @@ def run_ADAM(update_callback, status_queue):
     Handles the signals that are sent to the script, for example, when pressing the ctrl + c button.
 '''
 def signal_handler(sig, frame):
-    if app:
-        app.close()
-    Config.running = False
-    print("Gracefully shutting down...")
+    ADAM.close()
 
 if __name__ == "__main__":
     save_folder = "./screenshots"
@@ -60,6 +55,7 @@ if __name__ == "__main__":
     try:
         run_ADAM(update_device_count, status_queue)
     finally:
+        print("Gracefully shutting down screen capturer...")
         # Stop the screen capturer if the GUI is closed
         Config.running = False
         # Wait for the screen capturer to finish
