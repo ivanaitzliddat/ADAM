@@ -42,6 +42,10 @@ class ScreenCapturer:
 
         while Config.running:
             for i in self.available_devices:
+                # Check if ADAM GUI application is still running
+                if not Config.running:
+                    break
+
                 # Open the video feed from the USB capture card
                 cap = cv2.VideoCapture(i)
 
