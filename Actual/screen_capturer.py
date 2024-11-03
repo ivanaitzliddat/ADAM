@@ -11,7 +11,7 @@ class ScreenCapturer:
         self.save_path = save_path
         self.device_count = device_count
         self.available_devices = []
-    
+
     '''
         Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.
     '''
@@ -21,6 +21,8 @@ class ScreenCapturer:
             if cap.isOpened():
                 self.available_devices.append(i)
                 cap.release()
+            else:
+                print(f"Device {i} is not found.")
     
     '''
         Iterates through the list of available devices and captures a screenshot for every device and saves it in a folder.
