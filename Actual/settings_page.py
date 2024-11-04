@@ -29,4 +29,4 @@ class SettingsPage(tk.Frame):
             else:
                 messagebox.showwarning("Warning", f"Device {device + 1} is not detected.")
         except ValueError:
-            messagebox.showerror("Please enter a valid number.")
+            messagebox.showerror("Error", "Please enter a valid number.")
