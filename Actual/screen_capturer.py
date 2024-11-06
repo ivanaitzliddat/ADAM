@@ -61,18 +61,17 @@ class ScreenCapturer:
                 ret, frame = cap.read()
                 
                 if ret:
-                    '''# Check whether the save_path exists, if not create one
-                    if not os.path.exists(self.save_path):
-                        os.makedirs(self.save_path)
-                    # Save the frame as an image
-                    filename = os.path.join(self.save_path, f"screenshot_device_{i}_{int(time.time())}.png")
-                    cv2.imwrite(filename, frame)
-                    message = f"Screenshot saved from device {i} to {self.save_path}"
-                    self.send_message(message)'''
                     with Screenshot.lock:
-                        Screenshot.frames.append(frame)
+                        # Move the current frame to the previous frame
+                        if i in ScreenCapturer.frames:
+                            ScreenCapturer.frames[i]['previous'] = ScreenCapturer.frames[i]['current']
+
+                        # Save the newly captured frame
+                        ScreenCapturer.frames[i] = {
+                            'current': frame,
+                            'previous': ScreenCapturer.frames[i].get('previous') if i in ScreenCapturer.frames else None
+                        }
                         print("Screenshot added to Screenshot.frames")
-                        print(f"Number of screenshots captured: {len(Screenshot.frames)}")
                 else:
                     message = f"Error: Could not capture frame from device {i}"
                     self.send_message(message)
