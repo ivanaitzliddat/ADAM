@@ -3,6 +3,7 @@ import os
 import time
 import threading
 from config import Config
+from screenshots import Screenshot
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -60,17 +61,22 @@ class ScreenCapturer:
                 ret, frame = cap.read()
                 
                 if ret:
-                    # Check whether the save_path exists, if not create one
+                    '''# Check whether the save_path exists, if not create one
                     if not os.path.exists(self.save_path):
                         os.makedirs(self.save_path)
                     # Save the frame as an image
                     filename = os.path.join(self.save_path, f"screenshot_device_{i}_{int(time.time())}.png")
                     cv2.imwrite(filename, frame)
                     message = f"Screenshot saved from device {i} to {self.save_path}"
-                    self.send_message(message)
+                    self.send_message(message)'''
+                    with Screenshot.lock:
+                        Screenshot.frames.append(frame)
+                        print("Screenshot added to Screenshot.frames")
+                        print(f"Number of screenshots captured: {len(Screenshot.frames)}")
                 else:
                     message = f"Error: Could not capture frame from device {i}"
                     self.send_message(message)
 
                 # Release the video capture object
                 cap.release()
+        print("Screencapturer has ended.")

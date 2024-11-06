@@ -1,4 +1,5 @@
 from screen_capturer import ScreenCapturer
+from paddle_ocr import OCRProcessor
 from gui import ADAM
 from config import Config
 import threading
@@ -14,6 +15,16 @@ def start_screen_capturer(save_folder, status_queue):
         ss_object.capture_screenshots()
     except Exception as e:
         print(f"Screen capturer encountered an error: {e}")
+
+'''
+    Starts the ocr.
+'''
+def start_ocr():
+    ocr = OCRProcessor()
+    try:
+        ocr.run()
+    except Exception as e:
+        print(f"OCR Processor encountered an error: {e}")
 
 '''
     Starts the ADAM GUI application.
@@ -42,13 +53,19 @@ if __name__ == "__main__":
     screen_capturer_thread = threading.Thread(target=start_screen_capturer, args=(save_folder, status_queue))
     screen_capturer_thread.start()
 
+    ocr_thread = threading.Thread(target=start_ocr)
+    ocr_thread.start()
+
     try:
         run_ADAM(status_queue)
     finally:
-        print("Gracefully shutting down screen capturer...")
+        print("Gracefully shutting down screen capturer and OCR Processor...")
         # Stop the screen capturer if the GUI is closed
         Config.running = False
         # Wait for the screen capturer to finish
         screen_capturer_thread.join()
+        print("Shutting down of Screen Capturer completed.")
+        ocr_thread.join()
+        print("Shutting down of OCR Processor completed.")
 
     print("Thank you for using ADAM!")
