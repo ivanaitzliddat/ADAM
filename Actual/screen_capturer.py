@@ -64,12 +64,14 @@ class ScreenCapturer:
                         if i in Screenshot.frames:
                             Screenshot.frames[i]['previous'] = Screenshot.frames[i]['current']
                             Screenshot.frames[i]['current'] = frame
+                            Screenshot.frames[i]['processed'] = False
                             print(f"Successfully updated the screenshot frames for Device {i}.")
                         
                         # Store the current frame in RAM
                         Screenshot.frames[i] = {
                             'current': frame,
-                            'previous': None
+                            'previous': None,
+                            'processed': False
                         }
                         print("Screenshot added to Screenshot.frames")
                         print(f"Number of screenshots captured: {len(Screenshot.frames)}")

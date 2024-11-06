@@ -62,16 +62,28 @@ class OCRProcessor:
             # print("Running OCR...")
             try:
                 for frame in Screenshot.frames:
-                    # Convert the frame to RGB
-                    frame_rgb = cv2.cvtColor(Screenshot.frames.get(frame).get('current'), cv2.COLOR_BGR2RGB)
-                    print("Completed frame conversion!")
-                    ocr_results = self.perform_ocr(frame_rgb)
-                    print("Compelted OCR!")
-                    if None in ocr_results:
-                        print("No Text Found.")
-                    else:
-                        print("Displaying OCR Result...")
-                        self.display_ocr_results(Screenshot.frames.get(frame).get('current'), ocr_results)
+                    # Check if the frame is new
+                    processed = Screenshot.frames.get(frame).get('processed')
+                    if not processed:
+                        
+                        # Convert the frame to RGB
+                        screenshot = Screenshot.frames.get(frame).get('current')
+                        frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
+                        print("Completed frame conversion!")
+
+                        # Perform the OCR
+                        ocr_results = self.perform_ocr(frame_rgb)
+                        print("Completed OCR!")
+
+                        # Set to show that the frame has been processed
+                        with Screenshot.lock:
+                            Screenshot.frames[frame]['processed'] = True
+
+                        if None in ocr_results:
+                            print("No Text Found.")
+                        else:
+                            print("Displaying OCR Result...")
+                            self.display_ocr_results(Screenshot.frames.get(frame).get('current'), ocr_results)
             finally:
                 pass
         print("OCR Processor has ended.")
