@@ -1,5 +1,5 @@
 import threading
 
 class Screenshot:
-    frames = {}
+    frames = []
     lock = threading.Lock()
