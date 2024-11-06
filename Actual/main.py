@@ -20,7 +20,7 @@ def start_screen_capturer(save_folder, status_queue):
     Starts the ocr.
 '''
 def start_ocr():
-    ocr = OCRProcessor()
+    ocr = OCRProcessor(font_path="./Actual/arial.ttf")
     try:
         ocr.run()
     except Exception as e:

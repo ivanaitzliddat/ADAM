@@ -2,7 +2,7 @@ from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
 from config import Config
 import matplotlib.pyplot as plt
-import time
+import cv2
 
 '''
     An OCRProcessor using PaddleOCR.
@@ -30,6 +30,7 @@ class OCRProcessor:
     def perform_ocr(self, frame):
         print("Performing OCR...")
         result = self.ocr.ocr(frame, cls=True)
+        print(f"Results as shown:\n{result}")
         return result
 
     '''
@@ -61,12 +62,16 @@ class OCRProcessor:
             # print("Running OCR...")
             try:
                 for frame in Screenshot.frames:
-                    '''# Convert the frame to RGB
+                    # Convert the frame to RGB
                     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    print("Completed frame conversion!")
                     ocr_results = self.perform_ocr(frame_rgb)
-                    self.display_ocr_results(frame, ocr_results)'''
-                    time.sleep(5)
-                    print(type(frame))
+                    print("Compelted OCR!")
+                    if None in ocr_results:
+                        print("No Text Found.")
+                    else:
+                        print("Displaying OCR Result...")
+                        self.display_ocr_results(frame, ocr_results)
             finally:
                 pass
         print("OCR Processor has ended.")
