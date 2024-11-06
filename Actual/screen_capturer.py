@@ -60,7 +60,17 @@ class ScreenCapturer:
                 
                 if ret:
                     with Screenshot.lock:
-                        Screenshot.frames.append(frame)
+                        # Store the previous frame if it exists
+                        if i in Screenshot.frames:
+                            Screenshot.frames[i]['previous'] = Screenshot.frames[i]['current']
+                            Screenshot.frames[i]['current'] = frame
+                            print(f"Successfully updated the screenshot frames for Device {i}.")
+                        
+                        # Store the current frame in RAM
+                        Screenshot.frames[i] = {
+                            'current': frame,
+                            'previous': None
+                        }
                         print("Screenshot added to Screenshot.frames")
                         print(f"Number of screenshots captured: {len(Screenshot.frames)}")
                 else:
