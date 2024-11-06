@@ -23,10 +23,10 @@ class ScreenCapturer:
                     cap.release()
             else:
                 return i
+        print(f"Successfully updated number of devices. The devices are:\n{ScreenCapturer.available_devices}")
         return -1
 
-    def __init__(self, save_path, status_queue):
-        self.save_path = save_path
+    def __init__(self, status_queue):
         self.status_queue = status_queue
 
     '''
@@ -59,14 +59,6 @@ class ScreenCapturer:
                 ret, frame = cap.read()
                 
                 if ret:
-                    '''# Check whether the save_path exists, if not create one
-                    if not os.path.exists(self.save_path):
-                        os.makedirs(self.save_path)
-                    # Save the frame as an image
-                    filename = os.path.join(self.save_path, f"screenshot_device_{i}_{int(time.time())}.png")
-                    cv2.imwrite(filename, frame)
-                    message = f"Screenshot saved from device {i} to {self.save_path}"
-                    self.send_message(message)'''
                     with Screenshot.lock:
                         Screenshot.frames.append(frame)
                         print("Screenshot added to Screenshot.frames")
