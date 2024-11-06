@@ -74,7 +74,6 @@ class ScreenCapturer:
                             'processed': False
                         }
                         print("Screenshot added to Screenshot.frames")
-                        print(f"Number of screenshots captured: {len(Screenshot.frames)}")
                 else:
                     message = f"Error: Could not capture frame from device {i}"
                     self.send_message(message)
