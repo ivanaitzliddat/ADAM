@@ -1,6 +1,6 @@
 from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
-from config import Config
+from subthread_config import Thread_Config
 import matplotlib.pyplot as plt
 import cv2
 
@@ -58,7 +58,7 @@ class OCRProcessor:
         Iterates through the frames that were captured previously and runs the OCR.
     '''
     def run(self):
-        while Config.running:
+        while Thread_Config.running:
             # print("Running OCR...")
             try:
                 for frame in Screenshot.frames:

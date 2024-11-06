@@ -1,8 +1,6 @@
 import cv2
-import os
-import time
 import threading
-from config import Config
+from subthread_config import Thread_Config
 from screenshots import Screenshot
 
 '''
@@ -43,10 +41,10 @@ class ScreenCapturer:
     '''
     def capture_screenshots(self):
 
-        while Config.running:
+        while Thread_Config.running:
             for i in self.available_devices:
                 # Check if ADAM GUI application is still running
-                if not Config.running:
+                if not Thread_Config.running:
                     break
 
                 # Open the video feed from the USB capture card

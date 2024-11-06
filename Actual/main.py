@@ -1,7 +1,7 @@
 from screen_capturer import ScreenCapturer
 from paddle_ocr import OCRProcessor
 from gui import ADAM
-from config import Config
+from subthread_config import Thread_Config
 import threading
 import queue
 import signal
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     finally:
         print("Gracefully shutting down screen capturer and OCR Processor...")
         # Stop the screen capturer if the GUI is closed
-        Config.running = False
+        Thread_Config.running = False
         # Wait for the screen capturer to finish
         screen_capturer_thread.join()
         print("Shutting down of Screen Capturer completed.")
