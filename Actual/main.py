@@ -1,7 +1,7 @@
 from screen_capturer import ScreenCapturer
 # from paddle_ocr import OCRProcessor
 from gui import ADAM
-from config import Config
+from subthread_config import Thread_Config
 import threading
 import queue
 import signal
@@ -9,8 +9,8 @@ import signal
 '''
     Starts the screen capturer.
 '''
-def start_screen_capturer(save_folder, status_queue):
-    ss_object = ScreenCapturer(save_folder, status_queue)
+def start_screen_capturer(status_queue):
+    ss_object = ScreenCapturer(status_queue)
     try:
         ss_object.capture_screenshots()
     except Exception as e:
@@ -20,7 +20,7 @@ def start_screen_capturer(save_folder, status_queue):
     Starts the ocr.
 '''
 def start_ocr():
-    ocr = OCRProcessor()
+    ocr = OCRProcessor(font_path="./Actual/arial.ttf")
     try:
         ocr.run()
     except Exception as e:
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
 
     # Start the screen capturer thread
-    screen_capturer_thread = threading.Thread(target=start_screen_capturer, args=(save_folder, status_queue))
+    screen_capturer_thread = threading.Thread(target=start_screen_capturer, args=(status_queue, ))
     screen_capturer_thread.start()
 
     ocr_thread = threading.Thread(target=start_ocr)
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     finally:
         print("Gracefully shutting down screen capturer and OCR Processor...")
         # Stop the screen capturer if the GUI is closed
-        Config.running = False
+        Thread_Config.running = False
         # Wait for the screen capturer to finish
         screen_capturer_thread.join()
         print("Shutting down of Screen Capturer completed.")

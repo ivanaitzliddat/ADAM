@@ -1,8 +1,8 @@
 from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
-from config import Config
+from subthread_config import Thread_Config
 import matplotlib.pyplot as plt
-import time
+import cv2
 
 '''
     An OCRProcessor using PaddleOCR.
@@ -30,6 +30,7 @@ class OCRProcessor:
     def perform_ocr(self, frame):
         print("Performing OCR...")
         result = self.ocr.ocr(frame, cls=True)
+        print(f"Results as shown:\n{result}")
         return result
 
     '''
@@ -57,16 +58,32 @@ class OCRProcessor:
         Iterates through the frames that were captured previously and runs the OCR.
     '''
     def run(self):
-        while Config.running:
+        while Thread_Config.running:
             # print("Running OCR...")
             try:
                 for frame in Screenshot.frames:
-                    '''# Convert the frame to RGB
-                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    ocr_results = self.perform_ocr(frame_rgb)
-                    self.display_ocr_results(frame, ocr_results)'''
-                    time.sleep(5)
-                    print(type(frame))
+                    # Check if the frame is new
+                    processed = Screenshot.frames.get(frame).get('processed')
+                    if not processed:
+                        
+                        # Convert the frame to RGB
+                        screenshot = Screenshot.frames.get(frame).get('current')
+                        frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
+                        print("Completed frame conversion!")
+
+                        # Perform the OCR
+                        ocr_results = self.perform_ocr(frame_rgb)
+                        print("Completed OCR!")
+
+                        # Set to show that the frame has been processed
+                        with Screenshot.lock:
+                            Screenshot.frames[frame]['processed'] = True
+
+                        if None in ocr_results:
+                            print("No Text Found.")
+                        else:
+                            print("Displaying OCR Result...")
+                            self.display_ocr_results(Screenshot.frames.get(frame).get('current'), ocr_results)
             finally:
                 pass
         print("OCR Processor has ended.")

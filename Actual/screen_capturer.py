@@ -1,8 +1,6 @@
 import cv2
-import os
-import time
 import threading
-from config import Config
+from subthread_config import Thread_Config
 from screenshots import Screenshot
 
 '''
@@ -25,10 +23,10 @@ class ScreenCapturer:
                     cap.release()
             else:
                 return i
+        print(f"Successfully updated number of devices. The devices are:\n{ScreenCapturer.available_devices}")
         return -1
 
-    def __init__(self, save_path, status_queue):
-        self.save_path = save_path
+    def __init__(self, status_queue):
         self.status_queue = status_queue
 
     '''
@@ -43,10 +41,10 @@ class ScreenCapturer:
     '''
     def capture_screenshots(self):
 
-        while Config.running:
+        while Thread_Config.running:
             for i in self.available_devices:
                 # Check if ADAM GUI application is still running
-                if not Config.running:
+                if not Thread_Config.running:
                     break
 
                 # Open the video feed from the USB capture card
@@ -61,18 +59,21 @@ class ScreenCapturer:
                 ret, frame = cap.read()
                 
                 if ret:
-                    '''# Check whether the save_path exists, if not create one
-                    if not os.path.exists(self.save_path):
-                        os.makedirs(self.save_path)
-                    # Save the frame as an image
-                    filename = os.path.join(self.save_path, f"screenshot_device_{i}_{int(time.time())}.png")
-                    cv2.imwrite(filename, frame)
-                    message = f"Screenshot saved from device {i} to {self.save_path}"
-                    self.send_message(message)'''
                     with Screenshot.lock:
-                        Screenshot.frames.append(frame)
+                        # Store the previous frame if it exists
+                        if i in Screenshot.frames:
+                            Screenshot.frames[i]['previous'] = Screenshot.frames[i]['current']
+                            Screenshot.frames[i]['current'] = frame
+                            Screenshot.frames[i]['processed'] = False
+                            print(f"Successfully updated the screenshot frames for Device {i}.")
+                        
+                        # Store the current frame in RAM
+                        Screenshot.frames[i] = {
+                            'current': frame,
+                            'previous': None,
+                            'processed': False
+                        }
                         print("Screenshot added to Screenshot.frames")
-                        print(f"Number of screenshots captured: {len(Screenshot.frames)}")
                 else:
                     message = f"Error: Could not capture frame from device {i}"
                     self.send_message(message)
