@@ -1,5 +1,5 @@
-# Project ADAM
-Project Auxillary Dynamic Alert Monitor (ADAM) is a monitoring system that takes in inputs from a series of screens and process it accordingly.
+# About ADAM (in early development phase)
+Auxillary Dynamic Alert Monitor (ADAM) is a user-customisable alert monitoring system that takes in display inputs from connected systems, analyses their screen content, and alerts the user if configured word triggers are detected. ADAM is designed to function completely offline and to not interact with/control the connected systems in any way (all it does is "see"). ADAM is useful in environments where Internet connectivity is not available, and where the systems to be monitored are not able to connect to typical monitoring systems and devices.
 
 ## Problem Statement
 
