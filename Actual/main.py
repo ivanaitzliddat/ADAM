@@ -1,5 +1,5 @@
 from screen_capturer import ScreenCapturer
-# from paddle_ocr import OCRProcessor
+from paddle_ocr import OCRProcessor
 from gui import ADAM
 from subthread_config import Thread_Config
 import threading

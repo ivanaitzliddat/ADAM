@@ -1,3 +1,4 @@
+import time
 from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
 from subthread_config import Thread_Config
@@ -60,6 +61,7 @@ class OCRProcessor:
     def run(self):
         while Thread_Config.running:
             # print("Running OCR...")
+            time.sleep(3)
             try:
                 for frame in Screenshot.frames:
                     # Check if the frame is new

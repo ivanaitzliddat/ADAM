@@ -1,3 +1,4 @@
+import time
 import cv2
 import threading
 from subthread_config import Thread_Config
@@ -42,6 +43,7 @@ class ScreenCapturer:
     def capture_screenshots(self):
 
         while Thread_Config.running:
+            time.sleep(3)
             for i in self.available_devices:
                 # Check if ADAM GUI application is still running
                 if not Thread_Config.running:
