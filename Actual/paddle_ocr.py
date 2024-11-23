@@ -104,6 +104,8 @@ class OCRProcessor:
                         else:
                             print("Displaying OCR Result...")
                             self.display_ocr_results(Screenshot.frames.get(frame).get('current'), ocr_results)
+            except Exception as e:
+                print(f"OCR has encountered the exception: {e}")
             finally:
                 pass
         print("OCR Processor has ended.")
