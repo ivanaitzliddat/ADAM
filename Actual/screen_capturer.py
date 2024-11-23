@@ -68,14 +68,14 @@ class ScreenCapturer:
                             Screenshot.frames[i]['current'] = frame
                             Screenshot.frames[i]['processed'] = False
                             print(f"Successfully updated the screenshot frames for Device {i}.")
-                        
-                        # Store the current frame in RAM
-                        Screenshot.frames[i] = {
-                            'current': frame,
-                            'previous': None,
-                            'processed': False
-                        }
-                        print("Screenshot added to Screenshot.frames")
+                        else:
+                            # Store the current frame in RAM
+                            Screenshot.frames[i] = {
+                                'current': frame,
+                                'previous': None,
+                                'processed': False
+                            }
+                            print("Screenshot added to Screenshot.frames")
                 else:
                     message = f"Error: Could not capture frame from device {i}"
                     self.send_message(message)
