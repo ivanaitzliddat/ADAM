@@ -3,6 +3,7 @@ import cv2
 import threading
 from subthread_config import Thread_Config
 from screenshots import Screenshot
+from messages import MessageQueue
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -11,15 +12,12 @@ class ScreenCapturer:
     available_devices = []
     lock = threading.Lock()
 
-    def __init__(self, status_queue):
-        self.status_queue = status_queue
-
     '''
         Adds the message to queue and sends it to the GUI.
     '''
     def send_message(self, message):
-        print(message)
-        self.status_queue.put(message)         
+        with MessageQueue.lock:
+            MessageQueue.status_queue.put(message)
     
         '''
         Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.

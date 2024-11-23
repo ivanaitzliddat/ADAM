@@ -3,14 +3,13 @@ from paddle_ocr import OCRProcessor
 from gui import ADAM
 from subthread_config import Thread_Config
 import threading
-import queue
 import signal
 
 '''
     Starts the screen capturer.
 '''
-def start_screen_capturer(status_queue):
-    ss_object = ScreenCapturer(status_queue)
+def start_screen_capturer():
+    ss_object = ScreenCapturer()
     try:
         ss_object.capture_screenshots()
     except Exception as e:
@@ -29,8 +28,8 @@ def start_ocr():
 '''
     Starts the ADAM GUI application.
 '''
-def run_ADAM(status_queue):
-    app = ADAM(status_queue)
+def run_ADAM():
+    app = ADAM()
     try:
         app.run()
     except Exception as e:
@@ -43,20 +42,19 @@ def signal_handler(sig, frame):
     ADAM.close()
 
 if __name__ == "__main__":
-    status_queue = queue.Queue()
 
     # Register the signal handler for SIGINT
     signal.signal(signal.SIGINT, signal_handler)
 
     # Start the screen capturer thread
-    screen_capturer_thread = threading.Thread(target=start_screen_capturer, args=(status_queue, ))
+    screen_capturer_thread = threading.Thread(target=start_screen_capturer)
     screen_capturer_thread.start()
 
     ocr_thread = threading.Thread(target=start_ocr)
     ocr_thread.start()
 
     try:
-        run_ADAM(status_queue)
+        run_ADAM()
     except Exception as e:
         print(f"ADAM has failed to run with exception: {e}")
     finally:

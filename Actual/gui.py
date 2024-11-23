@@ -5,6 +5,7 @@ from alerts_page import AlertsPage
 from settings_page import SettingsPage
 from keyword_page import KeywordPage
 from color_picker_page import ColorPage
+from messages import MessageQueue
 
 '''
     Represents a GUI object which allows user to control ADAM.
@@ -13,7 +14,7 @@ class ADAM:
     # Class-level variable to keep track of all instances
     instances = []
 
-    def __init__(self, status_queue):
+    def __init__(self):
         self.master = tk.Tk()
         self.master.title("ADAM")
         self.master.geometry("1600x900")
@@ -56,7 +57,6 @@ class ADAM:
         self.show_alerts_page()  # Start with Alerts page
 
         # Start the queue checking process
-        self.status_queue = status_queue
         self.check_queue()
 
     '''
@@ -65,7 +65,7 @@ class ADAM:
     def check_queue(self):
         try:
             while True:
-                message = self.status_queue.get_nowait()
+                message = MessageQueue.status_queue.get_nowait()
                 self.alerts_page.append_message(message)
         except queue.Empty:
             pass

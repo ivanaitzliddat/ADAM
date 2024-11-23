@@ -1,9 +1,10 @@
 import time
+import matplotlib.pyplot as plt
+import cv2
 from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
 from subthread_config import Thread_Config
-import matplotlib.pyplot as plt
-import cv2
+from messages import MessageQueue
 
 '''
     An OCRProcessor using PaddleOCR.
@@ -18,6 +19,13 @@ class OCRProcessor:
     def __init__(self, lang='en', use_angle_cls=True, font_path=None):
         self.ocr = PaddleOCR(use_angle_cls=use_angle_cls, lang=lang)
         self.font_path = font_path
+
+    '''
+        Adds the message to queue and sends it to the GUI.
+    '''
+    def send_message(self, message):
+        with MessageQueue.lock:
+            MessageQueue.status_queue.put(message)
 
     '''
         Performs OCR on a given frame.
@@ -40,7 +48,7 @@ class OCRProcessor:
             for line in result:
                 for box, (text, score) in line:
                     if keyword.lower() in text.lower():  # Case-insensitive search
-                        print(f"Detected text: {text} (Confidence: {score:.2f})")
+                        self.send_message(f"Detected text: {text} (Confidence: {score:.2f})")
                         has_keyword = True
         return result, has_keyword
 
