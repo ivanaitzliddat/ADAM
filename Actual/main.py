@@ -43,7 +43,6 @@ def signal_handler(sig, frame):
     ADAM.close()
 
 if __name__ == "__main__":
-    save_folder = "./screenshots"
     status_queue = queue.Queue()
 
     # Register the signal handler for SIGINT
