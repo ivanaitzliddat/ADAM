@@ -31,7 +31,17 @@ class OCRProcessor:
     def perform_ocr(self, frame):
         print("Performing OCR...")
         result = self.ocr.ocr(frame, cls=True)
-        print(f"Results as shown:\n{result}")
+
+        keyword = "monitor"
+        # Display OCR results that contain the keyword "monitor"
+        if None in result:
+            print("No words were detected")
+        else:
+            for line in result:
+                for box, (text, score) in line:
+                    if keyword.lower() in text.lower():  # Case-insensitive search
+                        print(f"Detected text: {text} (Confidence: {score:.2f})")
+
         return result
 
     '''
@@ -42,13 +52,21 @@ class OCRProcessor:
         - result (list): OCR results from perform_ocr.
     '''
     def display_ocr_results(self, frame, result):
-        # Extract bounding boxes, texts, and scores
-        boxes = [item[0] for line in result for item in line]
-        texts = [item[1][0] for line in result for item in line]
-        scores = [item[1][1] for line in result for item in line]
+        keyword = "monitor"
+        # Filter the results to include only texts containing the keyword
+        filtered_boxes = []
+        filtered_texts = []
+        filtered_scores = []
 
-        # Draw results on the image
-        image_with_boxes = draw_ocr(frame, boxes, texts, scores, font_path=self.font_path)
+        for line in result:
+            for box, (text, score) in line:
+                if keyword.lower() in text.lower():  # Case-insensitive search
+                    filtered_boxes.append(box)
+                    filtered_texts.append(text)
+                    filtered_scores.append(score)
+
+        # Draw filtered OCR results on the image
+        image_with_boxes = draw_ocr(frame, filtered_boxes, filtered_texts, filtered_scores, font_path=self.font_path)
 
         # Display the image
         plt.imshow(image_with_boxes)
