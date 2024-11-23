@@ -35,8 +35,8 @@ class ADAM:
         self.alerts_button = tk.Button(self.sidebar, text="Alerts", command=self.show_alerts_page)
         self.alerts_button.pack(fill="x")
 
-        self.settings_button = tk.Button(self.sidebar, text="Settings", command=self.show_settings_page)
-        self.settings_button.pack(fill="x")
+        # self.settings_button = tk.Button(self.sidebar, text="Settings", command=self.show_settings_page)
+        # self.settings_button.pack(fill="x")
         
         self.keyword_button = tk.Button(self.sidebar, text="Keyword", command=self.show_keywords_page)
         self.keyword_button.pack(fill="x")
@@ -50,7 +50,7 @@ class ADAM:
 
         # Initialize pages
         self.alerts_page = AlertsPage(self.content_frame)  # Create an instance of AlertsPage
-        self.settings_page = SettingsPage(self.content_frame)  # Create an instance of SettingsPage and pass the callback
+        # self.settings_page = SettingsPage(self.content_frame)  # Create an instance of SettingsPage and pass the callback
         self.keyword_page = KeywordPage(self.content_frame) 
         self.color_picker_page = ColorPage(self.content_frame) 
         self.show_alerts_page()  # Start with Alerts page

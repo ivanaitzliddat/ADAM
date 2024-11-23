@@ -11,22 +11,6 @@ class ScreenCapturer:
     available_devices = []
     lock = threading.Lock()
 
-    '''
-        Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.
-    '''
-    @staticmethod
-    def update_available_devices(device_count):
-        for i in range(device_count):
-            cap = cv2.VideoCapture(i)
-            if cap.isOpened():
-                with ScreenCapturer.lock:
-                    ScreenCapturer.available_devices.append(i)
-                    cap.release()
-            else:
-                return i
-        print(f"Successfully updated number of devices. The devices are:\n{ScreenCapturer.available_devices}")
-        return -1
-
     def __init__(self, status_queue):
         self.status_queue = status_queue
 
@@ -37,6 +21,26 @@ class ScreenCapturer:
         print(message)
         self.status_queue.put(message)         
     
+        '''
+        Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.
+    '''
+    def update_available_devices(self):
+        for i in range(20):
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                if i not in ScreenCapturer.available_devices:
+                    with ScreenCapturer.lock:
+                        ScreenCapturer.available_devices.append(i)
+                cap.release()
+            else:
+                if i in ScreenCapturer.available_devices:
+                    self.send_message(f"WARNING: Device {i} is no longer detected!")
+                    with ScreenCapturer.lock:
+                        ScreenCapturer.available_devices.remove(i)
+                    
+        # self.send_message(f"Successfully updated number of devices. The devices are:\n{ScreenCapturer.available_devices}")
+        return
+
     '''
         Iterates through the list of available devices and captures a screenshot for every device and saves it in a folder.
     '''
@@ -44,6 +48,7 @@ class ScreenCapturer:
 
         while Thread_Config.running:
             time.sleep(3)
+            self.update_available_devices()
             for i in self.available_devices:
                 # Check if ADAM GUI application is still running
                 if not Thread_Config.running:
