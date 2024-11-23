@@ -58,6 +58,8 @@ if __name__ == "__main__":
 
     try:
         run_ADAM(status_queue)
+    except Exception as e:
+        print(f"ADAM has failed to run with exception: {e}")
     finally:
         print("Gracefully shutting down screen capturer and OCR Processor...")
         # Stop the screen capturer if the GUI is closed
