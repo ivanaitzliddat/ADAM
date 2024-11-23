@@ -28,11 +28,11 @@ class OCRProcessor:
         Returns:
         - result (list): OCR results, each containing bounding boxes, text, and confidence scores.
     '''
-    def perform_ocr(self, frame):
+    def perform_ocr(self, frame, keyword):
+        has_keyword = False
         print("Performing OCR...")
         result = self.ocr.ocr(frame, cls=True)
 
-        keyword = "monitor"
         # Display OCR results that contain the keyword "monitor"
         if None in result:
             print("No words were detected")
@@ -41,8 +41,8 @@ class OCRProcessor:
                 for box, (text, score) in line:
                     if keyword.lower() in text.lower():  # Case-insensitive search
                         print(f"Detected text: {text} (Confidence: {score:.2f})")
-
-        return result
+                        has_keyword = True
+        return result, has_keyword
 
     '''
         Displays OCR results on the frame.
@@ -51,8 +51,7 @@ class OCRProcessor:
         - frame (np.ndarray): The original frame in RGB format.
         - result (list): OCR results from perform_ocr.
     '''
-    def display_ocr_results(self, frame, result):
-        keyword = "monitor"
+    def display_ocr_results(self, frame, result, keyword):
         # Filter the results to include only texts containing the keyword
         filtered_boxes = []
         filtered_texts = []
@@ -80,6 +79,7 @@ class OCRProcessor:
         while Thread_Config.running:
             # print("Running OCR...")
             time.sleep(3)
+            keyword = "force"
             try:
                 for frame in Screenshot.frames:
                     # Check if the frame is new
@@ -92,18 +92,18 @@ class OCRProcessor:
                         print("Completed frame conversion!")
 
                         # Perform the OCR
-                        ocr_results = self.perform_ocr(frame_rgb)
+                        ocr_results, has_keyword = self.perform_ocr(frame_rgb, keyword)
                         print("Completed OCR!")
 
                         # Set to show that the frame has been processed
                         with Screenshot.lock:
                             Screenshot.frames[frame]['processed'] = True
 
-                        if None in ocr_results:
-                            print("No Text Found.")
-                        else:
+                        if has_keyword:
                             print("Displaying OCR Result...")
-                            self.display_ocr_results(Screenshot.frames.get(frame).get('current'), ocr_results)
+                            self.display_ocr_results(screenshot, ocr_results, keyword)
+                        else:
+                            print("No Text Found.")
             except Exception as e:
                 print(f"OCR has encountered the exception: {e}")
             finally:
