@@ -3,6 +3,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
+from config_handler import ConfigHandler 
 
 
 class KeywordPage(tk.Frame):
@@ -12,7 +13,11 @@ class KeywordPage(tk.Frame):
         label = tk.Label(self, text="Keyword Page", font=("Arial", 20))
         label.pack(pady=20, padx=20)
         
-        self.keywords = []  # Stores all keywords
+        # Initialize the ConfigHandler
+        self.config_handler = ConfigHandler()
+        
+        # Load initial settings
+        self.keywords = self.config_handler.get_list("Settings", "keywords")  # Use self.config_handler
 
         # Section for adding keywords
         self.add_keyword_frame = tk.Frame(self)
@@ -57,13 +62,23 @@ class KeywordPage(tk.Frame):
         # Button to clear search results and show all keywords
         self.show_all_button = tk.Button(self, text="Show All Keywords", command=self.show_all_keywords)
         self.show_all_button.pack(pady=5)
+        
+        # Initial display of keywords
+        self.update_keyword_listbox()
+
+    def refresh_keywords(self):
+        """Function to refresh the list display"""
+        self.keyword_listbox.delete(0, tk.END)
+        for keyword in self.keywords:
+            self.keyword_listbox.insert(tk.END, keyword)
 
     def add_keyword(self):
         """Adds a new keyword to the listbox and keyword list."""
         keyword = self.keyword_entry.get().strip()
         if keyword:
             self.keywords.append(keyword)
-            self.update_keyword_listbox()
+            self.config_handler.add_to_list("Settings", "keywords", keyword)
+            self.refresh_keywords()
             self.keyword_entry.delete(0, tk.END)
         else:
             messagebox.showwarning("Input Error", "Please enter a valid keyword.")
@@ -83,16 +98,15 @@ class KeywordPage(tk.Frame):
             # Pop up an entry box to edit the keyword
             new_keyword = simpledialog.askstring("Edit Keyword", f"Edit keyword '{selected_keyword}':")
             
-            # Check if the user clicked "Cancel" (new_keyword is None)
             if new_keyword is not None:
                 new_keyword = new_keyword.strip()
-                if new_keyword:  # Only update if new_keyword is not empty
+                if new_keyword:
+                    self.config_handler.edit_list_item("Settings", "keywords", selected_keyword, new_keyword)
                     self.keywords[selected_index] = new_keyword
-                    self.update_keyword_listbox()
+                    self.refresh_keywords()
+                    self.keyword_entry.delete(0, tk.END)
                 else:
                     messagebox.showwarning("Edit Error", "Please enter a valid keyword.")
-            # If new_keyword is None (user clicked "Cancel"), do nothing
-
         except IndexError:
             messagebox.showwarning("Selection Error", "Please select a keyword to edit.")
 
@@ -105,9 +119,9 @@ class KeywordPage(tk.Frame):
             # Confirm deletion
             confirm = messagebox.askyesno("Delete Keyword", f"Are you sure you want to delete '{selected_keyword}'?")
             if confirm:
-                del self.keywords[selected_index]
-                self.update_keyword_listbox()
-                
+                self.config_handler.delete_from_list("Settings", "keywords", selected_keyword)
+                self.keywords.remove(selected_keyword)
+                self.refresh_keywords()
         except IndexError:
             messagebox.showwarning("Selection Error", "Please select a keyword to delete.")
 

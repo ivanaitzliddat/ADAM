@@ -3,11 +3,16 @@
 import tkinter as tk
 from tkinter import colorchooser, messagebox, simpledialog
 from tkinter import ttk
+from config_handler import ConfigHandler 
 
 class ColorPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.colors = []  # List to store colors in hex format
+        # Initialize the ConfigHandler
+        self.config_handler = ConfigHandler()
+        
+        # Load initial settings
+        self.colors = self.config_handler.get_list("Settings", "colors")  # Use self.config_handler
 
         # Section for adding colors
         self.add_color_frame = tk.Frame(self)
@@ -46,14 +51,17 @@ class ColorPage(tk.Frame):
         
         self.delete_button = tk.Button(self, text="Delete Color", command=self.delete_color)
         self.delete_button.pack(pady=5)
+        
+        self.update_color_tree()
 
+            
     def add_color(self):
         """Adds a new color based on hex input or chosen color."""
         color_code = self.color_entry.get().strip()
         if color_code and self.is_valid_hex(color_code):
             self.colors.append(color_code)
+            self.config_handler.add_to_list("Settings", "colors", color_code)
             self.update_color_tree()
-            self.color_entry.delete(0, tk.END)
         else:
             messagebox.showwarning("Invalid Input", "Please enter a valid hex color code (e.g., #RRGGBB).")
 
@@ -82,6 +90,7 @@ class ColorPage(tk.Frame):
             
             if new_color is not None and self.is_valid_hex(new_color):
                 index = self.colors.index(selected_color)
+                self.config_handler.edit_list_item("Settings", "colors", selected_color, new_color)
                 self.colors[index] = new_color
                 self.update_color_tree()
             elif new_color is not None:
@@ -99,6 +108,7 @@ class ColorPage(tk.Frame):
             # Prompt user for confirmation before deleting
             confirm = messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete '{selected_color}'?")
             if confirm:  # Only delete if user clicks "Yes"
+                self.config_handler.delete_from_list("Settings", "colors", selected_color)
                 self.colors.remove(selected_color)
                 self.update_color_tree()
         else:
@@ -113,3 +123,4 @@ class ColorPage(tk.Frame):
             except ValueError:
                 return False
         return False
+
