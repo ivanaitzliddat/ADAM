@@ -1,6 +1,7 @@
 import time
 import cv2
 import threading
+import subprocess
 from subthread_config import Thread_Config
 from screenshots import Screenshot
 from messages import MessageQueue
@@ -19,7 +20,35 @@ class ScreenCapturer:
         with MessageQueue.lock:
             MessageQueue.status_queue.put(message)
     
-        '''
+    def get_usb_video_devices():
+        # Run the 'wmic' command to list all USB devices that are of type 'video capture'
+        result = subprocess.run(['wmic', 'path', 'Win32_PnPEntity', 'where', "(Name like '%camera%' or Name like '%capture%') and (PNPClass like '%camera%')"], 
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # Decode the result and split by lines
+        devices = result.stdout.decode().splitlines()
+        print(devices)
+        
+        # The first line is a header, so we skip it
+        # The rest are the devices that match the filter
+        video_devices = [device for device in devices if device.strip() != '']
+
+        for i in video_devices:
+            cap = cv2.VideoCapture(i)
+
+            if not cap.isOpened():
+                print(f"Error: Could not open device {i}")
+
+            # Capture one frame
+            ret, frame = cap.read()
+
+            if ret:
+                image_path = "C:\\Users\\ivana\\Downloads\\image.png"
+                cv2.imwrite(image_path)
+    
+        return len(video_devices) - 1   # Subtract 1 to exclude the header line
+
+    '''
         Updates the list of available devices by checking if the capture cards are recognised. If it is recognised, the device's index is appended to the available_devices array.
     '''
     def update_available_devices(self):
