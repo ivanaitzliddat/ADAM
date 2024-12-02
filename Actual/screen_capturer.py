@@ -65,20 +65,12 @@ class ScreenCapturer:
                 
                 if ret:
                     with Screenshot.lock:
-                        # Store the previous frame if it exists
-                        if i in Screenshot.frames:
-                            Screenshot.frames[i]['previous'] = Screenshot.frames[i]['current']
-                            Screenshot.frames[i]['current'] = frame
-                            Screenshot.frames[i]['processed'] = False
-                            print(f"Successfully updated the screenshot frames for Device {i}.")
-                        else:
-                            # Store the current frame in RAM
-                            Screenshot.frames[i] = {
-                                'current': frame,
-                                'previous': None,
-                                'processed': False
-                            }
-                            print("Screenshot added to Screenshot.frames")
+                        # Store the current frame in RAM
+                        Screenshot.frames[i] = {
+                            'current': frame,
+                            'processed': False
+                        }
+                        print(f"Screenshot from device {i} added to Screenshot.frames")
                 else:
                     message = f"Error: Could not capture frame from device {i}"
                     self.send_message(message)
