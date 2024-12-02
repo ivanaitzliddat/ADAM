@@ -2,8 +2,11 @@ from screen_capturer import ScreenCapturer
 from paddle_ocr import OCRProcessor
 from gui import ADAM
 from subthread_config import Thread_Config
+from config_handler import ConfigHandler
 import threading
 import signal
+
+ConfigHandler.init()
 
 '''
     Starts the screen capturer.
@@ -50,6 +53,7 @@ if __name__ == "__main__":
     screen_capturer_thread = threading.Thread(target=start_screen_capturer)
     screen_capturer_thread.start()
 
+    # Start the OCR Thread
     ocr_thread = threading.Thread(target=start_ocr)
     ocr_thread.start()
 
