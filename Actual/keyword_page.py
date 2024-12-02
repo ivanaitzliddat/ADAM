@@ -1,10 +1,7 @@
-# keyword_manager.py
-
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import simpledialog
 from config_handler import ConfigHandler 
-
 
 class KeywordPage(tk.Frame):
     def __init__(self, parent):
@@ -13,11 +10,8 @@ class KeywordPage(tk.Frame):
         label = tk.Label(self, text="Keyword Page", font=("Arial", 20))
         label.pack(pady=20, padx=20)
         
-        # Initialize the ConfigHandler
-        self.config_handler = ConfigHandler()
-        
         # Load initial settings
-        self.keywords = self.config_handler.get_list("Settings", "keywords")  # Use self.config_handler
+        self.keywords = ConfigHandler.get_list("Settings", "keywords")  # Use ConfigHandler
 
         # Section for adding keywords
         self.add_keyword_frame = tk.Frame(self)
@@ -77,7 +71,7 @@ class KeywordPage(tk.Frame):
         keyword = self.keyword_entry.get().strip()
         if keyword:
             self.keywords.append(keyword)
-            self.config_handler.add_to_list("Settings", "keywords", keyword)
+            ConfigHandler.add_to_list("Settings", "keywords", keyword)
             self.refresh_keywords()
             self.keyword_entry.delete(0, tk.END)
         else:
@@ -101,7 +95,7 @@ class KeywordPage(tk.Frame):
             if new_keyword is not None:
                 new_keyword = new_keyword.strip()
                 if new_keyword:
-                    self.config_handler.edit_list_item("Settings", "keywords", selected_keyword, new_keyword)
+                    ConfigHandler.edit_list_item("Settings", "keywords", selected_keyword, new_keyword)
                     self.keywords[selected_index] = new_keyword
                     self.refresh_keywords()
                     self.keyword_entry.delete(0, tk.END)
@@ -119,7 +113,7 @@ class KeywordPage(tk.Frame):
             # Confirm deletion
             confirm = messagebox.askyesno("Delete Keyword", f"Are you sure you want to delete '{selected_keyword}'?")
             if confirm:
-                self.config_handler.delete_from_list("Settings", "keywords", selected_keyword)
+                ConfigHandler.delete_from_list("Settings", "keywords", selected_keyword)
                 self.keywords.remove(selected_keyword)
                 self.refresh_keywords()
         except IndexError:

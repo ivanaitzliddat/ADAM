@@ -8,11 +8,9 @@ from config_handler import ConfigHandler
 class ColorPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        # Initialize the ConfigHandler
-        self.config_handler = ConfigHandler()
         
         # Load initial settings
-        self.colors = self.config_handler.get_list("Settings", "colors")  # Use self.config_handler
+        self.colors = ConfigHandler.get_list("Settings", "colors")  # Use ConfigHandler
 
         # Section for adding colors
         self.add_color_frame = tk.Frame(self)
@@ -60,7 +58,7 @@ class ColorPage(tk.Frame):
         color_code = self.color_entry.get().strip()
         if color_code and self.is_valid_hex(color_code):
             self.colors.append(color_code)
-            self.config_handler.add_to_list("Settings", "colors", color_code)
+            ConfigHandler.add_to_list("Settings", "colors", color_code)
             self.update_color_tree()
         else:
             messagebox.showwarning("Invalid Input", "Please enter a valid hex color code (e.g., #RRGGBB).")
@@ -90,7 +88,7 @@ class ColorPage(tk.Frame):
             
             if new_color is not None and self.is_valid_hex(new_color):
                 index = self.colors.index(selected_color)
-                self.config_handler.edit_list_item("Settings", "colors", selected_color, new_color)
+                ConfigHandler.edit_list_item("Settings", "colors", selected_color, new_color)
                 self.colors[index] = new_color
                 self.update_color_tree()
             elif new_color is not None:
@@ -108,7 +106,7 @@ class ColorPage(tk.Frame):
             # Prompt user for confirmation before deleting
             confirm = messagebox.askyesno("Confirm Delete", f"Are you sure you want to delete '{selected_color}'?")
             if confirm:  # Only delete if user clicks "Yes"
-                self.config_handler.delete_from_list("Settings", "colors", selected_color)
+                ConfigHandler.delete_from_list("Settings", "colors", selected_color)
                 self.colors.remove(selected_color)
                 self.update_color_tree()
         else:
