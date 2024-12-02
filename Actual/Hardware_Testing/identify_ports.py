@@ -3,7 +3,7 @@ import cv2
 
 def get_usb_video_devices():
     # Run the 'wmic' command to list all USB devices that are of type 'video capture'
-    result = subprocess.run(['wmic', 'path', 'Win32_PnPEntity', 'where', "Name like '%camera%' or Name like '%Display capture%'"], 
+    result = subprocess.run(['wmic', 'path', 'Win32_PnPEntity', 'where', "(Name like '%camera%' or Name like '%capture%') and (PNPClass like '%camera%')"], 
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     
     # Decode the result and split by lines
