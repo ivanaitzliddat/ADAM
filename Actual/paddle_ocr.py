@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import cv2
 from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
+from processed_screenshot import Processed_Screenshot
+from config_handler import ConfigHandler
 from subthread_config import Thread_Config
 from messages import MessageQueue
 
@@ -36,7 +38,7 @@ class OCRProcessor:
         Returns:
         - result (list): OCR results, each containing bounding boxes, text, and confidence scores.
     '''
-    def perform_ocr(self, frame, keyword):
+    def perform_ocr(self, frame, keywords):
         has_keyword = False
         print("Performing OCR...")
         result = self.ocr.ocr(frame, cls=True)
@@ -47,9 +49,12 @@ class OCRProcessor:
         else:
             for line in result:
                 for box, (text, score) in line:
-                    if keyword.lower() in text.lower():  # Case-insensitive search
-                        self.send_message(f"Detected text: {text} (Confidence: {score:.2f})")
-                        has_keyword = True
+                    for keyword in keywords:
+                        print(keyword)
+                        if keyword.lower() in text.lower():  # Case-insensitive search
+                            has_keyword = True
+                            return result, has_keyword
+                        
         return result, has_keyword
 
     '''
@@ -59,7 +64,7 @@ class OCRProcessor:
         - frame (np.ndarray): The original frame in RGB format.
         - result (list): OCR results from perform_ocr.
     '''
-    def display_ocr_results(self, frame, result, keyword):
+    def save_ocr_results(self, frame, result, keywords):
         # Filter the results to include only texts containing the keyword
         filtered_boxes = []
         filtered_texts = []
@@ -67,18 +72,29 @@ class OCRProcessor:
 
         for line in result:
             for box, (text, score) in line:
-                if keyword.lower() in text.lower():  # Case-insensitive search
-                    filtered_boxes.append(box)
-                    filtered_texts.append(text)
-                    filtered_scores.append(score)
+                for keyword in keywords:
+                    if keyword.lower() in text.lower():  # Case-insensitive search
+                        filtered_boxes.append(box)
+                        filtered_texts.append(text)
+                        filtered_scores.append(score)
 
         # Draw filtered OCR results on the image
         image_with_boxes = draw_ocr(frame, filtered_boxes, filtered_texts, filtered_scores, font_path=self.font_path)
 
-        # Display the image
+        '''# Display the image
         plt.imshow(image_with_boxes)
         plt.axis('off')
-        plt.show()
+        plt.show()'''
+
+        # Save the image
+        with Processed_Screenshot.lock:
+            Processed_Screenshot.frames.append(image_with_boxes)
+        
+        self.send_message(f"Detected text: {keyword} (Confidence: {score:.2f}). Screenshot saved in index {Processed_Screenshot.index}")
+        if Processed_Screenshot.index < 19:
+            Processed_Screenshot.index += 1
+        else:
+            Processed_Screenshot.index = 0
 
     '''
         Iterates through the frames that were captured previously and runs the OCR.
@@ -87,7 +103,8 @@ class OCRProcessor:
         while Thread_Config.running:
             # print("Running OCR...")
             time.sleep(3)
-            keyword = "force"
+            keywords = ConfigHandler.get_keywords()
+            print(keywords)
             try:
                 for frame in Screenshot.frames:
                     # Check if the frame is new
@@ -100,7 +117,7 @@ class OCRProcessor:
                         print("Completed frame conversion!")
 
                         # Perform the OCR
-                        ocr_results, has_keyword = self.perform_ocr(frame_rgb, keyword)
+                        ocr_results, has_keyword = self.perform_ocr(frame_rgb, keywords)
                         print("Completed OCR!")
 
                         # Set to show that the frame has been processed
@@ -109,7 +126,7 @@ class OCRProcessor:
 
                         if has_keyword:
                             print("Displaying OCR Result...")
-                            self.display_ocr_results(screenshot, ocr_results, keyword)
+                            self.save_ocr_results(screenshot, ocr_results, keywords)
                         else:
                             print("No Text Found.")
             except Exception as e:

@@ -2,8 +2,11 @@ from screen_capturer import ScreenCapturer
 from paddle_ocr import OCRProcessor
 from gui import ADAM
 from subthread_config import Thread_Config
+from config_handler import ConfigHandler
 import threading
 import signal
+
+ConfigHandler.init()
 
 '''
     Starts the screen capturer.
@@ -50,6 +53,7 @@ if __name__ == "__main__":
     screen_capturer_thread = threading.Thread(target=start_screen_capturer)
     screen_capturer_thread.start()
 
+    # Start the OCR Thread
     ocr_thread = threading.Thread(target=start_ocr)
     ocr_thread.start()
 
@@ -62,9 +66,13 @@ if __name__ == "__main__":
         # Stop the screen capturer if the GUI is closed
         Thread_Config.running = False
         # Wait for the screen capturer to finish
+        for thread in threading.enumerate():
+            print("Running threads = " + thread.name)
         screen_capturer_thread.join()
         print("Shutting down of Screen Capturer completed.")
         ocr_thread.join()
         print("Shutting down of OCR Processor completed.")
 
     print("Thank you for using ADAM!")
+    for thread in threading.enumerate():
+        print("Running threads = " + thread.name)
