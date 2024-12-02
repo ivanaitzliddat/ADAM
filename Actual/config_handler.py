@@ -2,6 +2,12 @@ import configparser
 import threading
 import os
 
+SETTINGS = "Settings"
+KEYWORDS = "keywords"
+COLORS = "colors"
+TTS = "tts_enabled"
+FONTS = "gui_fonts"
+
 class ConfigHandler:
     config_file = "config.ini"
     config = configparser.ConfigParser()
@@ -82,6 +88,10 @@ class ConfigHandler:
             return {key: value for key, value in ConfigHandler.config["Settings"].items()}
         return {}
 
+    '''Returns a list of all keywords.'''
+    def get_keywords():
+        return ConfigHandler.get_list(SETTINGS, KEYWORDS)
+    
 '''# Usage Example
 if __name__ == "__main__":
     ConfigHandler.init()
