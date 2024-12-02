@@ -71,7 +71,7 @@ class ADAM:
         try:
             while True:
                 message = MessageQueue.status_queue.get_nowait()
-                self.alerts_page.append_message(message)
+                self.pages["alerts"].append_message(message)
         except queue.Empty:
             pass
         finally:
