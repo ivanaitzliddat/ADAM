@@ -6,6 +6,8 @@ from settings_page import SettingsPage
 from keyword_page import KeywordPage
 from color_picker_page import ColorPage
 from messages import MessageQueue
+from tkinter import Menu
+
 
 '''
     Represents a GUI object which allows user to control ADAM.
@@ -24,26 +26,26 @@ class ADAM:
         # Define a larger font
         self.label_font = font.Font(size=24, weight="bold")
 
-        # Set up the sidebar
-        self.sidebar = tk.Frame(self.master, width=150, bg="lightgray")
-        self.sidebar.pack(side="left", fill="y")
+        # Set up the topbar
+        self.topbar = tk.Frame(self.master, height=50, bg="lightgray")
+        self.topbar.pack(side="top", fill="x")
         
         # Add a label
         self.label = tk.Label(self.master, text="Welcome to ADAM!", font=self.label_font)
         self.label.pack()
         
         # Buttons to switch between pages
-        self.alerts_button = tk.Button(self.sidebar, text="Alerts", command=lambda: self.show_page("alerts"))
-        self.alerts_button.pack(fill="x")
+        self.alerts_button = tk.Button(self.topbar, text="Alerts", command=lambda: self.show_page("alerts"))
+        self.alerts_button.pack(side="left", padx=10)
 
         # self.settings_button = tk.Button(self.sidebar, text="Settings", command=self.show_settings_page)
         # self.settings_button.pack(fill="x")
         
-        self.keyword_button = tk.Button(self.sidebar, text="Keyword", command=lambda: self.show_page("keywords"))
-        self.keyword_button.pack(fill="x")
+        self.keyword_button = tk.Button(self.topbar, text="Keyword", command=lambda: self.show_page("keywords"))
+        self.keyword_button.pack(side="left", padx=10)
         
-        self.color_picker_button = tk.Button(self.sidebar, text="Color Picker", command=lambda: self.show_page("color_picker"))
-        self.color_picker_button.pack(fill="x")
+        self.color_picker_button = tk.Button(self.topbar, text="Color Picker", command=lambda: self.show_page("color_picker"))
+        self.color_picker_button.pack(side="left", padx=10)
 
         # Main content area to display the current page
         self.content_frame = tk.Frame(self.master)
@@ -109,3 +111,19 @@ class ADAM:
             instance.master.destroy()
         ADAM.instances.clear()
         print("Closed all instances of ADAM.")
+
+
+        ##If want to change to menu bar instead of frame in the future
+        # menubar = Menu(self.master)
+
+        # filemenu = Menu(menubar, tearoff=0)
+        # filemenu.add_command(label="Exit", command=self.master.quit)
+        # menubar.add_cascade(label="File", menu=filemenu, command=self.master.quit)
+
+        # settingsmenu = Menu(menubar, tearoff=0)
+        # settingsmenu.add_command(label="TTS Settings", command=lambda: self.show_page(""))
+        # settingsmenu.add_command(label="Keywords & Colour Settings", command=lambda: self.show_page("keywords"))
+        # settingsmenu.add_command(label="LLM Settings", command=lambda: self.show_page(""))
+        # menubar.add_cascade(label="Settings", menu=settingsmenu)
+
+        # self.master.config(menu=menubar)
