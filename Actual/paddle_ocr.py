@@ -108,11 +108,11 @@ class OCRProcessor:
             try:
                 for frame in Screenshot.frames:
                     # Check if the frame is new
-                    processed = Screenshot.frames.get(frame).get('processed')
+                    processed = frame.get('processed')
                     if not processed:
                         
                         # Convert the frame to RGB
-                        screenshot = Screenshot.frames.get(frame).get('current')
+                        screenshot = frame.get('current')
                         frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
                         print("Completed frame conversion!")
 
@@ -122,10 +122,10 @@ class OCRProcessor:
 
                         # Set to show that the frame has been processed
                         with Screenshot.lock:
-                            Screenshot.frames[frame]['processed'] = True
+                            frame['processed'] = True
 
                         if has_keyword:
-                            print("Displaying OCR Result...")
+                            print("Saving OCR Result...")
                             self.save_ocr_results(screenshot, ocr_results, keywords)
                         else:
                             print("No Text Found.")
