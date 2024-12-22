@@ -78,7 +78,7 @@ class ADAM:
             pass
         finally:
             # Schedule the next check
-            self.master.after(100, self.check_queue)  # Check again after 100ms
+            self.master.after(1000, self.check_queue)  # Check again after 1000ms
             
     def show_page(self, page_name):
         """Switches to the specified page."""
