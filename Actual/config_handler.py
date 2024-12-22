@@ -27,8 +27,14 @@ class ConfigHandler:
         ConfigHandler.config["Settings"] = {
             "keywords": "",
             "colors": "#FFFFFF,#FF5733,#D3D3D3",
-            "tts_enabled": "True",
             "gui_fonts": "Arial 12,Times 14,ComicSans 10"
+        }
+        ConfigHandler.config["TTS Settings"] = {
+            "tts_enabled": "True",
+            "gender": "male",
+            "rate": "50",
+            "volume": "0.5",
+            "repeat": 3
         }
         with open(ConfigHandler.config_file, "w") as file:
             ConfigHandler.config.write(file)
@@ -92,6 +98,13 @@ class ConfigHandler:
     def get_keywords():
         return ConfigHandler.get_list(SETTINGS, KEYWORDS)
     
+    '''Returns dictionary of TTS Settings'''
+    def get_TTS_settings():
+        """Returns all TTS settings as a dictionary."""
+        if "TTS Settings" in ConfigHandler.config:
+            return {key: value for key, value in ConfigHandler.config["TTS Settings"].items()}
+        return {}
+
 '''# Usage Example
 if __name__ == "__main__":
     ConfigHandler.init()
