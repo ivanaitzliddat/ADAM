@@ -38,8 +38,8 @@ class ADAM:
         self.alerts_button = tk.Button(self.topbar, text="Alerts", command=lambda: self.show_page("alerts"))
         self.alerts_button.pack(side="left", padx=10)
 
-        # self.settings_button = tk.Button(self.sidebar, text="Settings", command=self.show_settings_page)
-        # self.settings_button.pack(fill="x")
+        self.settings_button = tk.Button(self.topbar, text="Settings", command=lambda: self.show_page("settings"))
+        self.settings_button.pack(side="left", padx=10)
         
         self.keyword_button = tk.Button(self.topbar, text="Keyword", command=lambda: self.show_page("keywords"))
         self.keyword_button.pack(side="left", padx=10)
@@ -54,7 +54,7 @@ class ADAM:
         # Initialize pages
         self.pages = {
             "alerts": AlertsPage(self.content_frame),
-            # "settings": SettingsPage(self.content_frame),  # Uncomment if needed
+            "settings": SettingsPage(self.content_frame),  
             "keywords": KeywordPage(self.content_frame),
             "color_picker": ColorPage(self.content_frame)
         }
