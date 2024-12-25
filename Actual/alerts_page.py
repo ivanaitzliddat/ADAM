@@ -6,25 +6,33 @@ class AlertsPage(tk.Frame):
         label = tk.Label(self, text="Alerts Page Content", font=("Arial", 20))
         label.pack(pady=20, padx=20)
 
-        # Create a frame to hold the custom list of event messages
-        self.list_frame = tk.Frame(self)
+        # Create a frame to hold the filter and alert messages
+        self.main_frame = tk.Frame(self)
+        self.main_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+        # Create the filter row (placed above the header)
+        self.create_filter_row()
+
+        # Create a frame for the custom list of event messages (this contains the header and alerts)
+        self.list_frame = tk.Frame(self.main_frame)
         self.list_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
-        # Create header for "Button" and "Description"
+        # Create header for "Button" and "Description" - placed above the alerts
         self.create_header()
 
-        # Hardcoded alerts
+        # Hardcoded alerts with different priority levels
         self.alerts = [
-            "CPU usage exceeded threshold!",
-            "Disk space running low.",
-            "System running normally.",
-            "Network interface down.",
-            "Memory usage high."
+            "Critical: CPU usage exceeded threshold!",
+            "Major: Disk space running low.",
+            "Minor: System running normally.",
+            "Critical: Network interface down.",
+            "Major: Memory usage high."
         ]
 
+        self.filtered_alerts = self.alerts  # Initially no filter, show all alerts
+
         # Add each alert to the list with a sound icon at the start
-        for index, alert in enumerate(self.alerts):
-            self.add_alert_row(alert, index)
+        self.update_alerts()
 
     def create_header(self):
         """Create header row with "Button" and "Description" labels."""
@@ -36,6 +44,47 @@ class AlertsPage(tk.Frame):
 
         description_label = tk.Label(header_frame, text="Description", font=("Arial", 12, "bold"), width=50, anchor="w")
         description_label.pack(side="left", fill="x")
+
+    def create_filter_row(self):
+        """Create a filter row with a dropdown for filter keywords."""
+        filter_frame = tk.Frame(self.main_frame)
+        filter_frame.pack(fill="x", pady=5)
+
+        filter_label = tk.Label(filter_frame, text="Filter by keyword:", font=("Arial", 12))
+        filter_label.pack(side="left", padx=10)
+
+        # Define filter options
+        self.filter_var = tk.StringVar()
+        self.filter_var.set("All")  # Default filter
+
+        filter_options = ["All", "Critical", "Major", "Minor"]
+        filter_menu = tk.OptionMenu(filter_frame, self.filter_var, *filter_options)
+        filter_menu.pack(side="left")
+
+        filter_button = tk.Button(filter_frame, text="Apply Filter", command=self.apply_filter)
+        filter_button.pack(side="left", padx=10)
+
+    def apply_filter(self):
+        """Apply the selected filter to the alerts."""
+        selected_filter = self.filter_var.get()
+
+        if selected_filter == "All":
+            self.filtered_alerts = self.alerts  # No filter
+        else:
+            self.filtered_alerts = [alert for alert in self.alerts if selected_filter in alert]
+
+        self.update_alerts()
+
+    def update_alerts(self):
+        """Update the list of alerts displayed."""
+        # Clear any existing rows in the list frame, except for the header
+        for widget in self.list_frame.winfo_children():
+            if isinstance(widget, tk.Frame) and widget != self.list_frame:
+                widget.destroy()
+
+        # Add each filtered alert to the list with a sound icon at the start
+        for index, alert in enumerate(self.filtered_alerts):
+            self.add_alert_row(alert, index)
 
     def add_alert_row(self, alert_text, index):
         """Adds a row with a sound icon and alert text."""
