@@ -73,8 +73,9 @@ class OCRProcessor:
             # Save the image
             with Processed_Screenshot.lock:
                 Processed_Screenshot.frames.append(image_with_boxes)
-        
-            self.send_message(f"Detected text: {keywords} (Confidence: {score:.2f}). Screenshot saved in index {Processed_Screenshot.index}")
+
+            
+            self.send_message((f"Detected text: {keywords} (Confidence: {score:.2f}). Screenshot saved in index {Processed_Screenshot.index}", Processed_Screenshot.index))
             if Processed_Screenshot.index < 19:
                 Processed_Screenshot.index += 1
             else:

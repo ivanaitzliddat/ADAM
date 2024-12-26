@@ -6,7 +6,7 @@ from settings_page import SettingsPage
 from keyword_page import KeywordPage
 from color_picker_page import ColorPage
 from messages import MessageQueue
-from tkinter import Menu
+from TTS import TTS
 
 
 '''
@@ -63,6 +63,8 @@ class ADAM:
         self.current_page = None
         self.show_page("alerts")
 
+        self.tts = TTS()
+
         # Start the queue checking process
         self.check_queue()
 
@@ -72,8 +74,9 @@ class ADAM:
     def check_queue(self):
         try:
             while True:
-                message = MessageQueue.status_queue.get_nowait()
-                self.pages["alerts"].append_message(message)
+                message, index = MessageQueue.status_queue.get_nowait()
+                self.pages["alerts"].append_message(message, index)
+                self.tts.run(message)
         except queue.Empty:
             pass
         finally:

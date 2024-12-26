@@ -32,9 +32,9 @@ class ConfigHandler:
         ConfigHandler.config["TTS Settings"] = {
             "tts_enabled": "True",
             "gender": "male",
-            "rate": "50",
+            "rate": "75",
             "volume": "0.5",
-            "repeat": 3
+            "repeat": 1
         }
         with open(ConfigHandler.config_file, "w") as file:
             ConfigHandler.config.write(file)
