@@ -36,13 +36,13 @@ class TTS:
         self.engine.setProperty('volume', self.settings["volume"])
 
     def run(self):
-        while Thread_Config.running or not TTS.alert_queue.empty():
+        while Thread_Config.running:
             alert = TTS.alert_queue.get()
-            pygame.init()
-            pygame.mixer.music.load("Sound\\notification.mp3")
-            pygame.mixer.music.play()
-            time.sleep(3)
             if alert:
+                pygame.init()
+                pygame.mixer.music.load("Sound\\notification.mp3")
+                pygame.mixer.music.play()
+                time.sleep(3)
                 for i in range(int(self.settings["repeat"])):
                     self.engine.say(alert)
                     self.engine.runAndWait()
