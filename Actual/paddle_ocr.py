@@ -58,9 +58,10 @@ class OCRProcessor:
                         # print(keyword)
                         if keyword.lower() in text.lower():  # Case-insensitive search
                             has_keyword = True
-                            filtered_boxes.append(box)
-                            filtered_texts.append(text)
-                            filtered_scores.append(score)
+                            if text not in filtered_texts:
+                                filtered_boxes.append(box)
+                                filtered_texts.append(text)
+                                filtered_scores.append(score)
         
         if has_keyword:
             # Draw filtered OCR results on the image
@@ -78,7 +79,7 @@ class OCRProcessor:
                 Processed_Screenshot.frames.append(tk_image)
 
             
-            self.send_message((f"Detected text: {keywords} (Confidence: {score:.2f}). Screenshot saved in index {Processed_Screenshot.index}", Processed_Screenshot.index))
+            self.send_message((f"Alert: {filtered_texts} has been detected.", Processed_Screenshot.index))
             if Processed_Screenshot.index < 19:
                 Processed_Screenshot.index += 1
             else:
