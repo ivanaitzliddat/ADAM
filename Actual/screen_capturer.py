@@ -155,7 +155,6 @@ class ScreenCapturer:
     def capture_screenshots(self):
 
         while Thread_Config.running:
-            # print(len(Screenshot.frames))
             time.sleep(3)
             self.update_available_devices()
 
@@ -184,36 +183,3 @@ class ScreenCapturer:
 
                 except Exception as e:
                     print(f"Capture Screenshot has failed with error: {e}")
-
-            '''for i in self.available_devices:
-                # Check if ADAM GUI application is still running
-                if not Thread_Config.running:
-                    break
-
-                # Open the video feed from the USB capture card
-                cap = cv2.VideoCapture(i)
-
-                if not cap.isOpened():
-                    message = f"Error: Could not open device {i}"
-                    self.send_message(message)
-                    continue
-
-                # Capture one frame
-                ret, frame = cap.read()
-                
-                if ret:
-                    with Screenshot.lock:
-                        # Store the current frame in RAM
-                        Screenshot.frames[i] = {
-                            'current': frame,
-                            'processed': False
-                        }
-                        print(f"Screenshot from device {i} added to Screenshot.frames")
-                else:
-                    message = f"Error: Could not capture frame from device {i}"
-                    self.send_message(message)
-
-                # Release the video capture object
-                cap.release()'''
-            
-        print("Screencapturer has ended.")

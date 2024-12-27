@@ -55,7 +55,6 @@ class OCRProcessor:
             for line in result:
                 for box, (text, score) in line:
                     for keyword in keywords:
-                        # print(keyword)
                         if keyword.lower() in text.lower():  # Case-insensitive search
                             has_keyword = True
                             if text not in filtered_texts:
@@ -92,10 +91,8 @@ class OCRProcessor:
     '''
     def run(self):
         while Thread_Config.running:
-            # print("Running OCR...")
             time.sleep(3)
             keywords = ConfigHandler.get_keywords()
-            print(keywords)
             try:
                 for frame in Screenshot.frames:
                     # Check if the frame is new
@@ -105,11 +102,9 @@ class OCRProcessor:
                         # Convert the frame to RGB
                         screenshot = frame.get('current')
                         frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
-                        print("Completed frame conversion!")
 
                         # Perform the OCR
                         has_keyword = self.perform_ocr(frame_rgb, keywords)
-                        print("Completed OCR!")
 
                         # Set to show that the frame has been processed
                         with Screenshot.lock:

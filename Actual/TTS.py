@@ -13,7 +13,6 @@ class TTS:
 
     def __init__(self):
         self.settings = ConfigHandler.get_TTS_settings()
-        print(self.settings)
         if not self.settings["tts_enabled"]:
             print("TTS is not enabled!")
             return
@@ -22,7 +21,6 @@ class TTS:
 
         # Configure the voices
         voices = self.engine.getProperty('voices')
-        print(voices)
         if self.settings["gender"].lower() == "male":
             self.engine.setProperty('voice', voices[0].id)
         else:

@@ -85,8 +85,8 @@ if __name__ == "__main__":
         # Stop the screen capturer if the GUI is closed
         Thread_Config.running = False
         # Wait for the screen capturer to finish
-        for thread in threading.enumerate():
-            print("Running threads = " + thread.name)
+        # for thread in threading.enumerate():
+        #     print("Running threads = " + thread.name)
         screen_capturer_thread.join()
         print("Shutting down of Screen Capturer completed.")
         ocr_thread.join()
@@ -100,5 +100,5 @@ if __name__ == "__main__":
     print("Thank you for using ADAM!")
 
     # Just for checking if all the threads have joined
-    for thread in threading.enumerate():
-        print("Running threads = " + thread.name)
+    # for thread in threading.enumerate():
+    #     print("Running threads = " + thread.name)

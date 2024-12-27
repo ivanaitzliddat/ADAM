@@ -149,21 +149,3 @@ class ConfigHandler:
         if "TTS Settings" in ConfigHandler.config:
             return {key: value for key, value in ConfigHandler.config["TTS Settings"].items()}
         return {}
-
-'''# Usage Example
-if __name__ == "__main__":
-    ConfigHandler.init()
-
-    # Get a list from the config
-    keywords = ConfigHandler.get_list("Settings", "keywords")
-    print("Keywords:", keywords)
-
-    # Add a new keyword and save
-    keywords.append("new_keyword")
-    ConfigHandler.set_list("Settings", "keywords", keywords)
-    print("Updated Keywords:", ConfigHandler.get_list("Settings", "keywords"))
-
-    # Get and update a single value
-    tts_enabled = ConfigHandler.get_value("Settings", "tts_enabled")
-    print("TTS Enabled:", tts_enabled)
-    ConfigHandler.set_value("Settings", "tts_enabled", "False")'''
