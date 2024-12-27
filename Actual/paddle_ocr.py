@@ -1,8 +1,6 @@
 import time
 import cv2
 from paddleocr import PaddleOCR, draw_ocr
-from PIL import Image, ImageTk
-import io
 from screenshots import Screenshot
 from processed_screenshot import Processed_Screenshot
 from config_handler import ConfigHandler
@@ -64,16 +62,9 @@ class OCRProcessor:
             # Draw filtered OCR results on the image
             image_with_boxes = draw_ocr(frame, filtered_boxes, filtered_texts, filtered_scores, font_path=self.font_path)
 
-            # Convert image to Tkinter-compatible format
-            pil_image = Image.fromarray(image_with_boxes)
-            with io.BytesIO() as buffer:
-                pil_image.save(buffer, format="PNG")
-                buffer.seek(0)
-                tk_image = ImageTk.PhotoImage(Image.open(buffer))
-
             # Save the image
             with Processed_Screenshot.lock:
-                Processed_Screenshot.frames[Processed_Screenshot.index % 20] = tk_image
+                Processed_Screenshot.frames[Processed_Screenshot.index % 20] = image_with_boxes
             
             self.send_message((f"Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
             Processed_Screenshot.index += 1
