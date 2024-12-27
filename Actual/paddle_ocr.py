@@ -1,6 +1,7 @@
 import time
 from datetime import datetime
 import cv2
+import numpy as np
 from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
 from processed_screenshot import Processed_Screenshot
@@ -61,11 +62,16 @@ class OCRProcessor:
         
         if has_keyword:
             # Draw filtered OCR results on the image
-            image_with_boxes = draw_ocr(frame, filtered_boxes, filtered_texts, filtered_scores, font_path=self.font_path)
+            for box in filtered_boxes:
+                # Convert the box points to integers
+                points = np.array(box, dtype=np.int32)
+                # Draw the polygon
+                cv2.polylines(frame, [points], isClosed=True, color=(0, 0, 255), thickness=2)
+            # image_with_boxes = draw_ocr(frame, filtered_boxes, filtered_texts, filtered_scores, font_path=self.font_path)
 
             # Save the image
             with Processed_Screenshot.lock:
-                Processed_Screenshot.frames[Processed_Screenshot.index % 20] = image_with_boxes
+                Processed_Screenshot.frames[Processed_Screenshot.index % 20] = frame
             
             self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
             Processed_Screenshot.index += 1

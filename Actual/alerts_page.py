@@ -1,4 +1,6 @@
 import tkinter as tk
+import numpy as np
+import cv2
 import io
 from PIL import Image, ImageTk
 from processed_screenshot import Processed_Screenshot
@@ -38,15 +40,37 @@ class AlertsPage(tk.Frame):
         # clickable_label.bind("<Button-1>", lambda event, msg=message: self.on_message_click(msg))
         clickable_label.bind("<Button-1>", lambda event, idx=index: self.on_message_click(idx))
 
+    def sharpen_image(image):
+        kernel = np.array([[-1, -1, -1],
+                        [-1,  9, -1],
+                        [-1, -1, -1]])
+        return cv2.filter2D(image, -1, kernel)
+
     def on_message_click(self, image_index):
         with Processed_Screenshot.lock:
             image_with_boxes = Processed_Screenshot.frames[image_index]
+            sharpened_image = AlertsPage.sharpen_image(image_with_boxes)
             # Convert image to Tkinter-compatible format
-            pil_image = Image.fromarray(image_with_boxes)
+            pil_image = Image.fromarray(sharpened_image)
+
+            # Resize the image if it's too large for the screen
+            screen_width = self.winfo_screenwidth()
+            screen_height = self.winfo_screenheight()
+            max_width = screen_width * 0.8  # 80% of the screen width
+            max_height = screen_height * 0.8  # 80% of the screen height
+            
+            image_width, image_height = pil_image.size
+            if image_width > max_width or image_height > max_height:
+                scaling_factor = min(max_width / image_width, max_height / image_height)
+                new_width = int(image_width * scaling_factor)
+                new_height = int(image_height * scaling_factor)
+                pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
             with io.BytesIO() as buffer:
                 pil_image.save(buffer, format="PNG")
                 buffer.seek(0)
                 tk_image = ImageTk.PhotoImage(Image.open(buffer))
+
             # Create a new Tkinter window to display the image
             window = tk.Toplevel(self.frame)
             canvas = tk.Canvas(window, width=tk_image.width(), height=tk_image.height())
