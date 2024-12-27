@@ -49,9 +49,7 @@ class OCRProcessor:
         result = self.ocr.ocr(frame, cls=True)
 
         # Display OCR results that contain the keyword "monitor"
-        if None in result:
-            print("No words were detected")
-        else:
+        if not None in result:
             for line in result:
                 for box, (text, score) in line:
                     for keyword in keywords:
@@ -75,14 +73,10 @@ class OCRProcessor:
 
             # Save the image
             with Processed_Screenshot.lock:
-                Processed_Screenshot.frames.append(tk_image)
-
+                Processed_Screenshot.frames[Processed_Screenshot.index % 20] = tk_image
             
-            self.send_message((f"Alert: {filtered_texts} has been detected.", Processed_Screenshot.index))
-            if Processed_Screenshot.index < 19:
-                Processed_Screenshot.index += 1
-            else:
-                Processed_Screenshot.index = 0
+            self.send_message((f"Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
+            Processed_Screenshot.index += 1
         
         return has_keyword
 
@@ -98,7 +92,6 @@ class OCRProcessor:
                     # Check if the frame is new
                     processed = frame.get('processed')
                     if not processed:
-                        
                         # Convert the frame to RGB
                         screenshot = frame.get('current')
                         frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
@@ -112,6 +105,8 @@ class OCRProcessor:
 
                         if not has_keyword:
                             print("No keywords Found.")
+                    else:
+                        Screenshot.frames.remove(frame)
             except Exception as e:
                 print(f"OCR has encountered the exception: {e}")
             finally:
