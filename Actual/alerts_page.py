@@ -9,18 +9,9 @@ class AlertsPage(tk.Frame):
         label = tk.Label(self, text="Alerts Page Content", font=("Arial", 20))
         label.pack(pady=20, padx=20)
 
-        # Create a Text widget to display messages
-        #self.message_display = tk.Text(self, wrap=tk.WORD, height=10, width=50)
-        #self.message_display.pack(pady=10)
-
         # Create a frame to hold the listbox of event messages
         self.frame = tk.Frame(self)
         self.frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
-    
-        # Add a vertical scrollbar to the listbox
-        # scrollbar = tk.Scrollbar(frame, orient="vertical", command=self.event_listbox.yview)
-        # scrollbar.pack(side="right", fill="y")
-        # self.event_listbox.config(yscrollcommand=scrollbar.set)
 
     def append_message(self, message, index):
         # Create a label for each message and make it clickable
@@ -33,30 +24,12 @@ class AlertsPage(tk.Frame):
 
     def on_message_click(self, image_index):
         with Processed_Screenshot.lock:
-            # Convert images to Tkinter-compatible format
-            plt.imshow(Processed_Screenshot.frames[image_index])
-            plt.axis('off')
-            plt.show()
+            tk_image = Processed_Screenshot.frames[image_index]
+            # Create a new Tkinter window to display the image
+            window = tk.Toplevel(self.frame)  # Assuming `self.root` is your main Tkinter window
+            canvas = tk.Canvas(window, width=tk_image.width(), height=tk_image.height())
+            canvas.pack()
+            canvas.create_image(0, 0, anchor="nw", image=tk_image)
 
-
-        # Function to simulate updating event messages periodically
-    # def update_event_messages(self):
-    #     messages = [
-    #         "CPU usage exceeded threshold!",
-    #         "Disk space running low.",
-    #         "System running normally.",
-    #         "Network interface down.",
-    #         "Memory usage high."
-    #     ]
-        
-    #     # Add each event message to the listbox
-    #     for message in messages:
-    #         self.add_event_message(message)
-        
-    #     # Call this function again in 5 seconds to simulate new event messages
-    #     self.after(5000, self.update_event_messages)
-
-
-    # def append_message(self, message):
-    #     self.message_display.insert(tk.END, message + "\n")
-    #     self.message_display.see(tk.END)  # Scroll to the end of the Text widget
+            # Keep a reference to avoid garbage collection
+            window.image = tk_image

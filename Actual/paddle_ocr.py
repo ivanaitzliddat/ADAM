@@ -1,7 +1,8 @@
 import time
-import matplotlib.pyplot as plt
 import cv2
 from paddleocr import PaddleOCR, draw_ocr
+from PIL import Image, ImageTk
+import io
 from screenshots import Screenshot
 from processed_screenshot import Processed_Screenshot
 from config_handler import ConfigHandler
@@ -65,14 +66,16 @@ class OCRProcessor:
             # Draw filtered OCR results on the image
             image_with_boxes = draw_ocr(frame, filtered_boxes, filtered_texts, filtered_scores, font_path=self.font_path)
 
-            '''# Display the image
-            plt.imshow(image_with_boxes)
-            plt.axis('off')
-            plt.show()'''
+            # Convert image to Tkinter-compatible format
+            pil_image = Image.fromarray(image_with_boxes)
+            with io.BytesIO() as buffer:
+                pil_image.save(buffer, format="PNG")
+                buffer.seek(0)
+                tk_image = ImageTk.PhotoImage(Image.open(buffer))
 
             # Save the image
             with Processed_Screenshot.lock:
-                Processed_Screenshot.frames.append(image_with_boxes)
+                Processed_Screenshot.frames.append(tk_image)
 
             
             self.send_message((f"Detected text: {keywords} (Confidence: {score:.2f}). Screenshot saved in index {Processed_Screenshot.index}", Processed_Screenshot.index))
