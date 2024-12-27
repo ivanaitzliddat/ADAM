@@ -1,12 +1,11 @@
 from screen_capturer import ScreenCapturer
 from paddle_ocr import OCRProcessor
+from TTS import TTS
 from gui import ADAM
 from subthread_config import Thread_Config
 from config_handler import ConfigHandler
 import threading
 import signal
-
-ConfigHandler.init()
 
 '''
     Starts the screen capturer.
@@ -29,6 +28,16 @@ def start_ocr():
         print(f"OCR Processor encountered an error: {e}")
 
 '''
+    Starts the TTS.
+'''
+def start_TTS():
+    tts = TTS()
+    try:
+        tts.run()
+    except Exception as e:
+        print(f"TTS encountered an error: {e}")
+
+'''
     Starts the ADAM GUI application.
 '''
 def run_ADAM():
@@ -46,6 +55,9 @@ def signal_handler(sig, frame):
 
 if __name__ == "__main__":
 
+    # Initialise the Config Handler
+    ConfigHandler.init()
+
     # Register the signal handler for SIGINT
     signal.signal(signal.SIGINT, signal_handler)
 
@@ -57,10 +69,17 @@ if __name__ == "__main__":
     ocr_thread = threading.Thread(target=start_ocr)
     ocr_thread.start()
 
+    # Start the TTS Thread
+    tts_thread = threading.Thread(target=start_TTS)
+    tts_thread.start()
+
+    # Start the GUI
     try:
         run_ADAM()
     except Exception as e:
         print(f"ADAM has failed to run with exception: {e}")
+
+    # Shutting down all of ADAM
     finally:
         print("Gracefully shutting down screen capturer and OCR Processor...")
         # Stop the screen capturer if the GUI is closed
@@ -72,7 +91,12 @@ if __name__ == "__main__":
         print("Shutting down of Screen Capturer completed.")
         ocr_thread.join()
         print("Shutting down of OCR Processor completed.")
+        tts_thread.join()
+        print("Shutting down of TTS completed.")
 
+    # Completely shut down all of ADAM
     print("Thank you for using ADAM!")
+
+    # Just for checking if all the threads have joined
     for thread in threading.enumerate():
         print("Running threads = " + thread.name)
