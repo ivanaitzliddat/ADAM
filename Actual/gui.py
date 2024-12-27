@@ -63,8 +63,6 @@ class ADAM:
         self.current_page = None
         self.show_page("alerts")
 
-        self.tts = TTS()
-
         # Start the queue checking process
         self.check_queue()
 
@@ -76,7 +74,8 @@ class ADAM:
             while True:
                 message, index = MessageQueue.status_queue.get_nowait()
                 self.pages["alerts"].append_message(message, index)
-                self.tts.run(message)
+                with TTS.lock:
+                    TTS.alert_queue.put(message)
         except queue.Empty:
             pass
         finally:

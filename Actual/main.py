@@ -91,6 +91,8 @@ if __name__ == "__main__":
         print("Shutting down of Screen Capturer completed.")
         ocr_thread.join()
         print("Shutting down of OCR Processor completed.")
+        with TTS.lock:
+            TTS.alert_queue.put("Thank you for using ADAM.")
         tts_thread.join()
         print("Shutting down of TTS completed.")
 

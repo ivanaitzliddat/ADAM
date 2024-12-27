@@ -1,9 +1,17 @@
 import pyttsx3
+import queue
+import threading
+import pygame
+import time
 from config_handler import ConfigHandler
+from subthread_config import Thread_Config
 
 class TTS:
-    def __init__(self):
 
+    alert_queue = queue.Queue()
+    lock = threading.Lock()
+
+    def __init__(self):
         self.settings = ConfigHandler.get_TTS_settings()
         print(self.settings)
         if not self.settings["tts_enabled"]:
@@ -29,14 +37,14 @@ class TTS:
         # Configure the volume
         self.engine.setProperty('volume', self.settings["volume"])
 
-    def run(self, text):
-        for i in range(int(self.settings["repeat"])):
-            self.engine.say(text)
-            self.engine.runAndWait()
-        
-'''# Speak the text
-ConfigHandler.init()
-text = "Hello! This is pyttsx3 speaking offline."
-engine = TTS()
-engine.run(text)'''
-
+    def run(self):
+        while Thread_Config.running or not TTS.alert_queue.empty():
+            alert = TTS.alert_queue.get()
+            pygame.init()
+            pygame.mixer.music.load("Sound\\notification.mp3")
+            pygame.mixer.music.play()
+            time.sleep(3)
+            if alert:
+                for i in range(int(self.settings["repeat"])):
+                    self.engine.say(alert)
+                    self.engine.runAndWait()
