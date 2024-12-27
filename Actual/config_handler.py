@@ -14,13 +14,58 @@ class ConfigHandler:
     lock = threading.Lock()
 
     def init():
-        # Check if the file exists, if not, create it
-        if not os.path.exists(ConfigHandler.config_file):
+        try:
+            # Check if the file exists, if not, create it
+            if not os.path.exists(ConfigHandler.config_file):
+                ConfigHandler.create_default_config()
+                print("A new config.ini has been created.")
+            else:
+                # Validate the config file structure
+                ConfigHandler.validate_config()
+                ConfigHandler.config.read(ConfigHandler.config_file)
+                print("Read from config.ini.")
+        except (configparser.ParsingError, configparser.DuplicateSectionError) as e:
+            print(f"Config file is corrupted: {e}")
+            print("Recreating the config.ini with default settings.")
             ConfigHandler.create_default_config()
-            print("A new config.ini has been created.")
-        else:
-            ConfigHandler.config.read(ConfigHandler.config_file)
-            print("Read from config.ini.")
+
+    def validate_config():
+        """Validates the presence of all required sections and options."""
+        # Define the required structure
+        required_structure = {
+            "Settings": {
+                "keywords": "",
+                "colors": "#FFFFFF,#FF5733,#D3D3D3",
+                "gui_fonts": "Arial 12,Times 14,ComicSans 10",
+            },
+            "TTS Settings": {
+                "tts_enabled": "True",
+                "gender": "male",
+                "rate": "75",
+                "volume": "0.5",
+                "repeat": "1",
+            }
+        }
+
+        updated = False  # Flag to track if updates were made
+
+        # Check each section and option
+        for section, options in required_structure.items():
+            if section not in ConfigHandler.config:
+                ConfigHandler.config[section] = {}
+                updated = True
+
+            for option, default_value in options.items():
+                if option not in ConfigHandler.config[section]:
+                    ConfigHandler.config[section][option] = default_value
+                    updated = True
+
+        # Save updates if needed
+        if updated:
+            with open(ConfigHandler.config_file, "w") as file:
+                ConfigHandler.config.write(file)
+            print("Config file updated with missing sections/options.")
+
 
     def create_default_config():
         """Creates a default config file."""
