@@ -92,7 +92,7 @@ class OCRProcessor:
     def run(self):
         while Thread_Config.running:
             time.sleep(3)
-            keywords = ConfigHandler.get_keywords()
+            keywords = ConfigHandler.get_list("Settings", "keywords")
             try:
                 for frame in Screenshot.frames:
                     # Check if the frame is new
