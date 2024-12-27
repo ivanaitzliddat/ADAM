@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 import cv2
 from paddleocr import PaddleOCR, draw_ocr
 from screenshots import Screenshot
@@ -66,7 +67,7 @@ class OCRProcessor:
             with Processed_Screenshot.lock:
                 Processed_Screenshot.frames[Processed_Screenshot.index % 20] = image_with_boxes
             
-            self.send_message((f"Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
+            self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
             Processed_Screenshot.index += 1
         
         return has_keyword

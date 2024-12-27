@@ -31,7 +31,7 @@ class AlertsPage(tk.Frame):
 
     def append_message(self, message, index):
         # Create a label for each message and make it clickable
-        clickable_label = tk.Label(self.message_frame, text=message, fg="blue", cursor="hand2", font=("Arial", 12),relief="solid", bd=1, padx=10, pady=5, width=50, anchor="w")
+        clickable_label = tk.Label(self.message_frame, text=message, fg="blue", cursor="hand2", font=("Arial", 12),relief="solid", bd=1, padx=10, pady=5, anchor="w")
         clickable_label.pack(padx=5, pady=5, fill="x")
 
         # Bind the label to call on_message_click when clicked

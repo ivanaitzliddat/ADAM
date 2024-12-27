@@ -74,8 +74,9 @@ class ADAM:
             while True:
                 message, index = MessageQueue.status_queue.get_nowait()
                 self.pages["alerts"].append_message(message, index)
+                alert_message_index = message.find(']') + 1
                 with TTS.lock:
-                    TTS.alert_queue.put(message)
+                    TTS.alert_queue.put(message[alert_message_index:].strip())
         except queue.Empty:
             pass
         finally:
