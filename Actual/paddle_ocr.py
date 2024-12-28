@@ -56,6 +56,7 @@ class OCRProcessor:
                         if keyword.lower() in text.lower():  # Case-insensitive search
                             has_keyword = True
                             if text not in filtered_texts:
+                                self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {text} has been detected.", Processed_Screenshot.index % 20))
                                 filtered_boxes.append(box)
                                 filtered_texts.append(text)
                                 filtered_scores.append(score)
@@ -72,8 +73,7 @@ class OCRProcessor:
             # Save the image
             with Processed_Screenshot.lock:
                 Processed_Screenshot.frames[Processed_Screenshot.index % 20] = frame
-            
-            self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
+            # self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
             Processed_Screenshot.index += 1
         
         return has_keyword
