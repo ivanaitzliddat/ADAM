@@ -86,10 +86,10 @@ class ScreenCapturer:
                     # Capture one frame
                     ret, generator = cap.read()
                     if ret:
-                        import matplotlib.pyplot as plt
-                        plt.imshow(generator)
-                        plt.axis('off')  # Turn off axis for a cleaner view
-                        plt.show()
+                        # import matplotlib.pyplot as plt
+                        # plt.imshow(generator)
+                        # plt.axis('off')  # Turn off axis for a cleaner view
+                        # plt.show()
 
                         # Check the current memory usage
                         # currentMemUsage = self.getCurrentMemUsage(self.getCurentProcessName())
