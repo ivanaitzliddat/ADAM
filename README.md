@@ -10,7 +10,7 @@ will process these screens and based on the keywords provided by the user, an al
 ## Overview
 The overall set up is as shown in the image below.
 
-![Overview](./Images/Overall.png)
+![Overview](./Images/Overall(new).png)
 
 ### Hardware Component
 In this project, our main hardware components consist of the USB-HDMI Capture Card and a Central Computer, also known as ADAM PC.
