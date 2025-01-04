@@ -14,3 +14,19 @@ The overall set up is as shown in the image below.
 
 ### Hardware Component
 In this project, our main hardware components consist of the USB-HDMI Capture Card and a Central Computer, also known as ADAM PC.
+
+## Quick Start
+
+### Option 1: Using .exe file (hassle-free)
+
+Our team will be working on releasing a .exe file so that users can run the software without any prior programming knowledge.
+
+### Option 2: Setting Up on your local machine
+
+This requires users to have some knowledge on setting up python system. The benefit is that users will be able to tweak any part of the code for their needs.
+
+Detailed Steps:
+1. Clone the repo onto your local machine.
+1. Ensure python and pip are installed.
+1. Install the libraries using `pip install -r requirements.txt`
+1. Run the python file using `python ./Actual/main.py`
