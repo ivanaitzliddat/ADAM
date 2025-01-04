@@ -67,6 +67,9 @@ class ScreenCapturer:
             # self.update_available_devices()
 
             num_of_devices = ScreenCapturer.get_usb_video_devices_new()
+            print("---------- ----------")
+            print("Starting new iteration of screenshot capture...")
+            print("Number of USB video devices detected =", num_of_devices)
             # for i in self.available_devices:
             for i in range(num_of_devices):
                 # Check if ADAM GUI application is still running
@@ -74,18 +77,26 @@ class ScreenCapturer:
                     break
 
                 try:
-                    # generator = next(iio.imiter(f"<video{i}>"))
-                    cap = cv2.VideoCapture(i)
-                    if not cap.isOpened():
-                        # message = f"Error: Could not open device {i}"
-                        # self.send_message(message)
-                        continue
+                    # -- Option 1. Using ImageIO
+                    generator = next(iio.imiter(f"<video{i}>"))
+                    frame = {
+                                'current': generator,
+                                'processed': False
+                            }
+                    with Screenshot.lock:
+                        Screenshot.frames.append(frame)
+                    # -- Option 2. Using cv2
+                    # cap = cv2.VideoCapture(i)
+                    # if not cap.isOpened():
+                    #     # message = f"Error: Could not open device {i}"
+                    #     # self.send_message(message)
+                    #     continue
                     
-                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)  # Set width to 1920 pixels (Full HD)
-                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)  # Set height to 1080 pixels (Full HD)
-                    # Capture one frame
-                    ret, generator = cap.read()
-                    if ret:
+                    # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)  # Set width to 1920 pixels (Full HD)
+                    # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)  # Set height to 1080 pixels (Full HD)
+                    # # Capture one frame
+                    # ret, generator = cap.read()
+                    # if ret:
                         # import matplotlib.pyplot as plt
                         # plt.imshow(generator)
                         # plt.axis('off')  # Turn off axis for a cleaner view
@@ -95,18 +106,17 @@ class ScreenCapturer:
                         # currentMemUsage = self.getCurrentMemUsage(self.getCurentProcessName())
                         # Check the current screenshots memory usage
                         # screenshot_memory_usage = sum([screenshot.get('current').nbytes for screenshot in Screenshot.frames]) / (1024 ** 2)
-                        frame = {
-                                    'current': generator,
-                                    'processed': False
-                                }
+                        # frame = {
+                        #             'current': generator,
+                        #             'processed': False
+                        #         }
                         # if not self.manage_memory_usage(currentMemUsage,screenshot_memory_usage):
                         #     print("Memory limit exceeded, deleting oldest screenshot...")
                         #     with Screenshot.lock:
                         #         Screenshot.frames.pop(0)
                         #     print(f"Screenshot removed. Current total memory usage by ADAM: {self.getCurrentMemUsage(self.getCurentProcessName())} MB")
-                        with Screenshot.lock:
-                            Screenshot.frames.append(frame)
-
+                        # with Screenshot.lock:
+                        #     Screenshot.frames.append(frame)
                 except Exception as e:
                     print(f"Capture Screenshot has failed with error: {e}")
 
