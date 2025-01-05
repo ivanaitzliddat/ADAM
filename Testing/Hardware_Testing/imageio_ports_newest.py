@@ -45,12 +45,17 @@ def get_usb_video_devices():
 
 def getCurrentMemUsage(processName):
     """Get memory usage of all processes with the specified name (default "ADAM")"""
-    process_name=processName
     total_memory = 0
     for proc in psutil.process_iter(['pid', 'name', 'memory_info']):
         try:
-            if process_name.lower() in proc.info['name'].lower():
-                total_memory += proc.info['memory_info'].rss  # in bytes
+            if processName.lower() in proc.info['name'].lower():
+                process = psutil.Process(proc.info['pid'])
+                # Add the main process memory
+                total_memory += proc.info['memory_info'].rss
+                # Add child processes memory recursively
+                for child in process.children(recursive=True):
+                    #print(child)
+                    total_memory += child.memory_info().rss
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     return total_memory / (1024 ** 2)  # Convert to MB
