@@ -47,7 +47,7 @@ class ScreenCapturer:
             if result.returncode == 0:
                 # print(f"Raw PowerShell Output:{result.stdout}")
                 # Split by newline and filter out any empty or non-device lines
-                devices = [line for line in result.stdout.strip().split('\n') if line.strip() and 'usb' in line.lower()]
+                devices = [line for line in result.stdout.strip().split('\n') if line.strip() and 'camera' in line.lower()]
                 # print(f"Number of Valid USB Video Devices: {len(devices)}")
                 # Return the number of valid devices
                 return len(devices)
