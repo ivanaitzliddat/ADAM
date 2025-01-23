@@ -167,14 +167,18 @@ class ConfigHandler:
         """Sets a single value in the config file."""
         if section not in ConfigHandler.cp:
             ConfigHandler.cp[section] = {}
+        if section == "Input Devices" or section == "Triggers":
+            if not isinstance(value, dict):
+                raise TypeError("Only dict values are allowed for Input Devices and Triggers sections.")
+                
         ConfigHandler.cp[section][option] = value
 
         with open(ConfigHandler.config_file, "w", encoding = "utf-8") as file:
             ConfigHandler.cp.write(file)
 
     @staticmethod
-    def delete_value(section, option):
-        """Deletes a single value in the config file."""
+    def delete_option(section, option):
+        """Deletes a single option in the config file."""
         ConfigHandler.cp.remove_option(section, option)
 
         with open(ConfigHandler.config_file, "w", encoding = "utf-8") as file:
