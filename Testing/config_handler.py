@@ -171,9 +171,9 @@ class ConfigHandler:
             if not isinstance(value, dict):
                 raise TypeError("Only dict values are allowed for Input Devices and Triggers sections.")
                 
-        ConfigHandler.cp[section][option] = value
+        ConfigHandler.cp[section][option] = str(value)
 
-        with open(ConfigHandler.config_file, "w", encoding = "utf-8") as file:
+        with open(ConfigHandler.CONFIG_FILE, "w", encoding = "utf-8") as file:
             ConfigHandler.cp.write(file)
 
     @staticmethod
@@ -181,7 +181,7 @@ class ConfigHandler:
         """Deletes a single option in the config file."""
         ConfigHandler.cp.remove_option(section, option)
 
-        with open(ConfigHandler.config_file, "w", encoding = "utf-8") as file:
+        with open(ConfigHandler.CONFIG_FILE, "w", encoding = "utf-8") as file:
             ConfigHandler.cp.write(file)
 
     @staticmethod
