@@ -11,3 +11,5 @@ for key, value in trigger_dict.items():
     print("Value = " + value)   # value is in String format
     print("Value in dict format is")
     print(ast.literal_eval(value))  # Convert String value with dict structure into a dict with ast.literal_eval
+
+ConfigHandler.set_value("Triggers", "device0", {'keywords': ['keyword 1', 'keyword 3', 'hello'], 'tts_text': 'hello', 'bg_colour': 'bleeeue'})
