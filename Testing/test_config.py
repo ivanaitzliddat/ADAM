@@ -14,15 +14,19 @@ if ConfigHandler.is_fresh_setup():
     
 
 ### Get GUI settings ###
+# Returns a dict of GUI settings
 print(ConfigHandler.get_cfg_gui())
 
 
 ### Get TTS settings ###
+# Returns a dict of TTS settings
 print(ConfigHandler.get_cfg_tts())
 
 
 ### Get Input Device settings. ###
 # This function accepts OPTIONAL usb_alt_name kwarg.
+# Returns a dict of all Input Device X settings if no usb_alt_name is passed in.
+# Returns a dict of a specific Input Device X's settings if usb_alt_name is passed in.
 device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = "aaa") # Pass in usb_alt_name argument to get settings for that device only as dict
 for key, val in device_dict.items():
     print(key)
