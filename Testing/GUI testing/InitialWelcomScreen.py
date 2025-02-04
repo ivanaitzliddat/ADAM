@@ -54,9 +54,9 @@ class VideoCaptureSetupApp:
         self.right_frame.pack(side="left", fill="both", expand=True, pady=10, padx=20)
 
         # Load images
-        self.left_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\GUI\images\1.jpg").resize((200, 200)))
-        self.middle_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\GUI\images\2.jpg").resize((200, 200)))
-        self.right_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\GUI\images\3.jpg").resize((200, 200)))
+        self.left_image = ImageTk.PhotoImage(Image.open(r"C:\Users\user\Desktop\ADAM\Testing\GUI testing\images\1.jpg").resize((200, 200)))
+        self.middle_image = ImageTk.PhotoImage(Image.open(r"C:\Users\user\Desktop\ADAM\Testing\GUI testing\images\1.jpg").resize((200, 200)))
+        self.right_image = ImageTk.PhotoImage(Image.open(r"C:\Users\user\Desktop\ADAM\Testing\GUI testing\images\1.jpg").resize((200, 200)))
 
         #info in left_frame
         self.second_row_left_header=tk.Label(self.left_frame,

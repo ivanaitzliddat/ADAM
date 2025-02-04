@@ -101,7 +101,6 @@ class VideoCaptureSetupApp:
                 height=500,
                 bg="white",
             )
-            #print(video_inputs[key])
             device_frame.grid_propagate(False)
             device_frame.pack_propagate(False)
             device_frame.grid(row=i // 4, column=i % 4, padx=10, pady=10)
@@ -144,7 +143,7 @@ class VideoCaptureSetupApp:
             )
             device_given_name.pack(side="left")
 
-            rename_button = tk.Button(device_given_name_frame, text="Rename", width=10, command=lambda video_data=video_inputs[key]: self.rename_device(video_data))
+            rename_button = tk.Button(device_given_name_frame, text="Rename", width=10, command=lambda video_data=video_inputs[key], device_label=device_given_name: self.rename_device(video_data, device_label))
             rename_button.pack(side="right", padx=5)
 
             # Trigger Condition Button
@@ -155,7 +154,8 @@ class VideoCaptureSetupApp:
             )
             trig_condition_button.pack(fill="both")
 
-    def rename_device(self, video_data):
+
+    def rename_device(self, video_data, device_label):
         """Prompt the user to rename the device."""
         rename_window = tk.Toplevel(self.root)
         rename_window.title("Rename Device")
@@ -176,18 +176,19 @@ class VideoCaptureSetupApp:
         name_entry = tk.Entry(rename_window, width=25)
         name_entry.pack(pady=5)
 
-        tk.Button(rename_window, text="Save", command=lambda: save_name(video_data)).pack(side="left", padx=10, pady=20)
-        tk.Button(rename_window, text="Cancel", command=rename_window.destroy).pack(side="right", padx=10, pady=20)
-       
-        def save_name(video_data):
+        def save_name():
             new_name = name_entry.get().strip()
             if new_name:
                 video_data["givenName"] = new_name
+                device_label.config(text=new_name)  # Update the label with the new name
                 messagebox.showinfo("Success", f"Device renamed to '{new_name}'!")
                 rename_window.destroy()
             else:
                 messagebox.showwarning("Warning", "Name cannot be empty!")
-      
+
+        tk.Button(rename_window, text="Save", command=save_name).pack(side="left", padx=10, pady=20)
+        tk.Button(rename_window, text="Cancel", command=rename_window.destroy).pack(side="right", padx=10, pady=20)
+
     def trigger_condition(self, video_data):
         """Display the trigger conditions for the selected device."""
         givenName=video_data["givenName"]
