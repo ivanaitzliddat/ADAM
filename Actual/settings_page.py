@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from screen_capturer import ScreenCapturer
+from tts_settings_page import TTSSettingsPage
 
 class SettingsPage(tk.Frame):
     def __init__(self, parent):
@@ -28,12 +29,10 @@ class SettingsPage(tk.Frame):
         self.content_area.pack(side="left", fill=tk.BOTH, expand=True)
    
     def show_tts_settings(self):
-        """Display sound settings page content"""
+        """Display the Text-to-Speech settings"""
         self.clear_content_area()
-        sound_label = tk.Label(self.content_area, text="Sound Settings", font=("Arial", 18))
-        sound_label.pack(pady=20)
-        sound_info = tk.Label(self.content_area, text="Adjust the system's sound settings here.", font=("Arial", 14))
-        sound_info.pack(pady=10)
+        tts_settings_page = TTSSettingsPage(self.content_area)
+        tts_settings_page.pack(fill="both", expand=True)
 
     def show_keyword_settings(self):
         # to change to put keyword settings page here

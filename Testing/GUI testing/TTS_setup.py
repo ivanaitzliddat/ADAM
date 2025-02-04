@@ -119,9 +119,9 @@ class VideoCaptureSetupApp:
 
     def text_to_speech_with_audio(self, text, voice_gender="male", volume=5, speech_rate="normal", alert_sound="buzzer"):
         alert_sounds = {
-            "buzzer": r"C:\Users\bai_j\Desktop\GUI\sound\buzzer.mp3",
-            "alarm": r"C:\Users\bai_j\Desktop\GUI\sound\alarm.mp3",
-            "notification": r"C:\Users\bai_j\Desktop\GUI\sound\notification.mp3",
+            "buzzer": r"C:\Users\user\Desktop\ADAM\Sound\alarm.mp3",
+            "alarm": r"C:\Users\user\Desktop\ADAM\Sound\buzzer.mp3",
+            "notification": r"C:\Users\user\Desktop\ADAM\Sound\notification.mp3",
         }
 
         sound_file = alert_sounds.get(alert_sound)

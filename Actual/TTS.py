@@ -40,7 +40,7 @@ class TTS:
             alert = TTS.alert_queue.get()
             if alert:
                 pygame.init()
-                pygame.mixer.music.load("Sound\\notification.mp3")
+                pygame.mixer.music.load("..\Sound\\notification.mp3")
                 pygame.mixer.music.play()
                 time.sleep(3)
                 for i in range(int(self.settings["repeat"])):
