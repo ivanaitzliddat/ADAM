@@ -1,4 +1,4 @@
-import ast, os, threading, traceback
+import ast, os, sys, threading, traceback
 import tkinter.messagebox as tk_msgbox
 import configparser
 
@@ -28,9 +28,21 @@ class ConfigHandler:
 
     cp = configparser.ConfigParser()
     lock = threading.Lock()
-
+    dirname = ""
+    
     @staticmethod
     def init():
+        global dirname
+        # This if...else needs to occur first before any subsequent references to file directories
+        if getattr(sys, 'frozen', False):
+            ''' If the application is run as a bundle, the PyInstaller bootloader
+            extends the sys module by a flag frozen=True and sets the app 
+            path into variable _MEIPASS'.
+            Directory of .exe is in os.path.dirname(sys.executable)'''
+            dirname = os.path.dirname(sys.executable)
+        else:
+            dirname = os.path.dirname(__file__)
+        
         """Initializes the configuration: creates or validates the config file."""
         if not os.path.exists(ConfigHandler.CONFIG_FILE):
             ConfigHandler.create_default_config()
@@ -60,7 +72,7 @@ class ConfigHandler:
             else:
                 os.rename(ConfigHandler.CONFIG_FILE, old_cfg_name)
         ConfigHandler.save_config()
-
+    
     @staticmethod
     def validate_config():
         print("Validating config.ini...")
