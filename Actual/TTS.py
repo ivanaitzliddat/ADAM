@@ -39,8 +39,21 @@ class TTS:
         while Thread_Config.running:
             alert = TTS.alert_queue.get()
             if alert:
+
+                import os
+                import sys
+                # This if...else needs to occur first before any subsequent references to file directories
+                if getattr(sys, 'frozen', False):
+                    ''' If the application is run as a bundle, the PyInstaller bootloader
+                    extends the sys module by a flag frozen=True and sets the app 
+                    path into variable _MEIPASS'.
+                    Directory of .exe is in os.path.dirname(sys.executable)'''
+                    dirname = os.path.dirname(sys.executable)
+                else:
+                    dirname = os.path.dirname(__file__)
+
                 pygame.init()
-                pygame.mixer.music.load("..\Sound\\notification.mp3")
+                pygame.mixer.music.load(f"{dirname}\\Sound\\notification.mp3")
                 pygame.mixer.music.play()
                 time.sleep(3)
                 for i in range(int(self.settings["repeat"])):
