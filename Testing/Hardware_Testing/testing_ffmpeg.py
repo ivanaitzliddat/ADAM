@@ -3,7 +3,7 @@ import imageio_ffmpeg as ffmpeg
 import numpy as np
 import matplotlib.pyplot as plt
 import imageio.v3 as iio
-import imageio
+from imageio.plugins.ffmpeg import parse_device_names
 
 def list_devices():
     try:
@@ -36,6 +36,27 @@ def list_devices():
     except Exception as e:
         print(f"Error listing devices: {e}")
         return {}
+
+ffmpeg_api = ffmpeg
+cmd = [
+    ffmpeg_api.get_ffmpeg_exe(),
+        "-list_devices",
+        "true",
+        "-f",
+        "dshow",
+        "-i",
+        "dummy",
+    ]
+completed_process = subprocess.run(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    encoding="utf-8",
+                    shell=True,
+                    check=False,
+                )
+name = parse_device_names(completed_process.stderr)[0]
+print(name)
 
 def capture_frame(device_name, output_file):
     # try:
@@ -70,7 +91,7 @@ def capture_frame(device_name, output_file):
     # except Exception as e:
     #     print(f"\nError capturing frame: {e}")
 
-# Example usage
+'''# Example usage
 devices = list_devices()
 # print("Video Devices:", devices["video_devices"])
 
@@ -91,3 +112,4 @@ frame = next(reader)
 # devices = list_devices()
 # print("Video Devices:", devices["video_devices"])
 # reader = imageio.get_reader("<video2>")
+'''
