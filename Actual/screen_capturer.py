@@ -6,6 +6,8 @@ import imageio.v3 as iio
 from subthread_config import Thread_Config
 from screenshots import Screenshot
 from messages import MessageQueue
+from imageio.plugins.devices import Devices
+from config_handler import ConfigHandler
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -79,9 +81,11 @@ class ScreenCapturer:
                 try:
                     # -- Option 1. Using ImageIO
                     generator = next(iio.imiter(f"<video{i}>"))
+                    alt_name = Devices.device_list[i]
                     frame = {
                                 'current': generator,
-                                'processed': False
+                                'processed': False,
+                                'alt_name': alt_name
                             }
                     with Screenshot.lock:
                         Screenshot.frames.append(frame)

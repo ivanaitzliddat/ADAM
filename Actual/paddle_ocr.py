@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+import traceback
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR, draw_ocr
@@ -8,6 +8,7 @@ from processed_screenshot import Processed_Screenshot
 from config_handler import ConfigHandler
 from subthread_config import Thread_Config
 from messages import MessageQueue
+from datetime import datetime, timedelta
 
 '''
     An OCRProcessor using PaddleOCR.
@@ -39,7 +40,7 @@ class OCRProcessor:
         Returns:
         - result (list): OCR results, each containing bounding boxes, text, and confidence scores.
     '''
-    def perform_ocr(self, frame, keywords):
+    def perform_ocr(self, frame, alt_name, keywords):
         has_keyword = False
         # Filter the results to include only texts containing the keyword
         filtered_boxes = []
@@ -72,7 +73,18 @@ class OCRProcessor:
 
             # Save the image
             with Processed_Screenshot.lock:
-                Processed_Screenshot.frames[Processed_Screenshot.index % 20] = frame
+                print("Attempting to add new frame")
+                Processed_Screenshot.frames.setdefault(alt_name, {}).update({datetime.now().strftime("%Y%m%d %H%M%S"): frame})
+                print("Added new frame in dictionary")
+                Processed_Screenshot.frames = {datetime.strptime(k, "%Y%m%d %H%M%S"): v for k, v in Processed_Screenshot.frames[alt_name].items()}
+                # Get the current time
+                now = datetime.now()
+                # Define the time threshold (5 minutes ago)
+                time_threshold = now - timedelta(minutes=5)
+                # Filter dictionary to keep only recent timestamps
+                print("Attempting to remove the expired frames")
+                Processed_Screenshot.frames = {k: v for k, v in Processed_Screenshot.frames.items() if k >= time_threshold}
+                print("Removed expired frames")
             # self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
             Processed_Screenshot.index += 1
         
@@ -92,10 +104,11 @@ class OCRProcessor:
                     if not processed:
                         # Convert the frame to RGB
                         screenshot = frame.get('current')
+                        alt_name = frame.get('alt_name')
                         frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
 
                         # Perform the OCR
-                        has_keyword = self.perform_ocr(frame_rgb, keywords)
+                        has_keyword = self.perform_ocr(frame_rgb, alt_name, keywords)
 
                         # Set to show that the frame has been processed
                         with Screenshot.lock:
@@ -106,6 +119,7 @@ class OCRProcessor:
                     else:
                         Screenshot.frames.remove(frame)
             except Exception as e:
+                traceback.print_exc()
                 print(f"OCR has encountered the exception: {e}")
             finally:
                 pass
