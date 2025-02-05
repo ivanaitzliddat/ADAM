@@ -7,6 +7,15 @@ ConfigHandler.init()
 
 
 '''
+### Loads (reads) the config file, if any. ###
+# If unable to read or file doesnt exist, auto create default config.
+# If able to read, proceeds to validate the config file.
+ConfigHandler.init()
+
+### Valides the config file. ###
+# If structure does not match default config, validation fails and (1) current config is renamed to old and (2) new default config is created.
+ConfigHandler.validate_config.()
+
 ### Check if this is a fresh setup of ADAM ###
 # Returns True if it is fresh setup
 if ConfigHandler.is_fresh_setup():
