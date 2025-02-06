@@ -474,7 +474,11 @@ class ConfigHandler:
                     print(f"usb_alt_name '{usb_alt_name}' already exists as an Input Device.")
                     return
             else:
-                new_device = "Input Device "+str(max(device_count)+1)
+                if device_count: 
+                    new_device = "Input Device "+str(max(device_count)+1)
+                else:
+                    new_device = "Input Device 0"
+                    
                 ConfigHandler.cp.add_section(new_device)
                 ConfigHandler.cp[new_device] = ConfigHandler.DEFAULT_CONFIG["Input Device 0"]
                 ConfigHandler.cp[new_device]["usb_alt_name"] = usb_alt_name
