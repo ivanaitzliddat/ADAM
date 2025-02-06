@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, font as tkFont
 import pyttsx3
 import pygame
-
+from config_handler import ConfigHandler
 
 class VideoCaptureSetupApp:
     def __init__(self, root):
@@ -119,9 +119,9 @@ class VideoCaptureSetupApp:
 
     def text_to_speech_with_audio(self, text, voice_gender="male", volume=5, speech_rate="normal", alert_sound="buzzer"):
         alert_sounds = {
-            "buzzer": r"C:\Users\user\Desktop\ADAM\Sound\alarm.mp3",
-            "alarm": r"C:\Users\user\Desktop\ADAM\Sound\buzzer.mp3",
-            "notification": r"C:\Users\user\Desktop\ADAM\Sound\notification.mp3",
+            "buzzer": ConfigHandler.dirname+"Sound\\alarm.mp3",
+            "alarm": ConfigHandler.dirname+"Sound\\buzzer.mp3",
+            "notification": ConfigHandler.dirname+"Sound\\notification.mp3",
         }
 
         sound_file = alert_sounds.get(alert_sound)
