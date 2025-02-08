@@ -68,6 +68,11 @@ ConfigHandler.save_config()
 ConfigHandler.set_cfg_input_device(usb_alt_name = "aaa", condition = "cond0", keywords = ["abc", "def"], bg_colour = "black")
 ConfigHandler.save_config()
 
+# Additional 'del_condition' and 'condition' kwarg can be used in conjunction to delete the specified condition.
+# If 'condition' is set to True, the function will ignore all kwargs except for 'usb_alt_name' and 'condition'.
+ConfigHandler.set_cfg_input_device(usb_alt_name = "aaa", condition = "cond0", del_condition = True, tts_text = "This kwarg will be ignored since del_condition is True.")
+ConfigHandler.save_config()
+
 
 ### Add new Input Device ###
 # This function requires MANDATORY usb_alt_name argument of String type.
