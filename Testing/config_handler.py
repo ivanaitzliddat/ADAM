@@ -372,14 +372,25 @@ class ConfigHandler:
     def set_cfg_input_device(**kwargs):
         usb_alt_name_arg = kwargs.get("usb_alt_name")
         condition_arg = kwargs.get("condition")
+        del_condition_arg = kwargs.get("del_condition")
         cfg_triggers_dict = {}
         initial_cfg_triggers_dict = {}
+        
         # Check if "usb_alt_name" is one of the kwargs and if its value is a String
         if isinstance(usb_alt_name_arg, str):
             # Loop through kwargs and do if the kwarg is not usb_alt_name and condition
-            for key, val in (temp for temp in kwargs.items() if ("usb_alt_name" not in temp and "condition" not in temp)):
+            for key, val in (temp for temp in kwargs.items() if ("usb_alt_name" not in temp and "condition" not in temp and "del_condition" not in temp)):
                 # Access [Input Device X] section that contains the specific "usb_alt_name" value
                 for section in (temp for temp in ConfigHandler.cp.sections() if (temp.startswith("Input Device ") and ConfigHandler.cp.get(temp, "usb_alt_name") == usb_alt_name_arg)):
+                    if del_condition_arg == True and condition_arg is not None:
+                        try:
+                            cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
+                        except:
+                            traceback.print_exc()
+                        print("Deleting condition '"+condition+"' - "+cfg_triggers_dict.pop(condition, "Condition not found."))
+                        ConfigHandler.cp[section]["triggers"] = str(cfg_triggers_dict)
+                        return # Exit function after deleting condition
+                        
                     try:
                         cfg_val = ast.literal_eval(val)
                         cfg_val_type = type(cfg_val)
