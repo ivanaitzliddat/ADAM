@@ -387,9 +387,13 @@ class ConfigHandler:
                             cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
                         except:
                             traceback.print_exc()
-                        print("Deleting condition '"+condition+"' - "+cfg_triggers_dict.pop(condition, "Condition not found."))
-                        ConfigHandler.cp[section]["triggers"] = str(cfg_triggers_dict)
-                        return # Exit function after deleting condition
+                        if len(cfg_triggers_dict) > 1:
+                            print("Deleting condition '"+condition+"' - "+cfg_triggers_dict.pop(condition, "Condition not found."))
+                            ConfigHandler.cp[section]["triggers"] = str(cfg_triggers_dict)
+                        else:
+                            tk_msgbox.showinfo("Unable to delete the last condition.",
+                                               "Deleting of a condition is not allowed if is the last remaining condition for an Input Device.")
+                        return # Exit function after attempt to delete condition
                         
                     try:
                         cfg_val = ast.literal_eval(val)
