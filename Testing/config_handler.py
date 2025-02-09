@@ -379,7 +379,7 @@ class ConfigHandler:
         # Check if "usb_alt_name" is one of the kwargs and if its value is a String
         if isinstance(usb_alt_name_arg, str):
             # Loop through kwargs and do if the kwarg is not usb_alt_name and condition
-            for key, val in (temp for temp in kwargs.items() if ("usb_alt_name" not in temp and "condition" not in temp and "del_condition" not in temp)):
+            for key, val in (temp for temp in kwargs.items() if ("usb_alt_name" not in temp and "condition" not in temp)):
                 # Access [Input Device X] section that contains the specific "usb_alt_name" value
                 for section in (temp for temp in ConfigHandler.cp.sections() if (temp.startswith("Input Device ") and ConfigHandler.cp.get(temp, "usb_alt_name") == usb_alt_name_arg)):
                     if del_condition_arg == True and condition_arg is not None:
