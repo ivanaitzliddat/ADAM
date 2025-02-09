@@ -65,11 +65,11 @@ ConfigHandler.set_cfg_input_device(usb_alt_name = "aaa", custom_name = "teletubb
 ConfigHandler.save_config()
 
 # Additional 'condition' kwarg can be used to set parameters only for the specified condition name, or to create new condition with that name.
-ConfigHandler.set_cfg_input_device(usb_alt_name = "aaa", condition = "cond0", keywords = ["abc", "def"], bg_colour = "black")
+ConfigHandler.set_cfg_input_device(usb_alt_name = "aaa", condition = "cond0", custom_name = "this is a custom name :)", keywords = ["word1", "word2"], bg_colour = "black")
 ConfigHandler.save_config()
 
 # Additional 'del_condition' and 'condition' kwarg can be used in conjunction to delete the specified condition.
-# If 'condition' is set to True, the function will ignore all kwargs except for 'usb_alt_name' and 'condition'.
+# If 'del_condition' is set to True, the function will ignore all kwargs except for 'usb_alt_name' and 'condition'.
 ConfigHandler.set_cfg_input_device(usb_alt_name = "aaa", condition = "cond0", del_condition = True, tts_text = "This kwarg will be ignored since del_condition is True.")
 ConfigHandler.save_config()
 
