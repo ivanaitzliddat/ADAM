@@ -12,7 +12,7 @@ class TTS:
     lock = threading.Lock()
 
     def __init__(self):
-        self.settings = ConfigHandler.get_TTS_settings()
+        self.settings = ConfigHandler.get_cfg_tts()
         if not self.settings["tts_enabled"]:
             print("TTS is not enabled!")
             return
