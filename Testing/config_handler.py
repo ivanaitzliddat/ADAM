@@ -250,6 +250,34 @@ class ConfigHandler:
         if "TTS" in ConfigHandler.cp.sections():
             return {key: value for key, value in ConfigHandler.cp["TTS"].items()}
         return {}
+    
+    # Returns all options and values in [Input Device X] section as a dictionary.
+    @staticmethod
+    def get_cfg_input_devices_temp(**kwargs):
+        return{
+            "Input Device 0": {
+            "usb_alt_name": "",
+            "custom_name": "",
+            "triggers": {
+                "cond0": {
+                    "keywords": ["keyword 1", "keyword 2"],
+                    "tts_text": "hello",
+                    "bg_colour": "RED"
+                }
+            }
+        },
+        "Input Device 1": {
+            "usb_alt_name": "Device 1",
+            "custom_name": "Custom Device 1",
+            "triggers": {
+                "cond1": {
+                    "keywords": ["keyword 3", "keyword 4"],
+                    "tts_text": "goodbye",
+                    "bg_colour": "BLUE"
+                }
+            }
+        }
+    }
 
     # Returns all options and values in [Input Device X] section as a dictionary.
     @staticmethod

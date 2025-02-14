@@ -6,7 +6,7 @@ import imageio.v3 as iio
 from subthread_config import Thread_Config
 from screenshots import Screenshot
 from messages import MessageQueue
-from imageio.plugins.devices import Devices
+#from imageio.plugins.devices import Devices
 from config_handler import ConfigHandler
 
 '''
