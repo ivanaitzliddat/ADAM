@@ -2,7 +2,7 @@ import time
 import traceback
 import cv2
 import numpy as np
-from paddleocr import PaddleOCR, draw_ocr
+from paddleocr import PaddleOCR
 from screenshots import Screenshot
 from processed_screenshot import Processed_Screenshot
 from config_handler import ConfigHandler
@@ -25,6 +25,123 @@ class OCRProcessor:
         self.font_path = font_path
 
     '''
+        Iterates through the frames that were captured previously and runs the OCR.
+    '''
+    def run(self):
+        while Thread_Config.running:
+            time.sleep(3)
+            try:
+                self.interate_screenshots()
+            except Exception as e:
+                traceback.print_exc()
+                print(f"OCR has encountered the exception: {e}")
+            finally:
+                pass
+        print("OCR Processor has ended.")
+
+    '''
+        Iterate through the screenshots captured and process a particular frame.
+    '''
+    def interate_screenshots(self):
+        temp_index = 0
+        for frame in Screenshot.frames:
+            self.process_frame(frame)
+            temp_index += 1
+
+    '''
+    Process a particular frame by getting the triggers tagged to the particular capture cards
+    '''
+    def process_frame(self, frame):
+        # Check if the frame is new
+        processed = frame.get('processed')
+        if not processed:
+            # Convert the frame to RGB
+            frame_rgb = self.convert_frame(frame)
+            # Get alt_name to find the relevant triggers
+            self.perform_ocr_using_triggers(frame, frame_rgb)
+        else:
+            with Screenshot.lock:
+                Screenshot.frames.remove(frame)
+
+    '''
+        Converts the frame to allow the processing of frame using imageio.
+    '''
+    def convert_frame(self, frame):
+        screenshot = frame.get('current')
+        frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
+        return frame_rgb
+
+    '''
+        Iterate through the triggers that are tagged to the capture cards and process via the conditions.
+    '''
+    def perform_ocr_using_triggers(self, frame, frame_rgb):
+        alt_name = frame.get('alt_name')
+        keywords_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = alt_name)
+        if not bool(keywords_dict):
+            print("The keywords dictionary is empty.")
+        else:
+            self.perform_ocr_using_conditions(frame, frame_rgb, alt_name, keywords_dict)
+    
+    '''
+        Obtain the keyword list from the conditions and perform the actual OCR using the keyword list.
+    '''
+    def perform_ocr_using_conditions(self, frame, frame_rgb, alt_name, keywords_dict):
+        for key, val in keywords_dict.items():
+            for condition in val["triggers"]:
+                keyword_list = val["triggers"][condition]["keywords"]
+
+                # Perform the OCR
+                has_keyword = self.perform_ocr(frame_rgb, alt_name, keyword_list)
+
+                # Set to show that the frame has been processed
+                with Screenshot.lock:
+                    frame['processed'] = True
+
+                if not has_keyword:
+                    print("No keywords Found.")
+
+    '''
+        Performs OCR on a given frame using the keyword list provided.
+    '''
+    def perform_ocr(self, frame, alt_name, keywords):
+        has_keyword = False
+        result = self.ocr.ocr(frame, cls=True)
+        # Display OCR results that contain the keywords
+        if not None in result:
+            has_keyword = self.iterate_line_in_screenshot(frame, keywords, alt_name, result)
+        return has_keyword
+    '''
+        Disect the screenshot by looking through the words identified line by line.
+    '''
+    def iterate_line_in_screenshot(self, frame, keywords, alt_name, result):
+        for line in result:
+            for box, (text, score) in line:
+                has_keyword = self.search_keywords_in_line(frame, keywords, alt_name, box, text, score)
+        return has_keyword
+    
+    '''
+        Search for the keywords in a single line.
+    '''
+    def search_keywords_in_line(self, frame, keywords, alt_name, box, text, score):
+        # Filter the results to include only texts containing the keyword
+        filtered_boxes = []
+        filtered_texts = []
+        filtered_scores = []
+        identified_keyword = all(keyword.lower() in text.lower() for keyword in keywords)
+        if identified_keyword:
+            filtered_boxes.append(box)
+            filtered_texts.append(text)
+            filtered_scores.append(score)
+            self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {text} has been detected.", "Test"))
+        if identified_keyword:
+            # Draw filtered OCR results on the image
+            self.draw_boxes(frame, filtered_boxes)
+
+            # Save the image
+            self.save_processed_screenshot(frame, alt_name)
+        return identified_keyword
+
+    '''
         Adds the message to queue and sends it to the GUI.
     '''
     def send_message(self, message):
@@ -32,95 +149,25 @@ class OCRProcessor:
             MessageQueue.status_queue.put(message)
 
     '''
-        Performs OCR on a given frame.
-
-        Parameters:
-        - frame (np.ndarray): The frame to perform OCR on, in RGB format.
-
-        Returns:
-        - result (list): OCR results, each containing bounding boxes, text, and confidence scores.
+        Draw boxes around the identified keywords
     '''
-    def perform_ocr(self, frame, alt_name, keywords):
-        has_keyword = False
-        # Filter the results to include only texts containing the keyword
-        filtered_boxes = []
-        filtered_texts = []
-        filtered_scores = []
-        print("Performing OCR...")
-        result = self.ocr.ocr(frame, cls=True)
-
-        # Display OCR results that contain the keyword "monitor"
-        if not None in result:
-            for line in result:
-                for box, (text, score) in line:
-                    for keyword in keywords:
-                        if keyword.lower() in text.lower():  # Case-insensitive search
-                            has_keyword = True
-                            if text not in filtered_texts:
-                                self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {text} has been detected.", Processed_Screenshot.index % 20))
-                                filtered_boxes.append(box)
-                                filtered_texts.append(text)
-                                filtered_scores.append(score)
-        
-        if has_keyword:
-            # Draw filtered OCR results on the image
-            for box in filtered_boxes:
+    def draw_boxes(self, frame, filtered_boxes):
+        for box in filtered_boxes:
                 # Convert the box points to integers
-                points = np.array(box, dtype=np.int32)
+            points = np.array(box, dtype=np.int32)
                 # Draw the polygon
-                cv2.polylines(frame, [points], isClosed=True, color=(0, 0, 255), thickness=2)
-            # image_with_boxes = draw_ocr(frame, filtered_boxes, filtered_texts, filtered_scores, font_path=self.font_path)
+            cv2.polylines(frame, [points], isClosed=True, color=(0, 0, 255), thickness=2)
 
-            # Save the image
-            with Processed_Screenshot.lock:
-                print("Attempting to add new frame")
-                Processed_Screenshot.frames.setdefault(alt_name, {}).update({datetime.now().strftime("%Y%m%d %H%M%S"): frame})
-                print("Added new frame in dictionary")
-                Processed_Screenshot.frames = {datetime.strptime(k, "%Y%m%d %H%M%S"): v for k, v in Processed_Screenshot.frames[alt_name].items()}
+    '''
+        Save the screenshots in the Processed Screenshot list.
+    '''
+    def save_processed_screenshot(self, frame, alt_name):
+        with Processed_Screenshot.lock:
+            Processed_Screenshot.frames.setdefault(alt_name, {}).update({datetime.now().strftime("%Y%m%d %H%M%S"): frame})
+            Processed_Screenshot.frames = {datetime.strptime(k, "%Y%m%d %H%M%S"): v for k, v in Processed_Screenshot.frames[alt_name].items()}
                 # Get the current time
-                now = datetime.now()
+            now = datetime.now()
                 # Define the time threshold (5 minutes ago)
-                time_threshold = now - timedelta(minutes=5)
+            time_threshold = now - timedelta(minutes=5)
                 # Filter dictionary to keep only recent timestamps
-                print("Attempting to remove the expired frames")
-                Processed_Screenshot.frames = {k: v for k, v in Processed_Screenshot.frames.items() if k >= time_threshold}
-                print("Removed expired frames")
-            # self.send_message((f"[{datetime.now().replace(microsecond=0)}] Alert: {filtered_texts} has been detected.", Processed_Screenshot.index % 20))
-            Processed_Screenshot.index += 1
-        
-        return has_keyword
-
-    '''
-        Iterates through the frames that were captured previously and runs the OCR.
-    '''
-    def run(self):
-        while Thread_Config.running:
-            time.sleep(3)
-            keywords = ConfigHandler.get_list("Settings", "keywords")
-            try:
-                for frame in Screenshot.frames:
-                    # Check if the frame is new
-                    processed = frame.get('processed')
-                    if not processed:
-                        # Convert the frame to RGB
-                        screenshot = frame.get('current')
-                        alt_name = frame.get('alt_name')
-                        frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
-
-                        # Perform the OCR
-                        has_keyword = self.perform_ocr(frame_rgb, alt_name, keywords)
-
-                        # Set to show that the frame has been processed
-                        with Screenshot.lock:
-                            frame['processed'] = True
-
-                        if not has_keyword:
-                            print("No keywords Found.")
-                    else:
-                        Screenshot.frames.remove(frame)
-            except Exception as e:
-                traceback.print_exc()
-                print(f"OCR has encountered the exception: {e}")
-            finally:
-                pass
-        print("OCR Processor has ended.")
+            Processed_Screenshot.frames = {k: v for k, v in Processed_Screenshot.frames.items() if k >= time_threshold}
