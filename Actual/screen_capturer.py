@@ -6,7 +6,7 @@ import imageio.v3 as iio
 from subthread_config import Thread_Config
 from screenshots import Screenshot
 from messages import MessageQueue
-from imageio.plugins.devices import Devices
+from imageio.plugins.deviceslist import DevicesList
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -23,13 +23,13 @@ class ScreenCapturer:
         while Thread_Config.running:
             time.sleep(3)
             i = 0
-            num_of_devices = len(Devices.device_list)
+            num_of_devices = len(DevicesList.device_list)
 
             if num_of_devices == 0:
                 print("The number of devices is 0.")
                 try:
                     generator = next(iio.imiter(f"<video{i}>"))
-                    num_of_devices = len(Devices.device_list)
+                    num_of_devices = len(DevicesList.device_list)
                     print("Ran the imiter once and the generator the new number of devices is", num_of_devices)
                 except Exception as e:
                     print(f"Unable to identify any video inputs. Exited with error: {e}")
@@ -40,7 +40,7 @@ class ScreenCapturer:
 
                 try:
                     generator = next(iio.imiter(f"<video{i}>"))
-                    alt_name = Devices.device_list[i]
+                    alt_name = DevicesList.device_list[i]
                     frame = {
                                 'current': generator,
                                 'processed': False,
