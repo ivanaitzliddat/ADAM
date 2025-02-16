@@ -72,8 +72,8 @@ class AlertsPage(tk.Frame):
 
         # Create a Treeview widget with three columns
         self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message"), show="headings")
-        self.treeview.heading("Date & Time", text="Date")
-        self.treeview.heading("Device", text="Time")
+        self.treeview.heading("Date & Time", text="Date & Time")
+        self.treeview.heading("Device", text="Device")
         self.treeview.heading("TTS Message", text="TTS Message")
 
         # Add a vertical scrollbar for the Treeview
@@ -245,14 +245,16 @@ class AlertsPage(tk.Frame):
     
     def on_row_click(self, event):
         selected_item = self.treeview.selection()[0]
-        print("selected item" + selected_item)
-        index = int(self.treeview.item(selected_item, "tags")[0])
-        print("index" + str(index))
-        self.on_message_click(index)
+        item_data = self.treeview.item(selected_item)
+        column_values = item_data['values']
+        date_time = column_values[0]
+        alt_name = column_values[1] 
+        tts_message = column_values[2]
+        self.on_message_click(alt_name, date_time)
 
-    def on_message_click(self, image_index):
+    def on_message_click(self, alt_name, date_time):
         with Processed_Screenshot.lock:
-            image_with_boxes = Processed_Screenshot.frames[image_index]
+            image_with_boxes = Processed_Screenshot.frames[alt_name][date_time]
             sharpened_image = AlertsPage.sharpen_image(image_with_boxes)
             # Convert image to Tkinter-compatible format
             pil_image = Image.fromarray(sharpened_image)
