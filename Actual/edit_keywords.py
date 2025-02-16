@@ -4,7 +4,6 @@ from config_handler import ConfigHandler
 
 class EditKeywordsPage:
     def __init__(self, root, usb_alt_name, condition, keywords, callback):
-        ConfigHandler.init()
         self.root = root
         self.root.geometry("1000x500")
         self.usb_alt_name = usb_alt_name

@@ -3,7 +3,6 @@ from config_handler import ConfigHandler
 
 class edit_bg_colour_page:
     def __init__(self, root, usb_alt_name, condition, bg_colour, callback):
-        ConfigHandler.init()
         self.root = root
         self.root.geometry("900x700")
         self.usb_alt_name = usb_alt_name

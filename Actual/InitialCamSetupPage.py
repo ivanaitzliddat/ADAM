@@ -21,8 +21,6 @@ class InitialVideoCaptureSetup:
         self.root.state("zoomed")
         self.root.configure(bg=BG_COLOUR)
 
-        ConfigHandler.init() #for testing purposes, to be removed once done
-
         #Prevent user from resizing this window
         self.root.resizable(False,False)   
 

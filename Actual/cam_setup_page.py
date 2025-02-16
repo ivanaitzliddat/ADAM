@@ -19,7 +19,6 @@ class VideoCaptureSetupApp(tk.Frame):
     def __init__(self, parent):
 
         super().__init__(parent,bg=BG_COLOUR)
-        ConfigHandler.init() #for testing purposes, to be removed once done
         # Create the main frame
         self.frame = tk.Frame(self, bg=BG_COLOUR)
         self.frame.pack(pady=20)
