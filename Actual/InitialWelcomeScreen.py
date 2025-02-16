@@ -4,7 +4,7 @@ from tkinter import *
 from threading import Thread
 from PIL import Image, ImageTk 
 from tkinter import font as tkFont
-from InitialCamSetupPage import Initial_video_capture_setup
+from InitialCamSetupPage import InitialVideoCaptureSetup
 from config_handler import ConfigHandler
 
 TEXT_COLOUR = "#000000"
@@ -157,7 +157,7 @@ class welcomeScreen:
     def open_video_capture_setup_page(self):
         # This method will open the VideoCaptureSetupApp window
         self.root.destroy()  # Close the current window
-        Initial_video_capture_setup.start_video_capture_setup()
+        InitialVideoCaptureSetup().start_video_capture_setup()
         
         
         #new_root = tk.Tk()  # Create a new window

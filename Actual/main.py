@@ -1,9 +1,10 @@
 from screen_capturer import ScreenCapturer
 from paddle_ocr import OCRProcessor
-from TTS import TTS
-from gui import ADAM
 from subthread_config import Thread_Config
 from config_handler import ConfigHandler
+from InitialWelcomeScreen import welcomeScreen
+from TTS import TTS
+from gui import ADAM
 import threading
 import signal
 
@@ -36,6 +37,26 @@ def start_TTS():
         tts.run()
     except Exception as e:
         print(f"TTS encountered an error: {e}")
+
+'''
+    Starts the ADAM GUI application.
+'''
+def check_if_fresh_setup():
+    if ConfigHandler.is_fresh_setup():
+        number_of_devices = ScreenCapturer.get_usb_video_devices_new()
+    
+        ConfigHandler.del_input_device(usb_alt_name = "")
+        number_of_devices = 3 #temporary - assume 3 connected devices
+
+        for i in range(number_of_devices):
+                #for testing purposes, the expected usb_alt_name should be the actual alt name provided by WMIC instead of ""
+            ConfigHandler.add_input_device(f"device{i}") #to replace with the actual alt device name
+        
+        ConfigHandler.save_config() #save the config file
+        #proceed to the function start_welcome_screen() in InitialWelcomeScreen.py
+        welcomeScreen.start_welcome_screen()
+    else:
+        run_ADAM()
 
 '''
     Starts the ADAM GUI application.
@@ -75,7 +96,7 @@ if __name__ == "__main__":
 
     # Start the GUI
     try:
-        run_ADAM()
+        check_if_fresh_setup()
     except Exception as e:
         print(f"ADAM has failed to run with exception: {e}")
 

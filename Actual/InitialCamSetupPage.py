@@ -13,7 +13,7 @@ FRAME_COLOUR = "#508991"
 GRAB_ATTENTION_COLOUR_1 ="#FF934F"
 GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
-class Initial_video_capture_setup:
+class InitialVideoCaptureSetup:
     def __init__(self, root):
         self.root = root
         self.root.title("Video Capture Card Configuration")
@@ -228,7 +228,7 @@ class Initial_video_capture_setup:
 
     def start_video_capture_setup():
         root = tk.Tk()
-        app = Initial_video_capture_setup(root)
+        app = InitialVideoCaptureSetup()(root)
         root.mainloop()
 
     if __name__ == "__main__":

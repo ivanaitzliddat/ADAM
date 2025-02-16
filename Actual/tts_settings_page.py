@@ -2,84 +2,102 @@ import tkinter as tk
 from tkinter import ttk, font as tkFont
 import pyttsx3
 import pygame
-from config_handler import ConfigHandler 
+from config_handler import ConfigHandler
 
+#o request config ini to store the following theme colours:
+TEXT_COLOUR = "#000000"
+BG_COLOUR = "#DCE0D9"
+FRAME_COLOUR = "#508991"
+GRAB_ATTENTION_COLOUR_1 ="#FF934F"
+GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
-class TTSSettingsPage(tk.Frame):
+class TTS_setup_page(tk.Frame):
     def __init__(self, parent):
-        super().__init__(parent, bg="white")
-        self.parent = parent
 
-        self.create_widgets()
+        super().__init__(parent,bg=BG_COLOUR)
+        #ConfigHandler.init() #for testing purposes, to be removed once done
 
-    def create_widgets(self):
-        # Set the window title
-        self.title_label = tk.Label(self, text="Configure Text-to-Speech Settings", font=("Malgun Gothic Semilight", 38))
-        self.title_label.pack(pady=20)
+        # Create the main frame
+        self.frame = tk.Frame(self, bg=BG_COLOUR)
+        self.frame.pack(pady=20)
+
+        # Create rows
+        self.first_row = tk.Frame(self.frame, bg=BG_COLOUR)
+        self.first_row.pack(fill="both")
+
+        self.second_row = tk.Frame(self.frame, bg=BG_COLOUR)
+        self.second_row.pack(fill="both")
+
+        self.third_row = tk.Frame(self.frame, bg=BG_COLOUR)
+        self.third_row.pack(fill="both")
+
+        # Logo (First Row)
+        tk.Label(
+            self.first_row,
+            text="Text-to-Speech Settings",
+            font=("Malgun Gothic Semilight", 38),
+            bg=BG_COLOUR
+        ).pack()
+        tk.Label(
+            self.first_row,
+            text="Please customise the parameters below",
+            font=("Malgun Gothic Semilight", 16),
+            bg=BG_COLOUR
+        ).pack()
+
+        # Row 1: Voice and Alert Options
+        self.row1_frame = tk.Frame(self.second_row, pady=10, bg=BG_COLOUR)
+        self.row1_frame.grid(row=0, column=0, sticky="ew")
 
         # Voice Gender
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Voice Gender:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
         self.voice_gender_var = tk.StringVar(value="male")
-        self.voice_gender_label = tk.Label(self, text="Voice Gender:")
-        self.voice_gender_label.pack(pady=5)
-        self.voice_gender_combo = ttk.Combobox(self, textvariable=self.voice_gender_var, values=["male", "female"], state="readonly")
-        self.voice_gender_combo.pack(pady=5)
+        ttk.Combobox(
+            self.row1_frame, textvariable=self.voice_gender_var, values=["male", "female"], state="readonly"
+        ).grid(row=0, column=1, padx=5, pady=5)
 
         # Volume
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Volume (1-10):").grid(row=0, column=2, padx=5, pady=5, sticky="w")
         self.volume_var = tk.StringVar(value="5")
-        self.volume_label = tk.Label(self, text="Volume (1-10):")
-        self.volume_label.pack(pady=5)
-        self.volume_spinbox = tk.Spinbox(self, from_=1, to=10, textvariable=self.volume_var, width=5)
-        self.volume_spinbox.pack(pady=5)
+        tk.Spinbox(self.row1_frame, from_=1, to=10, textvariable=self.volume_var, width=5).grid(
+            row=0, column=3, padx=5, pady=5
+        )
 
         # Speech Rate
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Speech Rate:").grid(row=0, column=4, padx=5, pady=5, sticky="w")
         self.speech_rate_var = tk.StringVar(value="normal")
-        self.speech_rate_label = tk.Label(self, text="Speech Rate:")
-        self.speech_rate_label.pack(pady=5)
-        self.speech_rate_combo = ttk.Combobox(self, textvariable=self.speech_rate_var, values=["slow", "normal", "fast"], state="readonly")
-        self.speech_rate_combo.pack(pady=5)
-
-        # Repeat No. Of Times
-        self.repeat_var = tk.StringVar(value="1")
-        self.repeat_label = tk.Label(self, text="Repeat (1-3):")
-        self.repeat_label.pack(pady=5)
-        self.repeat_spinbox = tk.Spinbox(self, from_=1, to=3, textvariable=self.repeat_var, width=5)
-        self.repeat_spinbox.pack(pady=5)
+        ttk.Combobox(
+            self.row1_frame, textvariable=self.speech_rate_var, values=["slow", "normal", "fast"], state="readonly"
+        ).grid(row=0, column=5, padx=5, pady=5)
 
         # Alert Sound
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Alert Sound:").grid(row=0, column=6, padx=5, pady=5, sticky="w")
         self.alert_sound_var = tk.StringVar(value="buzzer")
-        self.alert_sound_label = tk.Label(self, text="Alert Sound:")
-        self.alert_sound_label.pack(pady=5)
-        self.alert_sound_combo = ttk.Combobox(self, textvariable=self.alert_sound_var, values=["buzzer", "alarm", "notification"], state="readonly")
-        self.alert_sound_combo.pack(pady=5)
+        ttk.Combobox(
+            self.row1_frame,
+            textvariable=self.alert_sound_var,
+            values=["buzzer", "alarm", "notification"],
+            state="readonly",
+        ).grid(row=0, column=7, padx=5, pady=5)
 
-        # Message Input
-        self.message_label = tk.Label(self, text="Message:")
-        self.message_label.pack(pady=5)
-        self.text_input = tk.Entry(self, width=50)
-        self.text_input.pack(pady=5)
+        # Row 2: Text Input and Simulate Button
+        row2_frame = tk.Frame(self.second_row, pady=10, bg=BG_COLOUR)
+        row2_frame.grid(row=1, column=0, sticky="ew")
+
+        # Text Input
+        tk.Label(row2_frame, bg=BG_COLOUR, text="Message:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        self.text_input = tk.Entry(row2_frame, width=50)
+        self.text_input.grid(row=0, column=1, padx=5, pady=5)
 
         # Simulate Button
-        self.simulate_button = tk.Button(self, text="Simulate", command=self.simulate_alert)
-        self.simulate_button.pack(pady=20)
+        tk.Button(row2_frame, bg=BG_COLOUR, text="Simulate", command=self.simulate_alert).grid(
+            row=0, column=2, padx=5, pady=5
+        )
 
         # Save button (Third Row)
         save_button_font = tkFont.Font(family="Helvetica", size=26, weight="bold")
-        self.save_button_font = tk.Button(self, text="Save", font=save_button_font, command=self.edit_tts_settings)
+        self.save_button_font = tk.Button(self.third_row, text="Save", font=save_button_font, command=lambda: self.save_tts_settings())
         self.save_button_font.pack(pady=10)
-
-    def edit_tts_settings(self):
-        self.existing_tts_settings = ConfigHandler.get_TTS_settings()
-        # print(self.existing_tts_settings)
-        ConfigHandler.edit_list_item("TTS Settings", "gender", self.existing_tts_settings["gender"], self.voice_gender_var.get())
-        ConfigHandler.edit_list_item("TTS Settings", "volume", self.existing_tts_settings["volume"], self.volume_var.get())
-        if(self.speech_rate_var.get() == "slow"):
-            ConfigHandler.edit_list_item("TTS Settings", "rate", self.existing_tts_settings["rate"], "25")
-        elif(self.speech_rate_var.get() == "normal"):
-            ConfigHandler.edit_list_item("TTS Settings", "rate", self.existing_tts_settings["rate"], "50")
-        elif(self.speech_rate_var.get() == "fast"):
-            ConfigHandler.edit_list_item("TTS Settings", "rate", self.existing_tts_settings["rate"], "75")
-        ConfigHandler.edit_list_item("TTS Settings", "repeat", self.existing_tts_settings["repeat"], self.repeat_var.get())
-
 
     def play_audio_alert(self, sound_file):
         pygame.mixer.init()
@@ -93,15 +111,14 @@ class TTSSettingsPage(tk.Frame):
         voice_gender = self.voice_gender_var.get()
         volume = int(self.volume_var.get())
         speech_rate = self.speech_rate_var.get()
-        alert_sound = self.alert_sound_var.get()
-
+        alert_sound = self.alert_sound_var.get()        
         self.text_to_speech_with_audio(text, voice_gender, volume, speech_rate, alert_sound)
 
     def text_to_speech_with_audio(self, text, voice_gender="male", volume=5, speech_rate="normal", alert_sound="buzzer"):
         alert_sounds = {
-            "buzzer": r"C:\Users\user\Desktop\ADAM\Sound\alarm.mp3",
-            "alarm": r"C:\Users\user\Desktop\ADAM\Sound\buzzer.mp3",
-            "notification": r"C:\Users\user\Desktop\ADAM\Sound\notification.mp3",
+            "buzzer": ConfigHandler.dirname()+"Sound\\alarm.mp3",
+            "alarm": ConfigHandler.dirname()+"Sound\\buzzer.mp3",
+            "notification": ConfigHandler.dirname()+"Sound\\notification.mp3",
         }
 
         sound_file = alert_sounds.get(alert_sound)
@@ -117,3 +134,19 @@ class TTSSettingsPage(tk.Frame):
 
         engine.say(text)
         engine.runAndWait()
+
+    def save_tts_settings(self):
+        for widget in self.row1_frame.winfo_children():
+            #check if the widget is an Entry widget
+            if isinstance(widget, tk.Entry):
+                #check if the entry is not empty
+                print(widget.get())
+            if isinstance(widget,tk.Spinbox):
+                print(widget.get())
+                
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TTS_setup_page(root, lambda page: print(f"switch to {page}"))
+    app.pack(fill="both", expand = True)
+    root.mainloop()
