@@ -71,10 +71,10 @@ class AlertsPage(tk.Frame):
         clear_button.pack(side="left", padx=5, pady=5)
 
         # Create a Treeview widget with three columns
-        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "Text to Speech"), show="headings")
-        self.treeview.heading("Date", text="Date")
-        self.treeview.heading("Time", text="Time")
-        self.treeview.heading("Message", text="Message")
+        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message"), show="headings")
+        self.treeview.heading("Date & Time", text="Date")
+        self.treeview.heading("Device", text="Time")
+        self.treeview.heading("TTS Message", text="TTS Message")
 
         # Add a vertical scrollbar for the Treeview
         self.scrollbar = ttk.Scrollbar(self.bottom_frame, orient="vertical", command=self.treeview.yview)
@@ -91,6 +91,7 @@ class AlertsPage(tk.Frame):
         self.frontend_messages_with_index = {}
         self.filtered_frontend_messages_with_index = {}
 
+ ################## Old Code for clickable buttons in list ##############################
         # # Create a canvas to contain the scrollable content
         # self.canvas = tk.Canvas(self.bottom_frame, bg="white", bd=2, relief="solid")
         # self.canvas.pack(side="left", fill=tk.BOTH, expand=True)
@@ -104,8 +105,9 @@ class AlertsPage(tk.Frame):
         # self.message_frame = tk.Frame(self.canvas)
         # self.canvas.create_window((0, 0), window=self.message_frame, anchor="nw")
 
-        # # Update the scrollable region whenever the frame size changes
+        # Update the scrollable region whenever the frame size changes
         # self.message_frame.bind("<Configure>", self.on_frame_configure)
+#######################################################################################
 
     # Function to load and resize an image to the given width and height
     def load_resized_icon(self, image_path, width, height):
@@ -161,6 +163,7 @@ class AlertsPage(tk.Frame):
         self.after(5000, self.poll_for_device_changes)
 
     def append_message(self, message):
+################### Old Code for clickable events in list #######################################
         # # Create a label for each message and make it clickable
         # clickable_label = tk.Label(self.message_frame, text=message, fg="blue", cursor="hand2", font=("Arial", 12),relief="solid", bd=1, padx=10, pady=5, anchor="w")
         # clickable_label.pack(padx=5, pady=5, fill="x")
@@ -168,7 +171,7 @@ class AlertsPage(tk.Frame):
         # # Bind the label to call on_message_click when clicked
         # # clickable_label.bind("<Button-1>", lambda event, msg=message: self.on_message_click(msg))
         # clickable_label.bind("<Button-1>", lambda event, idx=index: self.on_message_click(idx))
-        #---------------------------------------------------------------#
+#################################################################################################
         # Using new treeview, above code is for older listbox
         # print('message' + message)
         # self.frontend_messages_with_index[index] = message
