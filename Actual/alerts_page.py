@@ -138,7 +138,7 @@ class AlertsPage(tk.Frame):
     #Fetch device changes and update the display every 5 seconds
     def poll_for_device_changes(self):
         # Fetch the latest custom_names from ConfigHandler
-        device_details = ConfigHandler.get_cfg_input_devices_temp()
+        device_details = ConfigHandler.get_cfg_input_devices()
         new_custom_names = [device["custom_name"] for device in device_details.values()]
 
         # Compare the old custom_names with the new list
