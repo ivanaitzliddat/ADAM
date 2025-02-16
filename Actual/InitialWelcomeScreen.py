@@ -64,14 +64,14 @@ class welcomeScreen:
         self.right_frame.pack(side="left", expand=True, pady=10, padx=(0,20))
 
         # Load images
-        #ConfigHandler.dirname returning "". to address the issue then amend the directory again
-        #self.left_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
-        #self.middle_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
-        #self.right_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
+        # ConfigHandler.dirname returning "". to address the issue then amend the directory again
+        self.left_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
+        self.middle_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
+        self.right_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
 
-        self.left_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
-        self.middle_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
-        self.right_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
+        # self.left_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
+        # self.middle_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
+        # self.right_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
 
 
         #info in left_frame

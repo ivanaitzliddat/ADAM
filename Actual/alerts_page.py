@@ -71,7 +71,7 @@ class AlertsPage(tk.Frame):
         clear_button.pack(side="left", padx=5, pady=5)
 
         # Create a Treeview widget with three columns
-        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date", "Time", "Message"), show="headings")
+        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "Text to Speech"), show="headings")
         self.treeview.heading("Date", text="Date")
         self.treeview.heading("Time", text="Time")
         self.treeview.heading("Message", text="Message")
@@ -160,7 +160,7 @@ class AlertsPage(tk.Frame):
         # Schedule the next call to poll_for_device_changes after 5000ms (5 seconds)
         self.after(5000, self.poll_for_device_changes)
 
-    def append_message(self, message, index):
+    def append_message(self, message):
         # # Create a label for each message and make it clickable
         # clickable_label = tk.Label(self.message_frame, text=message, fg="blue", cursor="hand2", font=("Arial", 12),relief="solid", bd=1, padx=10, pady=5, anchor="w")
         # clickable_label.pack(padx=5, pady=5, fill="x")
@@ -170,24 +170,14 @@ class AlertsPage(tk.Frame):
         # clickable_label.bind("<Button-1>", lambda event, idx=index: self.on_message_click(idx))
         #---------------------------------------------------------------#
         # Using new treeview, above code is for older listbox
-        print('index' + str(index))
-        print('message' + message)
-        self.frontend_messages_with_index[index] = message
-        for item in self.frontend_messages_with_index:
-            print(item)
-        date, time, message_text = self.process_message(message)
+        # print('message' + message)
+        # self.frontend_messages_with_index[index] = message
+        # for item in self.frontend_messages_with_index:
+        #     print(item)
+        date_time, alt_name, tts_text = message
         # Insert the parsed message into the Treeview
-        self.treeview.insert("", "end", values=(date, time, message_text),tags=(index,))
-
-    def process_message(self, message):
-        # Step 1: Parse the message into date, time, and remaining text
-        date_time_part, message_part = message.split(']', 1)
-        # Step 2: Clean the date_time_part and split it by space to get date and time
-        date_time_part = date_time_part[1:]  # Remove the leading '['
-        date, time = date_time_part.split(' ')
-        # Step 3: Clean the message part (remove leading spaces)
-        message_text = message_part.strip()
-        return date, time, message_text
+        #self.treeview.insert("", "end", values=(date_time, alt_name, tts_text),tags=(index,))
+        self.treeview.insert("", "end", values=(date_time, alt_name, tts_text))
     
     def apply_filters(self):
         """ Function to apply the filters based on the entries """
