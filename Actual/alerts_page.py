@@ -6,7 +6,7 @@ from PIL import Image, ImageTk
 from config_handler import ConfigHandler
 from processed_screenshot import Processed_Screenshot
 from tkinter import ttk
-from tkinter import PhotoImage
+import os
 
 class AlertsPage(tk.Frame):
     def __init__(self, parent):
@@ -33,8 +33,9 @@ class AlertsPage(tk.Frame):
         self.bottom_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
         # Load and resize monitor icons
-        self.green_icon = self.load_resized_icon(r"C:\Users\user\Desktop\ADAM\Images\green monitor.png", 50, 50)  # Resize to 50x50 pixels
-        self.red_icon = self.load_resized_icon(r"C:\Users\user\Desktop\ADAM\Images\red monitor.png", 50, 50)  # Resize to 50x50 pixels
+        print("The current dirname is:", ConfigHandler.dirname)
+        self.green_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "green_monitor.png"), 50, 50)  # Resize to 50x50 pixels
+        self.red_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "red_monitor.png"), 50, 50)  # Resize to 50x50 pixels
 
         # Start polling for device changes (first call after initialization)
         self.poll_for_device_changes()
