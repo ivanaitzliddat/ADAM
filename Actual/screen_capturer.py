@@ -15,6 +15,13 @@ class ScreenCapturer:
     available_devices = []
     lock = threading.Lock()
 
+    def get_num_of_devices():
+        try:
+            generator = next(iio.imiter(f"<video0>"))
+        except Exception as e:
+            print(f"Unable to identify any video inputs. Exited with error: {e}")
+        return len(DevicesList.device_list)
+
     '''
         Iterates through the list of available devices and captures a screenshot for every device and saves it in a folder.
     '''
@@ -26,13 +33,7 @@ class ScreenCapturer:
             num_of_devices = len(DevicesList.device_list)
 
             if num_of_devices == 0:
-                print("The number of devices is 0.")
-                try:
-                    generator = next(iio.imiter(f"<video{i}>"))
-                    num_of_devices = len(DevicesList.device_list)
-                    print("Ran the imiter once and the generator the new number of devices is", num_of_devices)
-                except Exception as e:
-                    print(f"Unable to identify any video inputs. Exited with error: {e}")
+                num_of_devices = ScreenCapturer.get_num_of_devices()
 
             while i < num_of_devices:
                 if not Thread_Config.running:

@@ -43,10 +43,9 @@ def start_TTS():
 '''
 def check_if_fresh_setup():
     if ConfigHandler.is_fresh_setup():
-        number_of_devices = ScreenCapturer.get_usb_video_devices_new()
+        number_of_devices = ScreenCapturer.get_num_of_devices()
     
         ConfigHandler.del_input_device(usb_alt_name = "")
-        number_of_devices = 3 #temporary - assume 3 connected devices
 
         for i in range(number_of_devices):
                 #for testing purposes, the expected usb_alt_name should be the actual alt name provided by WMIC instead of ""
