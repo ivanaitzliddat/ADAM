@@ -24,6 +24,8 @@ class welcomeScreen:
         self.root.state("zoomed")
         self.root.resizable(False,False)
         self.root.configure(bg=BG_COLOUR)
+        root.protocol("WM_DELETE_WINDOW", self.on_closing)
+
 
         #Create the main frame
         # Main frame
@@ -65,9 +67,9 @@ class welcomeScreen:
 
         # Load images
         # ConfigHandler.dirname returning "". to address the issue then amend the directory again
-        self.left_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
-        self.middle_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
-        self.right_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\"+"images\\1.jpg").resize((200, 200)))
+        self.left_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\green_monitor.png").resize((200, 200)))
+        self.middle_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\green_monitor.png").resize((200, 200)))
+        self.right_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\green_monitor.png").resize((200, 200)))
 
         # self.left_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
         # self.middle_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
@@ -157,7 +159,7 @@ class welcomeScreen:
     def open_video_capture_setup_page(self):
         # This method will open the VideoCaptureSetupApp window
         self.root.destroy()  # Close the current window
-        InitialVideoCaptureSetup().start_video_capture_setup()
+        InitialVideoCaptureSetup.start_video_capture_setup()
         
         
         #new_root = tk.Tk()  # Create a new window
@@ -172,6 +174,10 @@ class welcomeScreen:
         x = (self.root.winfo_screenwidth() // 2) - (width // 2)
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}")    
+
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.root.destroy()
 
     def start_welcome_screen():
         root = tk.Tk()

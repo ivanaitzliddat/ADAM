@@ -6,6 +6,7 @@ from tts_settings_page import TTS_setup_page
 from alerts_page import AlertsPage
 from about_page import AboutPage
 from FAQ_page import FAQPage
+from tkinter import messagebox
 #from TEST_InitialWelcomeScreen import welcomeScreen
 #from alerts_page import AlertsPage
 #from settings_page import SettingsPage
@@ -30,6 +31,8 @@ class ADAM:
         self.master.geometry("1980x1080")
         self.master.state("zoomed")
         self.master.config(bg=BG_COLOUR)
+        self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
+
 
         ADAM.instances.append(self)
 
@@ -152,11 +155,16 @@ class ADAM:
         # Force the GUI to redraw
         self.master.update_idletasks()
 
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.master.destroy()
+    
     '''
         Starts the GUI.
     '''
     def run(self):
         self.master.mainloop()
+        
 
     '''
         Stops all instances of the GUI.

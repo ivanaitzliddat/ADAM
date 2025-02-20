@@ -7,6 +7,10 @@ from TTS import TTS
 from gui import ADAM
 import threading
 import signal
+from imageio.plugins.deviceslist import DevicesList
+import time
+import tkinter as tk
+from tkinter import ttk
 
 '''
     Starts the screen capturer.
@@ -39,18 +43,62 @@ def start_TTS():
         print(f"TTS encountered an error: {e}")
 
 '''
+    Loads a window popup to display progress bar
+'''
+def show_loading_popup():
+    popup = tk.Tk()
+    popup.title("Fetching info from connected devices")
+    popup.geometry("500x100")
+    label = ttk.Label(popup, text="Please wait while ADAM is fetching information from the connected devices")
+    label.pack(pady=10)
+
+    # Calculate the center position
+    screen_width = popup.winfo_screenwidth()
+    screen_height = popup.winfo_screenheight()
+    window_width = 500
+    window_height = 100
+    center_x = int(screen_width / 2 - window_width / 2)
+    center_y = int(screen_height / 2 - window_height / 2)
+    popup.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
+
+    #Progress bar with percentage
+    progress_bar = ttk.Progressbar(popup, orient="horizontal", length=200, mode="determinate")
+    progress_bar.pack(pady=10)
+    progress_label = ttk.Label(popup, text="0%")
+    progress_label.pack()
+
+    return popup, progress_bar, progress_label
+
+'''
     Starts the ADAM GUI application.
 '''
 def check_if_fresh_setup():
     if ConfigHandler.is_fresh_setup():
+        #use ScreenCapturer to return the number of connected devices
         number_of_devices = ScreenCapturer.get_num_of_devices()
-    
+        #number_of_devices = 10 #for testing purposes
+
+        # Show loading popup
+        popup, progress_bar, progress_label = show_loading_popup()
+        progress_bar["maximum"] = number_of_devices
+
+        #DevicesList.device_list takes time to populate. Create a While loop to wait till device_list is fully populated
+        while len(DevicesList.device_list)!=number_of_devices:
+            current_devices = len(DevicesList.device_list)
+            progress_bar["value"] = current_devices
+            progress_label.config(text=f"{int((current_devices / number_of_devices) * 100)}%")
+            popup.update()  # Update the popup window
+            time.sleep(0.1)  # Sleep for 100 milliseconds
+        
+        #Close the popup window once device_list is fully populated
+        popup.destroy()
+        
         ConfigHandler.del_input_device(usb_alt_name = "")
 
-        for i in range(number_of_devices):
-                #for testing purposes, the expected usb_alt_name should be the actual alt name provided by WMIC instead of ""
-            ConfigHandler.add_input_device(f"device{i}") #to replace with the actual alt device name
-        
+        #Proceed to create new input device into Config.ini
+        for i in DevicesList.device_list:
+            ConfigHandler.add_input_device(usb_alt_name = i) #to replace with the actual alt device name
+            
         ConfigHandler.save_config() #save the config file
         #proceed to the function start_welcome_screen() in InitialWelcomeScreen.py
         welcomeScreen.start_welcome_screen()

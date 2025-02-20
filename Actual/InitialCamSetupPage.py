@@ -5,6 +5,9 @@ from screen_capturer import ScreenCapturer
 from config_handler import ConfigHandler
 from edit_condition import edit_condition
 import Pmw
+from imageio.plugins.deviceslist import DevicesList
+import imageio.v3 as iio
+from PIL import Image, ImageTk
 
 #o porpose using config ini to store the following theme colours:
 TEXT_COLOUR = "#000000"
@@ -20,6 +23,7 @@ class InitialVideoCaptureSetup:
         self.root.geometry("1920x1080")
         self.root.state("zoomed")
         self.root.configure(bg=BG_COLOUR)
+        root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         #Prevent user from resizing this window
         self.root.resizable(False,False)   
@@ -64,7 +68,7 @@ class InitialVideoCaptureSetup:
         else:
             #to be replaced with switching to the alerts_page or the main.py from Actual folder
             self.root.destroy()  # Close the current window
-            import TEST_main as main
+            import main as main
             main.run_ADAM()
             
     def create_scrollable_second_row(self):
@@ -95,6 +99,27 @@ class InitialVideoCaptureSetup:
         # retrieve the number of devices from config.ini and populate the video_inputs dictionary
         self.populate_video_inputs()
 
+    def get_one_frame_from_capture_device(self, video_label, index_num):
+        device_index = f"<video{index_num}>"
+        try:
+            frame_count = 0
+            for frame in iio.imiter(device_index):
+                # Convert the frame to an image
+                image = Image.fromarray(frame).resize((430,300))
+                image_tk = ImageTk.PhotoImage(image)
+                
+                video_label.config(image=image_tk)
+                video_label.image = image_tk
+                
+                frame_count += 1
+                if frame_count == 1:  # Limit to 1 frame
+                    break
+
+        except Exception as e:
+            print(f"An error occurred with device {index_num}: {e}")
+
+                # Function to display the frame in a tkinter window
+
     def populate_video_inputs(self):
         """Populate the scrollable frame with video input elements."""
          
@@ -124,9 +149,11 @@ class InitialVideoCaptureSetup:
 
             # Video Frame Placeholder
             video_label = tk.Label(
-                device_frame, text=f"Video Frame {i} = to hold 1 frame from each input", bg="black", fg="white", height=20, padx=5
+                device_frame, text=f"Video Frame {i} = to hold 1 frame from each input", bg="black", fg="white", height=300, padx=5
             )
             video_label.pack(fill="x", pady=5)
+
+            self.get_one_frame_from_capture_device(video_label,i)
 
             # Display the device sequence number
             device_seq_num_frame = tk.Frame(device_frame)
@@ -176,7 +203,7 @@ class InitialVideoCaptureSetup:
             rename_button.pack(side="right", padx=5)
 
             i += 1
-
+    
     def rename_and_update_trigger_condition_button(self, device_label, usb_alt_name,trig_condition_button):
         """Prompt the user to rename the device."""
         rename_window = tk.Toplevel(self.root)
@@ -215,6 +242,10 @@ class InitialVideoCaptureSetup:
                 rename_window.destroy()
             else:
                 messagebox.showwarning("Warning", "Name cannot be empty!")
+    
+    def on_closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            self.root.destroy()
 
     def center_window(self, window):
         window.update_idletasks()
@@ -226,7 +257,7 @@ class InitialVideoCaptureSetup:
 
     def start_video_capture_setup():
         root = tk.Tk()
-        app = InitialVideoCaptureSetup()(root)
+        app = InitialVideoCaptureSetup(root)
         root.mainloop()
 
     if __name__ == "__main__":

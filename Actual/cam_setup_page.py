@@ -5,6 +5,8 @@ from screen_capturer import ScreenCapturer
 from config_handler import ConfigHandler
 from edit_condition import edit_condition
 import Pmw
+import imageio.v3 as iio
+from PIL import Image, ImageTk
 
 
 #o request config ini to store the following theme colours:
@@ -69,6 +71,25 @@ class VideoCaptureSetupApp(tk.Frame):
         # retrieve the number of devices from config.ini and populate the video_inputs dictionary
         self.populate_video_inputs()
 
+    def get_one_frame_from_capture_device(self, video_label, index_num):
+        device_index = f"<video{index_num}>"
+        try:
+            frame_count = 0
+            for frame in iio.imiter(device_index):
+                # Convert the frame to an image
+                image = Image.fromarray(frame).resize((430,300))
+                image_tk = ImageTk.PhotoImage(image)
+                
+                video_label.config(image=image_tk)
+                video_label.image = image_tk
+                
+                frame_count += 1
+                if frame_count == 1:  # Limit to 1 frame
+                    break
+
+        except Exception as e:
+            print(f"An error occurred with device {index_num}: {e}")
+
     def _on_mousewheel(self, event):
         """Scroll the canvas content with the mouse wheel."""
         self.canvas.yview_scroll(int(-1*(event.delta/120)), "units")
@@ -102,9 +123,11 @@ class VideoCaptureSetupApp(tk.Frame):
 
             # Video Frame Placeholder - to find a way to store a frame for each video input {usb_alt_name:1frame}
             video_label = tk.Label(
-                device_frame, text=f"Video Frame {i} = to hold 1 frame from each input", bg="black", fg="white", height=20, padx=5
+                device_frame, text=f"Video Frame {i} = to hold 1 frame from each input", bg="black", fg="white", height=300, padx=5
             )
             video_label.pack(fill="x",pady=(0,5))
+            
+            self.get_one_frame_from_capture_device(video_label,i)
 
             # Display the device sequence number
             device_seq_num_frame = tk.Frame(device_frame)
