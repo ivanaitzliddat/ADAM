@@ -77,10 +77,8 @@ class edit_condition_page:
         inner_button_frame = tk.Frame(save_cancel_button_frame)
         inner_button_frame.pack(expand=True)
 
-        save_button = tk.Button(inner_button_frame, text="Save", font=("Arial", 10), command=self.save_condition)
-        save_button.pack(side="left",padx=5)
-        cancel_button = tk.Button(inner_button_frame, text="Cancel", font=("Arial", 10), command=self.cancel)
-        cancel_button.pack(side="left",padx=5)            
+        Done_button = tk.Button(inner_button_frame, text="Done", font=("Arial", 10), command=self.done)
+        Done_button.pack(side="left",padx=5)
 
         #auto populate the conditions into the scrollable frame in 2nd row
         for condition, trigger in triggers.items():
@@ -153,15 +151,15 @@ class edit_condition_page:
                 TTSmessageEntry.pack(side="left", padx=5)
                 
                 #Edit Keywords Button
-                edit_keywords_button = tk.Button(editing_buttons_frame, text="Edit Keywords", command=lambda a=usb_alt_name, c=condition, k=keywords, tw=trigger_window: self.open_edit_keywords(a, c, k, tw, lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
+                edit_keywords_button = tk.Button(editing_buttons_frame, text="Edit Keywords", command=lambda a=usb_alt_name, c=condition, k=keywords, tw=trigger_window, cN=custom_name: self.open_edit_keywords(a, c, k, tw, cN, lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
                 edit_keywords_button.pack(side="left", padx=5)
                 
                 #Edit bg_colour Button
-                edit_bg_colour_button = tk.Button(editing_buttons_frame, text="Edit Colour", command=lambda a=usb_alt_name, c=condition, bc=bg_colour, tw=trigger_window: self.open_edit_bg_colour(a,c,bc,tw , lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
+                edit_bg_colour_button = tk.Button(editing_buttons_frame, text="Edit Colour", command=lambda a=usb_alt_name, c=condition, bc=bg_colour, tw=trigger_window, cN=custom_name: self.open_edit_bg_colour(a,c,bc,tw,cN, lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
                 edit_bg_colour_button.pack(side="left", padx=5)
                 
                 #Edit tts_text Button
-                edit_tts_text_button = tk.Button(editing_buttons_frame, text="Edit Text-to-Speech Message", command=lambda a=usb_alt_name, c=condition, tt=tts_text, tw=trigger_window: self.open_edit_tts_text(a,c,tt,tw, lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
+                edit_tts_text_button = tk.Button(editing_buttons_frame, text="Edit Text-to-Speech Message", command=lambda a=usb_alt_name, c=condition, tt=tts_text, tw=trigger_window, cN=custom_name: self.open_edit_tts_text(a,c,tt,tw,cN, lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
                 edit_tts_text_button.pack(side="left", padx=5)
 
                 # Delete Condition Button
@@ -172,19 +170,22 @@ class edit_condition_page:
         """Scroll the canvas content with the mouse wheel."""
         canvas.yview_scroll(int(-1*(event.delta/120)), "units")
     
-    def save_condition(self):
-        ConfigHandler.save_config()
+    def done(self):
         self.root.destroy()
 
     def delete_condition(self, condition_frame, condition):
-        # delete the selected condition but won't save until user clicked on save button
-        ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition=condition , del_condition = True)
-        print(ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition=condition , del_condition = True))
-        """Delete an entire specific condition frame."""
-        condition_frame.destroy()
-
-    def cancel(self):
-        self.root.destroy()
+    
+        # Set the window to be always on top
+     
+        response = messagebox.askyesno("Confirm Deletion", "Are you sure you want to delete this condition?")
+         # Reset the window's 'topmost' attribute after the pop-up
+ 
+        if response:  # If the user clicks "Yes"
+            # Proceed to delete the selected condition
+            ConfigHandler.set_cfg_input_device(usb_alt_name=self.usb_alt_name, condition=condition, del_condition=True)
+            ConfigHandler.save_config()
+            # Delete the condition frame from the GUI (not saved until 'Save' is clicked)
+            condition_frame.destroy()
     
     def open_add_condition(self, usb_alt_name, trigger_window, callback=None):
         def on_add_condition_complete():
@@ -193,26 +194,27 @@ class edit_condition_page:
             trigger_window.destroy()
         add_condition(usb_alt_name, on_add_condition_complete)
 
-    def open_edit_keywords(self, usb_alt_name, condition, keywords, trigger_window, callback=None):
+    def open_edit_keywords(self, usb_alt_name, condition, keywords, trigger_window, custom_name, callback=None):
+        print(custom_name)
         def on_edit_keywords_complete():
             if callback:
                 callback()
             trigger_window.destroy()
-        edit_keywords(usb_alt_name, condition, keywords, on_edit_keywords_complete)
+        edit_keywords(usb_alt_name, condition, keywords, custom_name, on_edit_keywords_complete)
 
-    def open_edit_bg_colour(self, usb_alt_name, condition, bg_color, trigger_window, callback=None):
+    def open_edit_bg_colour(self, usb_alt_name, condition, bg_color, trigger_window, custom_name, callback=None):
         def on_edit_bg_colour_complete():
             if callback:
                 callback()
             trigger_window.destroy()
-        edit_bg_colour(usb_alt_name, condition, bg_color, on_edit_bg_colour_complete)
+        edit_bg_colour(usb_alt_name, condition, bg_color, custom_name, on_edit_bg_colour_complete)
 
-    def open_edit_tts_text(self, usb_alt_name, condition, tts_message, trigger_window, callback=None):
+    def open_edit_tts_text(self, usb_alt_name, condition, tts_message, trigger_window, custom_name, callback=None):
         def on_edit_tts_text_complete():
             if callback:
                 callback()
             trigger_window.destroy()
-        edit_tts_text(usb_alt_name, condition, tts_message, on_edit_tts_text_complete)
+        edit_tts_text(usb_alt_name, condition, tts_message, custom_name, on_edit_tts_text_complete)
 
     def refresh_trigger_window(self, trigger_window, usb_alt_name):
         trigger_window.destroy()

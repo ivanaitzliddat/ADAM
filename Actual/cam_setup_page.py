@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog, colorchooser
+from tkinter import messagebox
 from tkinter import font as tkFont
 from screen_capturer import ScreenCapturer
 from config_handler import ConfigHandler
@@ -102,12 +102,7 @@ class VideoCaptureSetupApp(tk.Frame):
         for key, val in device_dict.items():
             usb_alt_name = val["usb_alt_name"]
             custom_name = val["custom_name"]
-            triggers = val["triggers"]
-            condition = triggers["cond0"]
-            keywords = condition["keywords"]
-            tts_text = condition["tts_text"]
-            bg_colour = condition["bg_colour"]
-            
+
             # Create a subframe for each video input
             device_frame = tk.Frame(
                 self.scrollable_frame,

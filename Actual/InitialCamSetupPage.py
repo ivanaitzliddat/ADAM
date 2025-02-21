@@ -1,13 +1,16 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog, colorchooser
+from tkinter import messagebox
 from tkinter import font as tkFont
 from screen_capturer import ScreenCapturer
 from config_handler import ConfigHandler
 from edit_condition import edit_condition
 import Pmw
+import time
 from imageio.plugins.deviceslist import DevicesList
 import imageio.v3 as iio
 from PIL import Image, ImageTk
+from tkinter import ttk
+
 
 #o porpose using config ini to store the following theme colours:
 TEXT_COLOUR = "#000000"
@@ -40,6 +43,13 @@ class InitialVideoCaptureSetup:
         )
         self.logo_label1.pack()
 
+        # Call the method to detect devices and save them into config.ini
+        num_of_devices = self.detect_and_save_devices()
+
+        if num_of_devices == 0:
+            messagebox.showinfo("No video inputs detected. Please ensure all the video inputs are connected to the capture card correctly.")
+            self.root.destroy()
+  
         # Second row (scrollable area)
         self.create_scrollable_second_row()
 
@@ -52,6 +62,66 @@ class InitialVideoCaptureSetup:
 
         # Center the window
         self.root.after(100,  lambda: self.center_window(self.root))
+
+    def show_loading_popup(self):
+        popup = tk.Tk()
+        popup.title("Fetching info from connected devices")
+        popup.geometry("500x100")
+        label = ttk.Label(popup, text="Please wait while ADAM is fetching information from the connected devices")
+        label.pack(pady=10)
+        
+        # Calculate the center position
+        screen_width = popup.winfo_screenwidth()
+        screen_height = popup.winfo_screenheight()
+        window_width = 500
+        window_height = 100
+        center_x = int(screen_width / 2 - window_width / 2)
+        center_y = int(screen_height / 2 - window_height / 2)
+        popup.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
+
+        #Progress bar with percentage
+        progress_bar = ttk.Progressbar(popup, orient="horizontal", length=200, mode="determinate")
+        progress_bar.pack(pady=10)
+        progress_label = ttk.Label(popup, text="0%")
+        progress_label.pack()
+
+        return popup, progress_bar, progress_label
+    
+    def detect_and_save_devices(self):
+        """Detect available video devices and update config."""
+        # Get the number of connected devices
+        number_of_devices = ScreenCapturer.get_num_of_devices()
+        
+        # Show loading popup
+        popup, progress_bar, progress_label = self.show_loading_popup()
+        progress_bar["maximum"] = number_of_devices
+
+        # Wait for DevicesList.device_list to fully populate
+        while len(DevicesList.device_list) != number_of_devices:
+            if not popup.winfo_exists():  # Ensure the popup is still open
+                break
+
+            current_devices = len(DevicesList.device_list)
+            progress_bar["value"] = current_devices
+            progress_label.config(text=f"{int((current_devices / number_of_devices) * 100)}%")
+            popup.update()
+            time.sleep(0.1)
+
+        # Close popup once device_list is fully populated
+        if popup.winfo_exists():
+            popup.destroy()
+
+        # Remove old input devices
+        ConfigHandler.del_input_device(usb_alt_name="")
+
+        # Add newly detected devices to Config.ini
+        for device in DevicesList.device_list:
+            ConfigHandler.add_input_device(usb_alt_name=device)
+
+        # Save the updated config
+        ConfigHandler.save_config()
+
+        return len(DevicesList.device_list)
 
     def save(self):
         proceed_to_save = False
