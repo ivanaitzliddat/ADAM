@@ -7,6 +7,7 @@ from config_handler import ConfigHandler
 from processed_screenshot import Processed_Screenshot
 from tkinter import ttk
 import os
+from imageio.plugins.deviceslist import DevicesList
 
 class AlertsPage(tk.Frame):
     def __init__(self, parent):
@@ -18,7 +19,7 @@ class AlertsPage(tk.Frame):
         self.device_count_label = tk.Label(self, text="Connected Devices: 0", font=("Arial", 12))
         self.device_count_label.pack(pady=10)
 
-        self.custom_names = []  # Initialize custom_names as an empty list
+        self.starting_device_list = []
         self.device_states = {}  # Device states (True = connected)Dictionary to track device states (True for connected, False for disconnected)
         self.device_labels = {} # Store references to device labels for updating later
 
@@ -33,7 +34,6 @@ class AlertsPage(tk.Frame):
         self.bottom_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
         # Load and resize monitor icons
-        print("The current dirname is:", ConfigHandler.dirname)
         self.green_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "green_monitor.png"), 50, 50)  # Resize to 50x50 pixels
         self.red_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "red_monitor.png"), 50, 50)  # Resize to 50x50 pixels
 
@@ -118,49 +118,50 @@ class AlertsPage(tk.Frame):
     # "Update the display of connected devices with the appropriate icons
     def update_device_display(self):
         # Add devices that are not yet added to the UI
-        for device_name in self.custom_names:
-            if device_name not in self.device_labels:
+        for device in self.starting_device_list:
+            if device not in self.device_labels:
                 # Decide which icon to show based on device state
-                icon = self.green_icon if self.device_states.get(device_name, False) else self.red_icon
-                device_label = tk.Label(self.top_frame, text=device_name, image=icon, compound="left", font=("Arial", 12))
+                icon = self.green_icon if self.device_states.get(device, False) else self.red_icon
+                device_label = tk.Label(self.top_frame, text=device, image=icon, compound="left", font=("Arial", 12))
                 device_label.pack(anchor="w", pady=5)
-                self.device_labels[device_name] = device_label
+                self.device_labels[device] = device_label
 
-            device_label = self.device_labels[device_name]
-            icon = self.green_icon if self.device_states.get(device_name, False) else self.red_icon
+            device_label = self.device_labels[device]
+            icon = self.green_icon if self.device_states.get(device, False) else self.red_icon
             device_label.config(image=icon)
             device_label.image = icon
 
-        # Remove devices from the UI that are no longer in custom_names (they are disconnected)
-        devices_to_remove = [device for device in self.device_labels if device not in self.custom_names]
+        # Remove devices from the UI that are no longer in starting (they are disconnected)
+        devices_to_remove = [device for device in self.device_labels if device not in self.starting_device_list]
         for device in devices_to_remove:
             self.device_labels[device].config(image=self.red_icon)  # Set red icon for disconnected devices
             self.device_labels[device].image = self.red_icon  # Update the image reference
 
     #Fetch device changes and update the display every 5 seconds
     def poll_for_device_changes(self):
-        # Fetch the latest custom_names from ConfigHandler
-        device_details = ConfigHandler.get_cfg_input_devices()
-        new_custom_names = [device["custom_name"] for device in device_details.values()]
+        current_device_list = DevicesList.device_list # only contains alt_names
 
-        # Compare the old custom_names with the new list
-        added_devices = set(new_custom_names) - set(self.custom_names)
-        removed_devices = set(self.custom_names) - set(new_custom_names)
+        # Compare the starting device list with the new list
+        added_devices = set(current_device_list) - set(self.starting_device_list)
+        removed_devices = set(self.starting_device_list) - set(current_device_list)
 
-        # Add new devices to custom_names and mark them as connected
+        # Add new devices to starting_device_list and mark them as connected
         for device in added_devices:
-            self.custom_names.append(device)
+            self.starting_device_list.append(device)
             self.device_states[device] = True  # New device is connected
+            # need to add to add to config.ini if it does not exist there
 
         # Mark removed devices as disconnected (but don't remove them from the list)
         for device in removed_devices:
             self.device_states[device] = False  # Device is disconnected
+            self.starting_device_list.remove(device)
+            # need to show alert pop-up saying device disconnected 
 
         # Update the display with the current state of the devices
         self.update_device_display()
 
         # Schedule the next call to poll_for_device_changes after 5000ms (5 seconds)
-        self.after(5000, self.poll_for_device_changes)
+        self.after(3000, self.poll_for_device_changes)
 
     def append_message(self, message):
 ################### Old Code for clickable events in list #######################################
