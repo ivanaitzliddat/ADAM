@@ -174,13 +174,8 @@ class AlertsPage(tk.Frame):
         # clickable_label.bind("<Button-1>", lambda event, idx=index: self.on_message_click(idx))
 #################################################################################################
         # Using new treeview, above code is for older listbox
-        # print('message' + message)
-        # self.frontend_messages_with_index[index] = message
-        # for item in self.frontend_messages_with_index:
-        #     print(item)
         date_time, alt_name, tts_text = message
         # Insert the parsed message into the Treeview
-        #self.treeview.insert("", "end", values=(date_time, alt_name, tts_text),tags=(index,))
         self.treeview.insert("", "end", values=(date_time, alt_name, tts_text))
     
     def apply_filters(self):
