@@ -87,9 +87,8 @@ class AlertsPage(tk.Frame):
         # Bind the click event to the Treeview rows
         self.treeview.bind("<ButtonRelease-1>", self.on_row_click)
 
-        # Message Queue that is tracked on the frontend for filters
-        self.frontend_messages_with_index = {}
-        self.filtered_frontend_messages_with_index = {}
+        # To keep track of the row_ids that are filtered
+        self.detached_rows = []
 
  ################## Old Code for clickable buttons in list ##############################
         # # Create a canvas to contain the scrollable content
@@ -180,34 +179,28 @@ class AlertsPage(tk.Frame):
     
     def apply_filters(self):
         """ Function to apply the filters based on the entries """
-        self.filtered_frontend_messages_with_index = []
-        for row in self.frontend_messages_with_index:
+        for row_id in self.treeview.get_children():
+            row = self.treeview.item(row_id)
             # Check each filter independently
-            match = True
-            
+                        
             # Filter by date if it is not empty
             if self.date_filter_entry.get() and self.date_filter_entry.get() != "Enter Date (e.g., 2025-02-16)":
-                if self.date_filter_entry.get() not in row[0]:  # Assuming date is in row[0]
-                    match = False
+                if self.date_filter_entry.get() not in row["values"][0]:  # Assuming date is in row[0]
+                    self.treeview.detach(row_id)
+                    self.detached_rows.append(row_id)
             
             # Filter by time if it is not empty
             if self.time_filter_entry.get() and self.time_filter_entry.get() != "Enter Time (e.g., 01:05:38)":
-                if self.time_filter_entry.get() not in row[1]:  # Assuming time is in row[1]
-                    match = False
+                if self.time_filter_entry.get() not in row["values"][1]:  # Assuming time is in row[1]
+                    self.treeview.detach(row_id)
+                    self.detached_rows.append(row_id)
             
             # Filter by message if it is not empty
             if self.message_filter_entry.get() and self.message_filter_entry.get() != "Enter Message (e.g., Alert: Rahul detected.)":
-                if self.message_filter_entry.get() not in row[2]:  # Assuming message is in row[2]
-                    match = False
+                if self.message_filter_entry.get() not in row["values"][2]:  # Assuming message is in row[2]
+                    self.treeview.detach(row_id)
+                    self.detached_rows.append(row_id)
             
-            # If the row matches all non-empty filters, add it to the filtered data list
-            if match:
-                self.filtered_frontend_messages_with_index.append(row)
-    
-        self.clear_treeview()
-        # Update the Treeview with filtered data
-        self.insert_rows(self.filtered_frontend_messages_with_index)
-    
     def clear_filters(self):
         """ Function to clear the filters and restore all data """
         # Clear the filter entry fields
@@ -216,22 +209,10 @@ class AlertsPage(tk.Frame):
         self.time_filter_entry.delete(0, tk.END)
         self.message_filter_entry.delete(0, tk.END)
 
-        # Restore all rows from the original data
-        self.clear_treeview()
-        self.insert_rows(self.frontend_messages_with_index)
-    
-    def clear_treeview(self):
-        """ Helper function to clear all rows in the Treeview """
-        for row in self.treeview.get_children():
-            self.treeview.delete(row)
-
-    def insert_rows(self, frontend_messages_with_index):
-        for item in frontend_messages_with_index:
-            print(item)
-        """ Helper function to insert rows into the Treeview """
-        for index, message in frontend_messages_with_index:
-            date, time, message_text = self.process_message(message)
-            self.treeview.insert("", "end", values=(date, time, message_text),tags=(index,))
+        # Re-attach all detached rows back to the Treeview
+        for row_id in self.detached_rows:
+            self.treeview.reattach(row_id, "", "end")  # Reattach the row at the end
+        self.detached_rows.clear()  # Clear the list of detached rows
 
     def sharpen_image(image):
         kernel = np.array([[-1, -1, -1],
