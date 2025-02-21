@@ -5,19 +5,20 @@ import pyttsx3
 import pygame
 
 class Edit_TTS_Text_Page:
-    def __init__(self, root, usb_alt_name, condition, tts_message, callback):
+    def __init__(self, root, usb_alt_name, condition, tts_message, custom_name, callback):
         self.root = root
         self.root.geometry("900x500")
         self.usb_alt_name = usb_alt_name
         self.condition = condition
         self.callback = callback
         self.tts_message = tts_message
+        self.custom_name = custom_name
         # Center the window after initializing
         self.root.after(0, self.center_window)
         self.setup_ui()
     
     def setup_ui(self):
-        self.root.title(f"Edit Text-to-Speech Message for {self.usb_alt_name} - {self.condition}")
+        self.root.title(f"Edit Text-to-Speech Message for {self.custom_name} - {self.condition}")
         configure_TTS_frame = tk.Frame(self.root, width=1000, pady=5)
         configure_TTS_frame.pack(fill="y", pady=5)
         
@@ -114,7 +115,7 @@ class Edit_TTS_Text_Page:
         engine.say(text_message)
         engine.runAndWait()
 
-def edit_tts_text(alt_name, condition, tts_message, callback):
+def edit_tts_text(alt_name, condition, tts_message, custom_name, callback):
     root = tk.Tk()
-    app = Edit_TTS_Text_Page(root, alt_name, condition, tts_message, callback)
+    app = Edit_TTS_Text_Page(root, alt_name, condition, tts_message, custom_name, callback)
     root.mainloop()

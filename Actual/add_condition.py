@@ -25,7 +25,10 @@ class add_condition_page:
             #g_colour = condition["bg_colour"]
             
         #track number of existing trigger conditions
-        number_of_trigger_conditions = len(triggers)
+        last_key = list(triggers.keys())[-1]
+        last_trigger_number = last_key[4:]
+        
+        number_of_trigger_conditions = int(last_trigger_number)
 
         #temp variables to store the condition details
         self.temp_keywords = []
@@ -60,7 +63,7 @@ class add_condition_page:
 
         #populate temp condition parameters into 2nd row: Frame for Trigger Conditions
         # 1st row: Display the trigger condition text e.g. Trigger Condition: cond0
-        self.temp_condition = "cond" + str(number_of_trigger_conditions)
+        self.temp_condition = "cond" + str(number_of_trigger_conditions+1)
         tk.Label(temp_trigger_conditions_frame,text=f"Trigger Condition: {self.temp_condition}",font=("Arial", 10, "bold"),anchor="w",).pack(fill="x", padx=5, pady=2)
         
         # 2nd row: Display sub-heading "List of keyword(s):"

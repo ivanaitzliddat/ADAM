@@ -3,12 +3,13 @@ from tkinter import messagebox
 from config_handler import ConfigHandler
 
 class EditKeywordsPage:
-    def __init__(self, root, usb_alt_name, condition, keywords, callback):
+    def __init__(self, root, usb_alt_name, condition, keywords, custom_name, callback):
         self.root = root
         self.root.geometry("1000x500")
         self.usb_alt_name = usb_alt_name
         self.condition = condition
         self.callback = callback
+        self.custom_name = custom_name
 
         #a temp list to store the keywords independently of the actual keywords list
         self.temp_keywords = keywords.copy()
@@ -21,7 +22,7 @@ class EditKeywordsPage:
         self.setup_ui()
 
     def setup_ui(self):
-        self.root.title(f"Edit Keywords for {self.usb_alt_name} - {self.condition}")
+        self.root.title(f"Edit Keywords for {self.custom_name} - {self.condition}")
         condition_frame = tk.Frame(self.root, width=1000, pady=5, highlightbackground="grey", highlightthickness=1)
         condition_frame.pack(fill="y", pady=5)
 
@@ -172,7 +173,7 @@ class EditKeywordsPage:
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}") 
 
-def edit_keywords(alt_name, condition, keywords, callback):
+def edit_keywords(alt_name, condition, keywords, custom_name, callback):
     root = tk.Tk()
-    app = EditKeywordsPage(root, alt_name, condition, keywords, callback)
+    app = EditKeywordsPage(root, alt_name, condition, keywords, custom_name, callback)
     root.mainloop()
