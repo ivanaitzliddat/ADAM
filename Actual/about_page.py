@@ -56,7 +56,7 @@ class AboutPage(tk.Frame):
         # Developer Information
         tk.Label(self.frame, text="Developed by the Team: The Enablers", bg=BG_COLOUR, font=("Arial", 12), pady=5, anchor="w").pack(anchor="w", padx=10)
         tk.Label(self.frame, text="Team Members:", font=("Arial", 12), bg=BG_COLOUR, pady=5, anchor="w").pack(anchor="w", padx=10)
-        team_members = ["ME4 Rahul","ME4 Ivan Tan","ME4 Bryan","ME4 Kairos","ME2 Russell","ME2 Jun Long","ME4T Cephas"]
+        team_members = ["Rahul","van Tan","Bryan","Kairos","Russell","Jun Long","Cephas"]
         for memebrs in team_members:
             tk.Label(self.frame, text=f"• {memebrs}", font=("Arial", 10), bg=BG_COLOUR, anchor="w").pack(anchor="w", padx=30)
 
@@ -77,7 +77,7 @@ class AboutPage(tk.Frame):
             tk.Label(self.frame, text=f"• {ack}", font=("Arial", 10), bg=BG_COLOUR, anchor="w").pack(anchor="w", padx=30)
 
         # License Information
-        tk.Label(self.frame, text="Built by AOSX, for AOSX", font=("Arial", 12, "italic"), bg=BG_COLOUR, pady=10).pack()
+        tk.Label(self.frame, text="", font=("Arial", 12, "italic"), bg=BG_COLOUR, pady=10).pack()
 
 
 if __name__ == "__main__":
