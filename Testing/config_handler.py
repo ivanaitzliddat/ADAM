@@ -23,7 +23,7 @@ class ConfigHandler:
         "Input Device 0": {
             "usb_alt_name": "",
             "custom_name": "",
-            "triggers": {"cond0":{"keywords":["keyword 1","keyword 2",], "tts_text": "hello", "bg_colour": "RED"}},
+            "triggers": {"cond0":{"condition_name": "condition", "keywords":["keyword 1","keyword 2",], "tts_text": "hello", "bg_colour": "RED"}},
         }
     }
 
@@ -428,7 +428,7 @@ class ConfigHandler:
                         print(f"Invalid value type for [{section}]-{key}. Expected {default_val_type} but got {cfg_val_type} instead.")
                 else:
                     default_triggers_dict = ConfigHandler.DEFAULT_CONFIG["Input Device 0"]["triggers"]  # No need ast.literal_eval since type is already dict in DEFAULT_CONFIG
-                    cond_name = ""
+                    cond_id = ""
                     for sub_key, sub_val in default_triggers_dict.items():
                         default_val_type = type(sub_val.get(key))
 
@@ -447,31 +447,31 @@ class ConfigHandler:
                                 traceback.print_exc()
 
                             if condition_arg is not None:
-                                cond_name = condition_arg
+                                cond_id = condition_arg
                                 if condition_arg not in cfg_triggers_dict:
-                                    cfg_triggers_dict[cond_name] = default_triggers_dict["cond0"]   # Create new condition with default values
+                                    cfg_triggers_dict[cond_id] = default_triggers_dict["cond0"]   # Create new condition with default values
                                         
-                                cfg_triggers_dict[cond_name][key] = cfg_val # Set with user-specified value
+                                cfg_triggers_dict[cond_id][key] = cfg_val # Set with user-specified value
                             else:
                                 cond_count = []
                                 for item in (temp for temp in initial_cfg_triggers_dict if temp.startswith("cond")):
                                     cond_count.append(int(item.replace("cond", "")))
 
                                 if len(cond_count) > 0:
-                                    cond_name = "cond"+str(max(cond_count)+1)
+                                    cond_id = "cond"+str(max(cond_count)+1)
                                 else:
-                                    cond_name = "cond0"
+                                    cond_id = "cond0"
                                 
-                                cfg_triggers_dict[cond_name] = default_triggers_dict["cond0"]   # Create new condition with default values
-                                cfg_triggers_dict[cond_name][key] = cfg_val   # Set with user-specified value
+                                cfg_triggers_dict[cond_id] = default_triggers_dict["cond0"]   # Create new condition with default values
+                                cfg_triggers_dict[cond_id][key] = cfg_val   # Set with user-specified value
                         else:
                             print(f"Invalid value type for [{section}]-triggers-cond-{key}. Expected {default_val_type} but got {cfg_val_type} instead.")
                             return
         else:
             for cond, cond_val in initial_cfg_triggers_dict.items():
                 # Check if trigger values for the condition exists (i.e. duplicate)
-                if cfg_triggers_dict[cond_name].items() <= cond_val.items():
-                    print(f"The trigger condition values under [{section}] for '{cond_name}' is a duplicate of '{cond}'. '{cond_name}' will not be saved.")
+                if cfg_triggers_dict[cond_id].items() <= cond_val.items():
+                    print(f"The trigger condition values under [{section}] for '{cond_id}' is a duplicate of '{cond}'. '{cond_id}' will not be saved.")
                     tk_msgbox.showinfo("Duplicate trigger condition values in config.ini.",
                                         f"Duplicate trigger condition values detected for this input device. Trigger changes will not be saved.")
                     return  # Exit function if duplicate condition values detected
