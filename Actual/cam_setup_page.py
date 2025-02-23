@@ -36,7 +36,10 @@ class VideoCaptureSetupApp(tk.Frame):
             self.first_row, text="Video Capture Card Configuration", font=("Malgun Gothic Semilight", 38,), bg=BG_COLOUR
         )
         self.logo_label1.pack(pady=(10,50))
-
+        
+        # Second row (scrollable area)
+        self.create_scrollable_second_row()
+        
         # Fourth row (Save button)
         self.fourth_row = tk.Frame(self.frame, bg=BG_COLOUR)
         self.fourth_row.pack(fill="both")
@@ -53,9 +56,6 @@ class VideoCaptureSetupApp(tk.Frame):
             for child in topbar.winfo_children():
                 child.configure(state='normal')
             self.proceed_button.pack_forget()   
-
-        # Second row (scrollable area)
-        self.create_scrollable_second_row()
 
     def reset_topbar(self,topbar):
         response = messagebox.askyesno("Proceed to Alerts Page?", "Have you completed the configuration for your video input(s) and wish to proceed to Alerts Page?") 
