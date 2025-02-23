@@ -41,15 +41,6 @@ def start_TTS():
 '''
     Starts the ADAM GUI application.
 '''
-def check_if_fresh_setup():
-    if ConfigHandler.is_fresh_setup():
-        welcomeScreen.start_welcome_screen()
-    else:
-        run_ADAM()
-
-'''
-    Starts the ADAM GUI application.
-'''
 def run_ADAM():
     app = ADAM()
     try:
@@ -85,7 +76,8 @@ if __name__ == "__main__":
 
     # Start the GUI
     try:
-        check_if_fresh_setup()
+        #check_if_fresh_setup()
+        run_ADAM()
     except Exception as e:
         print(f"ADAM has failed to run with exception: {e}")
 

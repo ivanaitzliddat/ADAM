@@ -7,11 +7,13 @@ from alerts_page import AlertsPage
 from about_page import AboutPage
 from FAQ_page import FAQPage
 from tkinter import messagebox
+from welcome_page import welcomeScreen
 #from TEST_InitialWelcomeScreen import welcomeScreen
 #from alerts_page import AlertsPage
 #from settings_page import SettingsPage
 #from keyword_page import KeywordPage
 #from color_picker_page import ColorPage
+from config_handler import ConfigHandler
 from messages import MessageQueue
 from TTS import TTS
 
@@ -32,8 +34,6 @@ class ADAM:
         self.master.state("zoomed")
         self.master.config(bg=BG_COLOUR)
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
-
-
         ADAM.instances.append(self)
 
         # Define a larger font
@@ -56,7 +56,6 @@ class ADAM:
         self.settings_menu = tk.Menu(self.master, tearoff=0)
         self.settings_menu.add_command(label="Video Capture Cards", command=self.option1)
         self.settings_menu.add_command(label="Text-to-Speech", command=self.option2)
-        self.settings_menu.add_command(label="Option 3", command=self.option3)
   
         # button for About page
         self.about_button = tk.Button(self.topbar, text="About ADAM", command=self.show_about_page)
@@ -79,22 +78,27 @@ class ADAM:
         
         # self.color_picker_button = tk.Button(self.topbar, text="Color Picker", command=lambda: self.show_page("color_picker"))
         # self.color_picker_button.pack(side="left", padx=10)
+        
+        fresh_setup_status = ConfigHandler.is_fresh_setup()
 
         # Initialize pages
         self.pages = {
-            "cam_setup_page": VideoCaptureSetupApp(self.content_frame),
+            "welcome_page":welcomeScreen(self.content_frame, self.topbar, self.option1),
+            "cam_setup_page": VideoCaptureSetupApp(self.content_frame, self.topbar, fresh_setup_status, self.open_alerts_page),
             "tts_setup_page": TTS_setup_page(self.content_frame), 
-            "alerts_page": AlertsPage(self.content_frame),
             "FAQ_page":FAQPage(self.content_frame),
-            "About_page":AboutPage(self.content_frame)
+            "About_page":AboutPage(self.content_frame),
+            "alerts_page": AlertsPage(self.content_frame)
             # "settings": SettingsPage(self.content_frame),  
             # "keywords": KeywordPage(self.content_frame),
             # "color_picker": ColorPage(self.content_frame)
         }
-        
-        # Show the initial page
 
-        self.show_page("alerts_page")
+        # Show the initial page
+        if fresh_setup_status:
+            self.show_page("welcome_page")
+        else:
+            self.show_page("alerts_page")
 
         # Start the queue checking process
         self.check_queue()
@@ -107,10 +111,9 @@ class ADAM:
             while True:
                 message = MessageQueue.status_queue.get_nowait()
                 self.pages["alerts_page"].append_message(message)
-                print('message', str(message))
-                timestamp, custom_name, tts_alert = message
-                with TTS.lock:
-                    TTS.alert_queue.put(tts_alert)
+                # alert_message_index = message.find(']') + 1
+                # with TTS.lock:
+                #     TTS.alert_queue.put(message[alert_message_index:].strip())
         except queue.Empty:
             pass
         finally:
@@ -126,9 +129,6 @@ class ADAM:
 
     def option2(self):
         self.show_page("tts_setup_page")
-
-    def option3(self):
-        print("Option 3 selected")
 
     def open_alerts_page(self):
         self.show_page("alerts_page")

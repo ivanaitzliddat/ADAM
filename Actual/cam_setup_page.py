@@ -4,9 +4,12 @@ from tkinter import font as tkFont
 from screen_capturer import ScreenCapturer
 from config_handler import ConfigHandler
 from edit_condition import edit_condition
+from imageio.plugins.deviceslist import DevicesList
+import time
 import Pmw
 import imageio.v3 as iio
 from PIL import Image, ImageTk
+from tkinter import ttk
 
 
 #o request config ini to store the following theme colours:
@@ -18,13 +21,14 @@ GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
 
 class VideoCaptureSetupApp(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, topbar, fresh_setup_status, proceed_to_alerts_page):
 
         super().__init__(parent,bg=BG_COLOUR)
         # Create the main frame
         self.frame = tk.Frame(self, bg=BG_COLOUR)
         self.frame.pack(pady=20)
-
+        self.topbar = topbar
+        self.proceed_to_alerts_page = proceed_to_alerts_page
         # First row (ADAM logo)
         self.first_row = tk.Frame(self.frame, bg=BG_COLOUR)
         self.first_row.pack(fill="both")
@@ -33,12 +37,98 @@ class VideoCaptureSetupApp(tk.Frame):
         )
         self.logo_label1.pack(pady=(10,50))
 
-        # Second row (scrollable area)
-        self.create_scrollable_second_row()
-
         # Fourth row (Save button)
         self.fourth_row = tk.Frame(self.frame, bg=BG_COLOUR)
         self.fourth_row.pack(fill="both")
+        proceed_button = tkFont.Font(family="Helvetica", size=20, weight="bold")
+        self.proceed_button = tk.Button(self.fourth_row, text="Proceed to Alerts Page", font=proceed_button, command=lambda: self.reset_topbar(topbar))
+        self.proceed_button.pack(pady=20)
+
+        if fresh_setup_status == True:
+            # Call the method to detect devices and save them into config.ini
+            self.detect_and_save_devices()
+            for child in topbar.winfo_children():
+                child.configure(state='disable')
+        else:
+            for child in topbar.winfo_children():
+                child.configure(state='normal')
+            self.proceed_button.pack_forget()   
+
+        # Second row (scrollable area)
+        self.create_scrollable_second_row()
+
+    def reset_topbar(self,topbar):
+        response = messagebox.askyesno("Proceed to Alerts Page?", "Have you completed the configuration for your video input(s) and wish to proceed to Alerts Page?") 
+        if response:
+            for child in topbar.winfo_children():
+                child.configure(state='normal')
+            self.proceed_to_alerts_page()
+            self.proceed_button.pack_forget()
+
+    def show_loading_popup(self):
+        popup = tk.Tk()
+        popup.title("Fetching info from connected devices")
+        popup.geometry("500x100")
+        label = ttk.Label(popup, text="Please wait while ADAM is fetching information from the connected devices")
+        label.pack(pady=10)
+        
+        # Calculate the center position
+        screen_width = popup.winfo_screenwidth()
+        screen_height = popup.winfo_screenheight()
+        window_width = 500
+        window_height = 100
+        center_x = int(screen_width / 2 - window_width / 2)
+        center_y = int(screen_height / 2 - window_height / 2)
+        popup.geometry(f"{window_width}x{window_height}+{center_x}+{center_y}")
+
+        #Progress bar with percentage
+        progress_bar = ttk.Progressbar(popup, orient="horizontal", length=200, mode="determinate")
+        progress_bar.pack(pady=10)
+        progress_label = ttk.Label(popup, text="0%")
+        progress_label.pack()
+
+        return popup, progress_bar, progress_label
+    
+    def detect_and_save_devices(self):
+        """Detect available video devices and update config."""
+        # Get the number of connected devices
+        number_of_devices = ScreenCapturer.get_num_of_devices()
+        
+        # Show loading popup
+        popup, progress_bar, progress_label = self.show_loading_popup()
+        progress_bar["maximum"] = number_of_devices
+
+        # Wait for DevicesList.device_list to fully populate
+        while len(DevicesList.device_list) != number_of_devices:
+            if not popup.winfo_exists():  # Ensure the popup is still open
+                break
+
+            current_devices = len(DevicesList.device_list)
+            progress_bar["value"] = current_devices
+            progress_label.config(text=f"{int((current_devices / number_of_devices) * 100)}%")
+            popup.update()
+            time.sleep(0.1)
+
+        # Close popup once device_list is fully populated
+        if popup.winfo_exists():
+            popup.destroy()
+
+        # Remove old input devices
+        ConfigHandler.del_input_device(usb_alt_name="")
+        counter = 1
+        # Add newly detected devices to Config.ini
+        for device in DevicesList.device_list:
+            default_custom_name = "Input Device " + str(counter)
+            ConfigHandler.add_input_device(usb_alt_name=device)
+            ConfigHandler.save_config()
+            ConfigHandler.set_cfg_input_device(usb_alt_name=device, custom_name=default_custom_name)
+            counter+=1
+        # Save the updated config
+        ConfigHandler.save_config()
+        
+        # Show a confirmation message
+        #messagebox.showinfo("Device Detection Complete", "Video devices have been successfully detected and configured.")
+        #return len(DevicesList.device_list)
 
     def create_scrollable_second_row(self):
         """Create a scrollable second row with detected inputs."""
