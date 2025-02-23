@@ -23,7 +23,7 @@ class ConfigHandler:
         "Input Device 0": {
             "usb_alt_name": "",
             "custom_name": "",
-            "triggers": {"cond0":{"keywords":["keyword 1","keyword 2",], "tts_text": "hello", "bg_colour": "RED"}},
+            "triggers": {"cond0":{"condition_name": "", "keywords":["keyword 1","keyword 2",], "tts_text": "hello", "bg_colour": "RED"}},
         }
     }
 
@@ -375,107 +375,129 @@ class ConfigHandler:
     def set_cfg_input_device(usb_alt_name: str, **kwargs):
         usb_alt_name_arg = str(usb_alt_name)
         condition_arg = kwargs.get("condition")
+        condition_name_arg = kwargs.get("condition_name")
         del_condition_arg = kwargs.get("del_condition")
         cfg_triggers_dict = {}
         initial_cfg_triggers_dict = {}
 
+        # Convert condition_arg into String if the kwarg was passed in (if not passed in, it will be None)
         if condition_arg is not None:
             condition_arg = str(condition_arg)
-        
+            
+        # Convert condition_arg into String if the kwarg was passed in (if not passed in, it will be None)    
+        if condition_name_arg is not None:
+            condition_name_arg = str(condition_name_arg)
 
-        # Loop through kwargs and do if the kwarg is not usb_alt_name and condition
-        for key, val in (temp for temp in kwargs.items() if "condition" not in temp):
-            # Access [Input Device X] section that contains the specific "usb_alt_name" value
-            for section in (temp for temp in ConfigHandler.cp.sections() if (temp.startswith("Input Device ") and ConfigHandler.cp.get(temp, "usb_alt_name") == usb_alt_name_arg)):
-                if del_condition_arg == True and condition_arg is not None:
-                    try:
-                        cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
-                    except:
-                        traceback.print_exc()
-                    if len(cfg_triggers_dict) > 1:
-                        print("Deleting condition '"+condition_arg+"' - "+str(cfg_triggers_dict.pop(condition_arg, "Condition not found.")))
-                        ConfigHandler.cp[section]["triggers"] = str(cfg_triggers_dict)
-                    else:
-                        tk_msgbox.showinfo("Unable to delete the last condition.",
-                                            "Deleting of a condition is not allowed if is the last remaining condition for an Input Device.")
-                    return # Exit function after attempt to delete condition
-
-                if key != "custom_name":    
-                    try:
-                        cfg_val = ast.literal_eval(val)
-                        cfg_val_type = type(cfg_val)
-                    except (ValueError, SyntaxError):
-                        cfg_val = val
-                        cfg_val_type = type(cfg_val)
-                    except:
-                        traceback.print_exc()
-                else:
-                    cfg_val = str(val)
-                    cfg_val_type = type(cfg_val)
-                    
-                if ConfigHandler.cp.has_option(section, key):
-                    try:
-                        default_val_type = type(ast.literal_eval(ConfigHandler.DEFAULT_CONFIG["Input Device 0"][key]))
-                    except (ValueError, SyntaxError):
-                        default_val_type = type(ConfigHandler.DEFAULT_CONFIG["Input Device 0"][key])
-                    except:
-                        traceback.print_exc()
-
-                    if cfg_val_type == default_val_type:
-                        ConfigHandler.cp[section][key] = str(val)
-                        print(f"[{section}]-{key} was set to {val}. You need to call save_config() separately to write to config.ini.")
-                    else:
-                        print(f"Invalid value type for [{section}]-{key}. Expected {default_val_type} but got {cfg_val_type} instead.")
-                else:
-                    default_triggers_dict = ConfigHandler.DEFAULT_CONFIG["Input Device 0"]["triggers"]  # No need ast.literal_eval since type is already dict in DEFAULT_CONFIG
-                    cond_name = ""
-                    for sub_key, sub_val in default_triggers_dict.items():
-                        default_val_type = type(sub_val.get(key))
-
-                        if key in sub_val and cfg_val_type == default_val_type:
-                            try:
-                                # Set cfg_triggers_dict if it is empty
-                                if len(cfg_triggers_dict)==0:
-                                    cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
-                                        
-                                initial_cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
-                                if not isinstance(cfg_triggers_dict, dict):
-                                    raise ValueError
-                            except (ValueError, SyntaxError):
-                                print(f"Invalid value type found under [{section}]-triggers in config.ini.")
-                            except:
-                                traceback.print_exc()
-
-                            if condition_arg is not None:
-                                cond_name = condition_arg
-                                if condition_arg not in cfg_triggers_dict:
-                                    cfg_triggers_dict[cond_name] = default_triggers_dict["cond0"]   # Create new condition with default values
-                                        
-                                cfg_triggers_dict[cond_name][key] = cfg_val # Set with user-specified value
-                            else:
-                                cond_count = []
-                                for item in (temp for temp in initial_cfg_triggers_dict if temp.startswith("cond")):
-                                    cond_count.append(int(item.replace("cond", "")))
-
-                                if len(cond_count) > 0:
-                                    cond_name = "cond"+str(max(cond_count)+1)
-                                else:
-                                    cond_name = "cond0"
-                                
-                                cfg_triggers_dict[cond_name] = default_triggers_dict["cond0"]   # Create new condition with default values
-                                cfg_triggers_dict[cond_name][key] = cfg_val   # Set with user-specified value
+        # Loop through the kwargs that were passed in
+        for key, val in kwargs.items():
+            # Do if the kwarg is not 'condition'
+            if key != "condition":
+                # Access [Input Device X] section that contains the specific "usb_alt_name" value
+                for section in (temp for temp in ConfigHandler.cp.sections() if (temp.startswith("Input Device ") and ConfigHandler.cp.get(temp, "usb_alt_name") == usb_alt_name_arg)):
+                    if del_condition_arg == True and condition_arg is not None:
+                        try:
+                            cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
+                        except:
+                            traceback.print_exc()
+                        if len(cfg_triggers_dict) > 1:
+                            print("Deleting condition '"+condition_arg+"' - "+str(cfg_triggers_dict.pop(condition_arg, "Condition not found.")))
+                            ConfigHandler.cp[section]["triggers"] = str(cfg_triggers_dict)
                         else:
-                            print(f"Invalid value type for [{section}]-triggers-cond-{key}. Expected {default_val_type} but got {cfg_val_type} instead.")
-                            return
+                            tk_msgbox.showinfo("Unable to delete the last condition.",
+                                                "Deleting of a condition is not allowed if is the last remaining condition for an Input Device.")
+                        return # Exit function after attempt to delete condition
+
+                    # Create and set cfg_val and cfg_val_type if the kwarg is not 'custom_name'
+                    if key != "custom_name":    
+                        try:
+                            cfg_val = ast.literal_eval(val)
+                            cfg_val_type = type(cfg_val)
+                        except (ValueError, SyntaxError):
+                            cfg_val = val
+                            cfg_val_type = type(cfg_val)
+                        except:
+                            traceback.print_exc()
+                    # Else, set cfg_val and cfg_val_type to a String value and String type respectively
+                    else:
+                        cfg_val = str(val)
+                        cfg_val_type = type(cfg_val)
+
+                    # Do if the kwarg name/key (not the value) exists as an option in the Input Device X section of ConfigHandler object
+                    if ConfigHandler.cp.has_option(section, key):
+                        try:
+                            default_val_type = type(ast.literal_eval(ConfigHandler.DEFAULT_CONFIG["Input Device 0"][key]))
+                        except (ValueError, SyntaxError):
+                            default_val_type = type(ConfigHandler.DEFAULT_CONFIG["Input Device 0"][key])
+                        except:
+                            traceback.print_exc()
+
+                        if cfg_val_type == default_val_type:
+                            ConfigHandler.cp[section][key] = str(val)
+                            print(f"[{section}]-{key} was set to {val}. You need to call save_config() separately to write to config.ini.")
+                        else:
+                            print(f"Invalid value type for [{section}]-{key}. Expected {default_val_type} but got {cfg_val_type} instead.")
+                    # Else, the kwarg name/key is considered to be inside the 'triggers' option of the Input Device X section of ConfigHandler object
+                    else:
+                        # Create a dict based on the DEFAULT_CONFIG 'triggers' template
+                        default_triggers_dict = ConfigHandler.DEFAULT_CONFIG["Input Device 0"]["triggers"]  # No need ast.literal_eval since type is already dict in DEFAULT_CONFIG
+                        cond_id = ""
+
+                        # Loop through the 'triggers' option in the default_triggers_dict
+                        for sub_key, sub_val in default_triggers_dict.items():
+                            default_val_type = type(sub_val.get(key))
+
+                            if key in sub_val and cfg_val_type == default_val_type:
+                                try:
+                                    # Set cfg_triggers_dict if it is empty
+                                    if len(cfg_triggers_dict)==0:
+                                        cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
+                                            
+                                    initial_cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp.get(section, "triggers"))
+                                    if not isinstance(cfg_triggers_dict, dict):
+                                        raise ValueError
+                                except (ValueError, SyntaxError):
+                                    print(f"Invalid value type found under [{section}]-triggers in config.ini.")
+                                except:
+                                    traceback.print_exc()
+
+                                if condition_arg is not None:
+                                    cond_id = condition_arg
+                                    if condition_arg not in cfg_triggers_dict:
+                                        cfg_triggers_dict[cond_id] = default_triggers_dict["cond0"]   # Create new condition with default values
+                                            
+                                    cfg_triggers_dict[cond_id][key] = cfg_val # Set with user-specified value
+                                else:
+                                    cond_count = []
+                                    for item in (temp for temp in initial_cfg_triggers_dict if temp.startswith("cond")):
+                                        cond_count.append(int(item.replace("cond", "")))
+
+                                    if len(cond_count) > 0:
+                                        cond_id = "cond"+str(max(cond_count)+1)
+                                    else:
+                                        cond_id = "cond0"
+                                    
+                                    cfg_triggers_dict[cond_id] = default_triggers_dict["cond0"]   # Create new condition with default values
+                                    cfg_triggers_dict[cond_id][key] = cfg_val   # Set with user-specified value
+                            else:
+                                print(f"Invalid value type for [{section}]-triggers-cond-{key}. Expected {default_val_type} but got {cfg_val_type} instead.")
+                                return
         else:
+            # Loop through the initial_cfg_triggers_dict to check for duplicate settings
             for cond, cond_val in initial_cfg_triggers_dict.items():
-                # Check if trigger values for the condition exists (i.e. duplicate)
-                if cfg_triggers_dict[cond_name].items() <= cond_val.items():
-                    print(f"The trigger condition values under [{section}] for '{cond_name}' is a duplicate of '{cond}'. '{cond_name}' will not be saved.")
+                # Check if the entire set of trigger values for the condition already exists (i.e. duplicate)
+                if cfg_triggers_dict[cond_id].items() <= cond_val.items():
+                    print(f"The trigger condition values under [{section}] for '{cond_id}' is a duplicate of '{cond}'. '{cond_id}' will not be saved.")
                     tk_msgbox.showinfo("Duplicate trigger condition values in config.ini.",
                                         f"Duplicate trigger condition values detected for this input device. Trigger changes will not be saved.")
                     return  # Exit function if duplicate condition values detected
+                # Check if the condition_name_arg already exists (i.e. duplicate)
+                elif condition_name_arg == cond_val["condition_name"]:
+                    print(f"The trigger condition name under [{section}] for '{cond_id}' is a duplicate of '{cond}'. '{cond_id}' will not be saved.")
+                    tk_msgbox.showinfo("Duplicate trigger condition values in config.ini.",
+                                        f"Duplicate trigger condition name detected for this input device. Trigger changes will not be saved.")
+                    return  # Exit function if duplicate condition name detected
             else:
+                # Update the ConfigHandler object if cfg_triggers_dict is not empty
                 if len(cfg_triggers_dict) != 0:
                     try:
                         ConfigHandler.cp[section]["triggers"] = str(cfg_triggers_dict)
