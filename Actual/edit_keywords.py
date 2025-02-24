@@ -16,6 +16,9 @@ class EditKeywordsPage:
 
         #actual keywords list
         self.keywords = keywords
+
+        self.root.grab_set()
+        self.root.focus_set()
      
         # Center the window after initializing
         self.root.after(0, self.center_window)
@@ -163,6 +166,7 @@ class EditKeywordsPage:
                 return True
             
     def cancel(self):
+        self.root.grab_release()
         self.root.destroy()
 
     def center_window(self):
@@ -174,6 +178,7 @@ class EditKeywordsPage:
         self.root.geometry(f"{width}x{height}+{x}+{y}") 
 
 def edit_keywords(alt_name, condition, keywords, custom_name, callback):
-    root = tk.Tk()
+    root = tk.Toplevel()
     app = EditKeywordsPage(root, alt_name, condition, keywords, custom_name, callback)
-    root.mainloop()
+    root.transient()
+    root.wait_window(root)

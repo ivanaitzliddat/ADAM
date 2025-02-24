@@ -11,6 +11,9 @@ class edit_bg_colour_page:
         self.bg_colour = bg_colour
         self.custom_name = custom_name
 
+        self.root.grab_set()
+        self.root.focus_set()
+        
         # Center the window after initializing
         self.root.after(0, self.center_window)
         self.setup_ui()
@@ -120,6 +123,7 @@ class edit_bg_colour_page:
         self.callback()
 
     def cancel(self):
+        self.root.grab_release()
         self.root.destroy()
 
     def center_window(self):
@@ -131,6 +135,7 @@ class edit_bg_colour_page:
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
 def edit_bg_colour(alt_name, condition, bg_colour, custom_name, callback):
-    root = tk.Tk()
+    root = tk.Toplevel()
     app = edit_bg_colour_page(root, alt_name, condition, bg_colour, custom_name, callback)
-    root.mainloop()
+    root.transient()
+    root.wait_window(root)

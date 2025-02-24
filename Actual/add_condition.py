@@ -9,6 +9,9 @@ class add_condition_page:
         self.usb_alt_name = usb_alt_name
         self.callback = callback
 
+        self.root.grab_set()
+        self.root.focus_set()
+
         # Center the window after initializing
         self.root.after(0, self.center_window)
         self.add_condition()
@@ -19,16 +22,16 @@ class add_condition_page:
             usb_alt_name = val["usb_alt_name"]
             custom_name = val["custom_name"]
             triggers = val["triggers"]
-            #condition = triggers["cond0"]
-            #keywords = condition["keywords"]
-            #tts_text = condition["tts_text"]
-            #g_colour = condition["bg_colour"]
             
         #track number of existing trigger conditions
-        last_key = list(triggers.keys())[-1]
-        last_trigger_number = last_key[4:]
-        
-        number_of_trigger_conditions = int(last_trigger_number)
+        device_key = next(iter(device_dict))  
+        device_info = device_dict[device_key]  
+
+        # Get the "triggers" dictionary
+        triggers = device_info.get("triggers", {})
+
+        # Count the number of triggers
+        trigger_count = len(triggers) + 2
 
         #temp variables to store the condition details
         self.temp_keywords = []
@@ -63,8 +66,11 @@ class add_condition_page:
 
         #populate temp condition parameters into 2nd row: Frame for Trigger Conditions
         # 1st row: Display the trigger condition text e.g. Trigger Condition: cond0
-        self.temp_condition = "cond" + str(number_of_trigger_conditions+1)
-        tk.Label(temp_trigger_conditions_frame,text=f"Trigger Condition: {self.temp_condition}",font=("Arial", 10, "bold"),anchor="w",).pack(fill="x", padx=5, pady=2)
+        self.temp_condition = "cond" + str(trigger_count)
+        self.temp_condition_name = self.temp_condition
+        self.condition_name_frame = tk.Frame(temp_trigger_conditions_frame)
+        self.condition_name_frame.pack(fill="x", pady=5)
+        self.display_condition_name(self.temp_condition_name)
         
         # 2nd row: Display sub-heading "List of keyword(s):"
         self.keywords_frame = tk.Frame(temp_trigger_conditions_frame)
@@ -85,6 +91,12 @@ class add_condition_page:
         self.buttons_frame = tk.Frame(temp_trigger_conditions_frame)
         self.buttons_frame.pack(fill="x", pady=5)
         self.create_buttons()
+
+    def display_condition_name(self,cond_name):
+        for widget in self.condition_name_frame.winfo_children():
+            widget.destroy()
+
+        tk.Label(self.condition_name_frame,text=f"Trigger Condition Name: {cond_name}",font=("Arial", 10, "bold"),anchor="w",).pack(fill="x", padx=5, pady=2)
 
     def display_keywords(self):
         for widget in self.keywords_frame.winfo_children():
@@ -115,6 +127,9 @@ class add_condition_page:
         tts_entry.pack(side="left", padx=5)    
             
     def create_buttons(self):
+        edit_condition_name = tk.Button(self.buttons_frame, text="Change Condition Name", command=self.change_condition_name)
+        edit_condition_name.pack(side="left", padx=5)
+
         edit_keywords_button = tk.Button(self.buttons_frame, text="Add a keyword", command=self.add_keyword)
         edit_keywords_button.pack(side="left", padx=5)
 
@@ -123,6 +138,46 @@ class add_condition_page:
 
         edit_tts_button = tk.Button(self.buttons_frame, text="Add Text-to-Speech Message", command=self.add_tts)
         edit_tts_button.pack(side="left", padx=5)
+
+    def check_dup_cond_name(self,cond_name):
+        device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name=self.usb_alt_name)
+        existing_cond_names=[]
+        for key, val in device_dict.items():
+            triggers = val["triggers"]
+            
+            for condition, trigger in triggers.items():
+                existing_cond_names.append(trigger['condition_name'])
+        if cond_name in existing_cond_names:
+            return True
+        else:
+            return False
+
+    def change_condition_name(self):
+        def on_submit():
+            new_cond_name = new_cond_name_entry.get()
+            if self.check_dup_cond_name(new_cond_name):
+                messagebox.showwarning("Duplicate Condition Name Found", "Duplicate Condition Name found, please enter another condition name.", parent=change_cond_name_window)
+            else:
+                self.temp_condition_name = new_cond_name
+                self.display_condition_name(self.temp_condition_name)
+                change_cond_name_window.destroy()
+
+        change_cond_name_window = tk.Toplevel(self.root)
+        change_cond_name_window.title("Change Condition Name")
+        change_cond_name_window.geometry("300x100")
+        change_cond_name_window.transient(self.root)
+
+        tk.Label(change_cond_name_window, text="Enter a new condition name:", font=("Arial", 10)).pack(pady=10)
+        new_cond_name_entry = tk.Entry(change_cond_name_window, font=("Arial", 10))
+        new_cond_name_entry.pack(pady=5)
+
+        submit_button = tk.Button(change_cond_name_window, text="Submit", command=on_submit)
+        submit_button.pack(pady=5)
+
+        change_cond_name_window.after(0, self.center_window)
+
+        # Center the window
+        self.center_sub_window(change_cond_name_window)
 
     def add_keyword(self):
         def on_submit():
@@ -285,10 +340,13 @@ class add_condition_page:
 
     def save_new_condition(self):
         if len(self.temp_keywords)>=1:
-            ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition = self.temp_condition, keywords = self.temp_keywords ,tts_text=self.temp_tts_text,bg_colour=self.temp_bg_colour)
+            ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition = self.temp_condition, condition_name = self.temp_condition_name, keywords = self.temp_keywords ,tts_text=self.temp_tts_text,bg_colour=self.temp_bg_colour)
+            #ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition_name=self.temp_condition_name)
             ConfigHandler.save_config()
-            self.root.destroy()
             self.callback()
+            self.root.grab_release()
+            self.root.destroy()
+ 
         else:
             self.root.lift()  # Bring the main window to the front
             self.root.attributes('-topmost', True)  # Keep it on top
@@ -296,6 +354,7 @@ class add_condition_page:
             messagebox.showwarning("Warning", "Unable to proceed. Condition must have at least 1 keyword!", parent=self.root)
 
     def cancel(self):
+        self.root.grab_release()
         self.root.destroy()
 
     def refresh_trigger_window(self, trigger_window, usb_alt_name):
@@ -319,9 +378,10 @@ class add_condition_page:
         window.geometry(f"{width}x{height}+{x}+{y}")      
 
 def add_condition(alt_name, callback):
-    root = tk.Tk()
+    root = tk.Toplevel()
     app = add_condition_page(root, alt_name, callback)
-    root.mainloop()
+    root.transient()
+    root.wait_window(root)
 
 
 

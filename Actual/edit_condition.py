@@ -7,6 +7,7 @@ from edit_keywords import edit_keywords
 from edit_bg_colour import edit_bg_colour
 from edit_tts_text import edit_tts_text
 from add_condition import add_condition
+from edit_condition_name import edit_condition_name
 import Pmw
 
 class edit_condition_page:
@@ -14,6 +15,9 @@ class edit_condition_page:
         self.root = root
         self.root.geometry("1200x700")
         self.usb_alt_name = usb_alt_name
+
+        self.root.grab_set()
+        self.root.focus_set()
 
         # Center the window after initializing
         self.root.after(0, self.center_window)
@@ -28,10 +32,6 @@ class edit_condition_page:
             usb_alt_name = val["usb_alt_name"]
             custom_name = val["custom_name"]
             triggers = val["triggers"]
-            #condition = triggers["cond0"]
-            #keywords = condition["keywords"]
-            #tts_text = condition["tts_text"]
-            #bg_colour = condition["bg_colour"]
 
         # Create a new window
         self.root.title(f"Configuring alert trigger conditions for {custom_name}")
@@ -86,14 +86,10 @@ class edit_condition_page:
                 condition_frame = tk.Frame(scrollable_conditions_frame, width=900, height=200 , pady=5, highlightbackground="grey", highlightthickness=1)
                 condition_frame.pack_propagate(False)
                 condition_frame.pack(fill="x", pady=5, padx=8)
-                
+                condition_name = trigger['condition_name']
+
                 # 1st row: Display the trigger condition text e.g. Trigger Condition: cond0
-                tk.Label(
-                    condition_frame,
-                    text=f"Trigger Condition: {condition}",
-                    font=("Arial", 10, "bold"),
-                    anchor="w",
-                ).pack(fill="x", padx=5, pady=2)
+                tk.Label(condition_frame, text=f"Trigger Condition Name: {condition_name}", font=("Arial", 10, "bold"), anchor="w").pack(fill="x", padx=5, pady=2)
 
                 # 2nd row: Display sub-heading "List of keyword(s):"
                 keyword_subheading_frame = tk.Frame(condition_frame)
@@ -150,6 +146,10 @@ class edit_condition_page:
                 TTSmessageEntry.config(state='readonly')
                 TTSmessageEntry.pack(side="left", padx=5)
                 
+                #Edit Condition name Button
+                edit_condition_name_button = tk.Button(editing_buttons_frame, text="Edit Condition Name", command=lambda a=usb_alt_name, c=condition, cN=condition_name, tw=trigger_window: self.open_edit_condition_name(a, c, cN, tw, lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
+                edit_condition_name_button.pack(side="left", padx=5)
+
                 #Edit Keywords Button
                 edit_keywords_button = tk.Button(editing_buttons_frame, text="Edit Keywords", command=lambda a=usb_alt_name, c=condition, k=keywords, tw=trigger_window, cN=custom_name: self.open_edit_keywords(a, c, k, tw, cN, lambda: self.refresh_trigger_window(trigger_window, usb_alt_name)))
                 edit_keywords_button.pack(side="left", padx=5)
@@ -171,6 +171,7 @@ class edit_condition_page:
         canvas.yview_scroll(int(-1*(event.delta/120)), "units")
     
     def done(self):
+        self.root.grab_release()
         self.root.destroy()
 
     def delete_condition(self, condition_frame, condition):
@@ -187,6 +188,14 @@ class edit_condition_page:
             # Delete the condition frame from the GUI (not saved until 'Save' is clicked)
             condition_frame.destroy()
     
+    def open_edit_condition_name(self, usb_alt_name, condition, condition_name, trigger_window, callback=None):
+        def on_edit_condition_name_complete():
+            if callback:
+                callback()
+            trigger_window.destroy()
+        edit_condition_name(usb_alt_name, condition, condition_name, on_edit_condition_name_complete)
+        return
+
     def open_add_condition(self, usb_alt_name, trigger_window, callback=None):
         def on_add_condition_complete():
             if callback:
@@ -195,7 +204,6 @@ class edit_condition_page:
         add_condition(usb_alt_name, on_add_condition_complete)
 
     def open_edit_keywords(self, usb_alt_name, condition, keywords, trigger_window, custom_name, callback=None):
-        print(custom_name)
         def on_edit_keywords_complete():
             if callback:
                 callback()
@@ -229,6 +237,7 @@ class edit_condition_page:
         self.root.geometry(f"{width}x{height}+{x}+{y}")   
   
 def edit_condition(alt_name):
-    root = tk.Tk()
+    root = tk.Toplevel()
     app = edit_condition_page(root,alt_name)
-    root.mainloop()
+    root.transient()
+    root.wait_window(root)

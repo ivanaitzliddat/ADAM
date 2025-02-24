@@ -13,6 +13,10 @@ class Edit_TTS_Text_Page:
         self.callback = callback
         self.tts_message = tts_message
         self.custom_name = custom_name
+
+        self.root.grab_set()
+        self.root.focus_set()
+
         # Center the window after initializing
         self.root.after(0, self.center_window)
         self.setup_ui()
@@ -68,11 +72,12 @@ class Edit_TTS_Text_Page:
         print(self.tts_text)
         ConfigHandler.set_cfg_input_device(usb_alt_name=self.usb_alt_name, condition=self.condition, tts_text=self.tts_text)
         ConfigHandler.save_config()
+        self.root.grab_release()
         self.root.destroy()
         self.callback()
-   
 
     def cancel(self):
+        self.root.grab_release()
         self.root.destroy()
 
     def center_window(self):
@@ -116,6 +121,7 @@ class Edit_TTS_Text_Page:
         engine.runAndWait()
 
 def edit_tts_text(alt_name, condition, tts_message, custom_name, callback):
-    root = tk.Tk()
+    root = tk.Toplevel()
     app = Edit_TTS_Text_Page(root, alt_name, condition, tts_message, custom_name, callback)
-    root.mainloop()
+    root.transient()
+    root.wait_window(root)
