@@ -2,7 +2,6 @@ from screen_capturer import ScreenCapturer
 from paddle_ocr import OCRProcessor
 from subthread_config import Thread_Config
 from config_handler import ConfigHandler
-from InitialWelcomeScreen import welcomeScreen
 from TTS import TTS
 from gui import ADAM
 import threading

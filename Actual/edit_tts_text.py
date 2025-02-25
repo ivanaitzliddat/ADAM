@@ -3,6 +3,7 @@ from tkinter import messagebox
 from config_handler import ConfigHandler
 import pyttsx3
 import pygame
+import threading
 
 class Edit_TTS_Text_Page:
     def __init__(self, root, usb_alt_name, condition, tts_message, custom_name, callback):
@@ -94,17 +95,22 @@ class Edit_TTS_Text_Page:
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy():
             continue
+
+    def test_tts(self,voice_gender,speech_rate,volume, alert_sound="buzzer"):
+        # Run text-to-speech and audio alert in a separate thread
+        thread = threading.Thread(target=self._test_tts_alert_thread, args=(voice_gender,speech_rate,volume, alert_sound))
+        thread.start()
     
-    def test_tts(self, voice_gender,speech_rate,volume, alert_sound="buzzer"):
+    def _test_tts_alert_thread(self, voice_gender,speech_rate,volume, alert_sound="buzzer"):
         text_message = self.tts_entry.get().strip() or "No custom message set. ADAM will read out default message."
         #alert_sounds = {
         #    "buzzer": r"C:\Users\\bai_j\Desktop\\ADAM-main\\Testing\\GUI testing\\sound\\alarm.mp3",
         #    "alarm": r"C:\Users\\bai_j\Desktop\\ADAM-main\\Testing\\GUI testing\\sound\\alarm.mp3",
         #    "notification": r"C:\Users\\bai_j\Desktop\\ADAM-main\\Testing\\GUI testing\\sound\\alarm.mp3"}
         alert_sounds = {
-            "buzzer": ConfigHandler.dirname()+'\\Testing\\GUI testing\\sound\\buzzer.mp3',
-            "alarm": ConfigHandler.dirname()+"\\Testing\\GUI testing\\sound\\alarm.mp3",
-            "notification": ConfigHandler.dirname()+"\\Testing\\GUI testing\\sound\\notification.mp3",
+            "buzzer": ConfigHandler.dirname+'\\Sound\\buzzer.mp3',
+            "alarm": ConfigHandler.dirname+"\\Sound\\alarm.mp3",
+            "notification": ConfigHandler.dirname+"\\Sound\\notification.mp3",
         }
         
         sound_file = alert_sounds.get(alert_sound)

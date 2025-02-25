@@ -37,6 +37,15 @@ class VideoCaptureSetupApp(tk.Frame):
         )
         self.logo_label1.pack(pady=(10,50))
         
+        if fresh_setup_status == True:
+            # Call the method to detect devices and save them into config.ini
+            self.detect_and_save_devices()
+            for child in topbar.winfo_children():
+                child.configure(state='disable')
+        else:
+            for child in topbar.winfo_children():
+                child.configure(state='normal')
+
         # Second row (scrollable area)
         self.create_scrollable_second_row()
 
@@ -47,16 +56,8 @@ class VideoCaptureSetupApp(tk.Frame):
         self.proceed_button = tk.Button(self.fourth_row, text="Proceed to Alerts Page", font=proceed_button, command=lambda: self.reset_topbar(topbar))
         self.proceed_button.pack(pady=20)
 
-        if fresh_setup_status == True:
-            # Call the method to detect devices and save them into config.ini
-            self.detect_and_save_devices()
-            for child in topbar.winfo_children():
-                child.configure(state='disable')
-        else:
-            for child in topbar.winfo_children():
-                child.configure(state='normal')
+        if not fresh_setup_status == True:
             self.proceed_button.pack_forget()   
-
 
 
     def reset_topbar(self,topbar):
@@ -95,6 +96,7 @@ class VideoCaptureSetupApp(tk.Frame):
         """Detect available video devices and update config."""
         # Get the number of connected devices
         number_of_devices = ScreenCapturer.get_num_of_devices()
+        print(number_of_devices)
         
         # Show loading popup
         popup, progress_bar, progress_label = self.show_loading_popup()
@@ -121,9 +123,11 @@ class VideoCaptureSetupApp(tk.Frame):
         # Add newly detected devices to Config.ini
         for device in DevicesList.device_list:
             default_custom_name = "Input Device " + str(counter)
+            default_condition_name = "Default Condition Name " + str(counter)
             ConfigHandler.add_input_device(usb_alt_name=device)
             ConfigHandler.save_config()
             ConfigHandler.set_cfg_input_device(usb_alt_name=device, custom_name=default_custom_name)
+            ConfigHandler.set_cfg_input_device(usb_alt_name=device, condition = "cond0", condition_name = default_condition_name)
             counter+=1
         # Save the updated config
         ConfigHandler.save_config()

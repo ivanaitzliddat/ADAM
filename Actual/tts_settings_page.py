@@ -3,6 +3,7 @@ from tkinter import ttk, font as tkFont
 import pyttsx3
 import pygame
 from config_handler import ConfigHandler
+import threading
 
 #o request config ini to store the following theme colours:
 TEXT_COLOUR = "#000000"
@@ -107,6 +108,11 @@ class TTS_setup_page(tk.Frame):
             continue
 
     def simulate_alert(self):
+        # Run text-to-speech and audio alert in a separate thread
+        thread = threading.Thread(target=self._simulate_alert_thread)
+        thread.start()
+
+    def _simulate_alert_thread(self):
         text = self.text_input.get().strip() or "This is a default message."
         voice_gender = self.voice_gender_var.get()
         volume = int(self.volume_var.get())
@@ -116,9 +122,9 @@ class TTS_setup_page(tk.Frame):
 
     def text_to_speech_with_audio(self, text, voice_gender="male", volume=5, speech_rate="normal", alert_sound="buzzer"):
         alert_sounds = {
-            "buzzer": ConfigHandler.dirname()+"Sound\\alarm.mp3",
-            "alarm": ConfigHandler.dirname()+"Sound\\buzzer.mp3",
-            "notification": ConfigHandler.dirname()+"Sound\\notification.mp3",
+            "buzzer": ConfigHandler.dirname+"\\Sound\\alarm.mp3",
+            "alarm": ConfigHandler.dirname+"\\Sound\\buzzer.mp3",
+            "notification": ConfigHandler.dirname+"\\Sound\\notification.mp3",
         }
 
         sound_file = alert_sounds.get(alert_sound)
@@ -136,15 +142,24 @@ class TTS_setup_page(tk.Frame):
         engine.runAndWait()
 
     def save_tts_settings(self):
-        for widget in self.row1_frame.winfo_children():
-            #check if the widget is an Entry widget
-            if isinstance(widget, tk.Entry):
-                #check if the entry is not empty
-                print(widget.get())
-            if isinstance(widget,tk.Spinbox):
-                print(widget.get())
-                
+        gender = self.voice_gender_var.get()
+        vol = self.volume_var.get()
+        speech_rate = self.speech_rate_var.get()
+        
+        if speech_rate == "fast":
+            speech_rate = 50
+        elif speech_rate == "normal":
+            speech_rate = 0
+        else:
+            speech_rate = -50
 
+        if vol == "":
+            messagebox.showwarning("Warning", "Volume cannot be empty!")
+        else:
+            ConfigHandler.set_cfg_tts(gender = gender, volume = vol, rate = speech_rate, tts_enabled = True)
+            ConfigHandler.save_config()
+
+                
 if __name__ == "__main__":
     root = tk.Tk()
     app = TTS_setup_page(root, lambda page: print(f"switch to {page}"))

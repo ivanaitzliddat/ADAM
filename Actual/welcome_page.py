@@ -4,7 +4,6 @@ from tkinter import *
 from threading import Thread
 from PIL import Image, ImageTk 
 from tkinter import font as tkFont
-from InitialCamSetupPage import InitialVideoCaptureSetup
 from config_handler import ConfigHandler
 
 TEXT_COLOUR = "#000000"
