@@ -122,7 +122,11 @@ class AlertsPage(tk.Frame):
             if device not in self.device_labels:
                 # Decide which icon to show based on device state
                 icon = self.green_icon if self.device_states.get(device, False) else self.red_icon
-                device_label = tk.Label(self.top_frame, text=device, image=icon, compound="left", font=("Arial", 12))
+                device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = device)
+                custom_name = ""
+                for key, val in device_dict.items():
+                    custom_name = val["custom_name"]
+                device_label = tk.Label(self.top_frame, text=custom_name, image=icon, compound="left", font=("Arial", 12))
                 device_label.pack(anchor="w", pady=5)
                 self.device_labels[device] = device_label
 
