@@ -153,13 +153,14 @@ class AlertsPage(tk.Frame):
         for device in added_devices:
             self.starting_device_list.append(device)
             self.device_states[device] = True  # New device is connected
-            # need to add to add to config.ini if it does not exist there
+            if(len(ConfigHandler.get_cfg_input_devices(usb_alt_name = device)) == 0): # does not exist in config.ini, need to add device
+                ConfigHandler.add_input_device(usb_alt_name = device)
 
         # Mark removed devices as disconnected (but don't remove them from the list)
         for device in removed_devices:
             self.device_states[device] = False  # Device is disconnected
             self.starting_device_list.remove(device)
-            # need to show alert pop-up saying device disconnected 
+            tk_msgbox.showinfo(f"This device: [{device}] was removed.") # show popup for removed device
 
         # Update the display with the current state of the devices
         self.update_device_display()
