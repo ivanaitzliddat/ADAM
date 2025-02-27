@@ -7,6 +7,7 @@ from config_handler import ConfigHandler
 from processed_screenshot import Processed_Screenshot
 from tkinter import ttk
 import os
+import tkinter.messagebox as tk_msgbox
 from imageio.plugins.deviceslist import DevicesList
 
 class AlertsPage(tk.Frame):
@@ -221,13 +222,16 @@ class AlertsPage(tk.Frame):
         return cv2.filter2D(image, -1, kernel)
     
     def on_row_click(self, event):
-        selected_item = self.treeview.selection()[0]
-        item_data = self.treeview.item(selected_item)
-        column_values = item_data['values']
-        date_time = column_values[0]
-        alt_name = column_values[1] 
-        tts_message = column_values[2]
-        self.on_message_click(alt_name, date_time)
+        try: 
+            selected_item = self.treeview.selection()[0]
+            item_data = self.treeview.item(selected_item)
+            column_values = item_data['values']
+            date_time = column_values[0]
+            alt_name = column_values[1] 
+            tts_message = column_values[2]
+            self.on_message_click(alt_name, date_time)
+        except Exception as e:
+            tk_msgbox.showinfo("Error: Clicked on an invalid row. Please try to click again on the specific alert.")
 
     def on_message_click(self, alt_name, date_time):
         with Processed_Screenshot.lock:
