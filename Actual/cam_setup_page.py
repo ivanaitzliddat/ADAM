@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import font as tkFont
-from screen_capturer import ScreenCapturer
+from tkinter import ttk
 from config_handler import ConfigHandler
 from edit_condition import edit_condition
 from imageio.plugins.deviceslist import DevicesList
@@ -9,7 +9,7 @@ import time
 import Pmw
 import imageio.v3 as iio
 from PIL import Image, ImageTk
-from tkinter import ttk
+from screenshots import Screenshot
 
 
 #o request config ini to store the following theme colours:
@@ -95,19 +95,30 @@ class VideoCaptureSetupApp(tk.Frame):
     def detect_and_save_devices(self):
         """Detect available video devices and update config."""
         # Get the number of connected devices
-        number_of_devices = ScreenCapturer.get_num_of_devices()
-        print(number_of_devices)
+        number_of_devices = len(DevicesList.device_list)
+        
+        # Wait for device_list to populate... Should add in a pop up if after a few loops still no device, for user to check if any device is even plugged in.
+        counter = 0
+        while number_of_devices == 0:
+            if counter >= 5:
+                # This one can help change to a pop up? Hopefully is something blocking so that when they plug in then they press okay or sth
+                print("Are you sure you plugged in anything at all?")
+            else:
+                print("Currently still 0, so waiting for awhile...")
+                time.sleep(3)
+                number_of_devices = len(DevicesList.device_list)
+                counter += 1
         
         # Show loading popup
         popup, progress_bar, progress_label = self.show_loading_popup()
         progress_bar["maximum"] = number_of_devices
 
         # Wait for DevicesList.device_list to fully populate
-        while len(DevicesList.device_list) != number_of_devices:
+        while len(Screenshot.frames) < number_of_devices:
             if not popup.winfo_exists():  # Ensure the popup is still open
                 break
 
-            current_devices = len(DevicesList.device_list)
+            current_devices = len(Screenshot.frames)
             progress_bar["value"] = current_devices
             progress_label.config(text=f"{int((current_devices / number_of_devices) * 100)}%")
             popup.update()
