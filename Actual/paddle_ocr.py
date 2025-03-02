@@ -62,6 +62,8 @@ class OCRProcessor:
         else:
             with Screenshot.lock:
                 Screenshot.frames.remove(frame)
+                print("Successfully removed a screenshot from the screenshot list")
+                print("The number of screenshots left is: ", len(Screenshot.frames))
 
     '''
         Converts the frame to allow the processing of frame using imageio.
@@ -111,6 +113,7 @@ class OCRProcessor:
         if not None in result:
             has_keyword = self.iterate_line_in_screenshot(frame, keywords, alt_name, result, tts_message)
         return has_keyword
+    
     '''
         Disect the screenshot by looking through the words identified line by line.
     '''
@@ -171,6 +174,7 @@ class OCRProcessor:
     def save_processed_screenshot(self, frame, alt_name, timestamp):
         with Processed_Screenshot.lock:
             Processed_Screenshot.frames.setdefault(alt_name, {}).update({timestamp: frame})
+            print("New screenshot has been added to processed screenshot")
             Processed_Screenshot.frames = {datetime.strptime(k, "%Y%m%d %H%M%S"): v for k, v in Processed_Screenshot.frames[alt_name].items()}
                 # Get the current time
             now = datetime.now()
@@ -178,3 +182,4 @@ class OCRProcessor:
             time_threshold = now - timedelta(minutes=5)
                 # Filter dictionary to keep only recent timestamps
             Processed_Screenshot.frames = {k: v for k, v in Processed_Screenshot.frames.items() if k >= time_threshold}
+            print("Successfully filtered processed screenshots such that only freshly processed screenshots are kept.")
