@@ -23,7 +23,7 @@ class ConfigHandler:
         "Input Device 0": {
             "usb_alt_name": "",
             "custom_name": "",
-            "triggers": {"cond0":{"condition_name": "", "keywords":["keyword 1","keyword 2",], "tts_text": "hello", "bg_colour": "RED"}},
+            "triggers": {"cond0":{"condition_name": "", "keywords":["keyword1",], "tts_text": "", "bg_colour": "#FFFFFF"}},
         }
     }
 
