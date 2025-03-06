@@ -77,6 +77,8 @@ if __name__ == "__main__":
     try:
         #check_if_fresh_setup()
         run_ADAM()
+    except RuntimeError:   
+        ADAM.close()
     except Exception as e:
         print(f"ADAM has failed to run with exception: {e}")
 
