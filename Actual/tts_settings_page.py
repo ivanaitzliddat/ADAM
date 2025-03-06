@@ -3,9 +3,9 @@ from tkinter import ttk, font as tkFont
 import pyttsx3
 import pygame
 from config_handler import ConfigHandler
-import threading
+import threading, traceback
 
-#o request config ini to store the following theme colours:
+#To request config ini to store the following theme colours:
 TEXT_COLOUR = "#000000"
 BG_COLOUR = "#DCE0D9"
 FRAME_COLOUR = "#508991"
@@ -139,7 +139,17 @@ class TTS_setup_page(tk.Frame):
         engine.setProperty("rate", rate + (50 if speech_rate == "fast" else -50 if speech_rate == "slow" else 0))
 
         engine.say(text)
-        engine.runAndWait()
+        try:
+            # .runAndWait() blocks code from running after it until its event loop queue is cleared.
+            # However, its event loop queue never seems to clear, so it blocks indefinitely and makes it impossible to stop with .endLoop().
+            engine.runAndWait() 
+        except RuntimeError:    # engine throws RuntimeError on subsequent calls to .runAndWait() as the engine loop already exists.
+            if engine._inLoop:
+                engine.endLoop()    # Ends the existing engine loop that was created on the previous call of .runAndWait()
+                engine.say(text)    # Need to call .say() again 
+                engine.runAndWait()
+        except:
+            traceback.print_exc()
 
     def save_tts_settings(self):
         gender = self.voice_gender_var.get()
