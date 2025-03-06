@@ -101,8 +101,11 @@ class VideoCaptureSetupApp(tk.Frame):
         counter = 0
         while number_of_devices == 0:
             if counter >= 5:
-                # This one can help change to a pop up? Hopefully is something blocking so that when they plug in then they press okay or sth
-                print("Are you sure you plugged in anything at all?")
+                if messagebox.askretrycancel("Unable to detect any USB capture cards",  "Ensure your USB capture cards are connected and try again. "
+                                          +"You may need to restart your computer after plugging it in for the first time."):
+                    counter = 0
+                else:
+                    break   #TODO: Change this to close GUI exit properly
             else:
                 print("Currently still 0, so waiting for awhile...")
                 time.sleep(3)
