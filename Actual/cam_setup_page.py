@@ -105,7 +105,7 @@ class VideoCaptureSetupApp(tk.Frame):
                                           +"You may need to restart your computer after plugging it in for the first time."):
                     counter = 0
                 else:
-                    break   #TODO: Change this to close GUI exit properly
+                    raise RuntimeError
             else:
                 print("Currently still 0, so waiting for awhile...")
                 time.sleep(3)
