@@ -37,6 +37,9 @@ class welcomeScreen(tk.Frame):
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
+        # Mouse Wheel Binding for Scroll
+        self.canvas.bind("<MouseWheel>", self.on_mouse_wheel)
+
         # Responsive Resizing
         self.parent.bind("<Configure>", self.on_resize)
 
@@ -116,6 +119,14 @@ class welcomeScreen(tk.Frame):
             img_label.config(image=img_label.image)
         
         self.setup_button.config(font=("Helvetica", button_font_size, "bold"))
+    
+    # Mouse Wheel Scroll Handler
+    def on_mouse_wheel(self, event):
+        # Scroll up or down with the mouse wheel
+        if event.delta > 0:  # Mouse wheel scroll up
+            self.canvas.yview_scroll(-1, "units")
+        else:  # Mouse wheel scroll down
+            self.canvas.yview_scroll(1, "units")
 
 if __name__ == "__main__":
     root = tk.Tk()
