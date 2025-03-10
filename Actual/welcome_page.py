@@ -15,137 +15,107 @@ GRAB_ATTENTION_COLOUR_2 ="#C3423F"
         #---------------------------------------Start of ADAM App-----------------------------------
 class welcomeScreen(tk.Frame):
     def __init__(self, parent, topbar, option1):
-        super().__init__(parent,bg=BG_COLOUR)
-        self.parent = parent  # Store parent reference
-        # Create the main frame
-        self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.pack(pady=20)
-        
+        super().__init__(parent, bg=BG_COLOUR)
+        self.parent = parent
+
         if ConfigHandler.is_fresh_setup():
             for child in topbar.winfo_children():
                 child.configure(state='normal')
         else:
             for child in topbar.winfo_children():
                 child.configure(state='disable')
-            
-        #Create 3 rows
-        #First row (to store ADAM logo)
-        self.first_row = tk.Frame(self.frame, bg=BG_COLOUR) 
-        self.first_row.pack(fill="both", expand=0) 
 
-        # Second row (to store simple guides before user begin using ADAM)
-        self.second_row = tk.Frame(self.frame, bg=BG_COLOUR) 
-        self.second_row.pack(fill="both",expand=0) 
+        # Scrollable Canvas
+        self.canvas = tk.Canvas(self, bg=BG_COLOUR)
+        self.scrollbar = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas, bg=BG_COLOUR)
+
+        self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
         
-        # Third row (to store button "begin")
-        self.third_row = tk.Frame(self.frame, bg=BG_COLOUR) 
-        self.third_row.pack(fill="both") 
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
 
-        # Logo (placeholder in first row)
-        self.logo_label_header = tk.Label(self.first_row , text="WELCOME TO ADAM", font=("Terminal", 58), bg=BG_COLOUR)
-        self.logo_label_subheader= tk.Label(self.first_row , text="Auxillary Dynamic Alert Monitor", font=("Malgun Gothic Semilight", 16), bg=BG_COLOUR)
-        self.logo_label_before_you_being = tk.Label(self.first_row, text="Before we begin, please ensure the following steps are done", font=("Malgun Gothic Semilight", 20), bg=BG_COLOUR)
-        self.logo_label_header.pack(pady=(200,10))
+        # Responsive Resizing
+        self.parent.bind("<Configure>", self.on_resize)
+
+        # Title Labels
+        self.logo_label_header = tk.Label(self.scrollable_frame, text="WELCOME TO ADAM", bg=BG_COLOUR)
+        self.logo_label_subheader = tk.Label(self.scrollable_frame, text="Auxiliary Dynamic Alert Monitor", bg=BG_COLOUR)
+        self.logo_label_before_you_begin = tk.Label(self.scrollable_frame, text="Before we begin, please ensure the following steps are done", bg=BG_COLOUR)
+        
+        self.logo_label_header.pack(pady=(50, 10))
         self.logo_label_subheader.pack()
-        self.logo_label_before_you_being.pack(side="left",padx=(90,0),pady=(50,20))
+        self.logo_label_before_you_begin.pack(pady=(20, 20))
 
-        # 3 frames in second row
-        self.left_frame = tk.Frame(self.second_row, bg=BG_COLOUR)
-        self.middle_frame = tk.Frame(self.second_row, bg=BG_COLOUR)
-        self.right_frame = tk.Frame(self.second_row, bg=BG_COLOUR)
+        # Steps Frame
+        self.steps_frame = tk.Frame(self.scrollable_frame, bg=BG_COLOUR)
+        self.steps_frame.pack()
 
-        self.left_frame.pack(side="left", expand=True, pady=10, padx=(20,10))
-        self.middle_frame.pack(side="left", expand=True, pady=10, padx=10)
-        self.right_frame.pack(side="left", expand=True, pady=10, padx=(0,20))
+        # Load images dynamically
+        self.images = []
+        for _ in range(3):
+            img = Image.open(ConfigHandler.dirname+"/green_monitor.png")
+            self.images.append(img)
 
-        # Load images
-        # ConfigHandler.dirname returning "". to address the issue then amend the directory again
-        self.left_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\green_monitor.png").resize((200, 200)))
-        self.middle_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\green_monitor.png").resize((200, 200)))
-        self.right_image = ImageTk.PhotoImage(Image.open(ConfigHandler.dirname+"\\green_monitor.png").resize((200, 200)))
+        # Steps Information
+        self.step_labels = []
+        self.step_images = []
+        self.step_texts = []
+        steps = [
+            ("STEP 1", "Ensure all devices are powered on and displayed on the main screen."),
+            ("STEP 2", "Connect the USB video capture card to the ADAM unit and ensure the input device is connected."),
+            ("STEP 3", "Repeat Step 1 and Step 2 for all desired devices. Click Begin when ready.")
+        ]
 
-        # self.left_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
-        # self.middle_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
-        # self.right_image = ImageTk.PhotoImage(Image.open(r"C:\Users\bai_j\Desktop\ADAM-main\Testing\GUI testing\images\1.jpg").resize((300, 300)))
+        for i, (step, text) in enumerate(steps):
+            frame = tk.Frame(self.steps_frame, bg=BG_COLOUR)
+            frame.pack(pady=20, padx=20, fill="both", expand=True)
+            
+            header = tk.Label(frame, text=step, bg=BG_COLOUR)
+            header.pack()
+            self.step_labels.append(header)
+            
+            img_label = tk.Label(frame, bg=BG_COLOUR)
+            img_label.pack(pady=10)
+            self.step_images.append(img_label)
+            
+            desc = tk.Label(frame, text=text, wraplength=500, bg=BG_COLOUR)
+            desc.pack()
+            self.step_texts.append(desc)
 
-
-        #info in left_frame
-        self.second_row_left_header=tk.Label(self.left_frame,
-                                        text="STEP 1",
-                                        font=("Arial",30,"bold"),
-                                        justify="left",
-                                        fg=TEXT_COLOUR,
-                                        bg=BG_COLOUR)
-
-
-        self.left_image_label = tk.Label(self.left_frame, image=self.left_image, bg=BG_COLOUR)
+        # Begin Button
+        self.setup_button = tk.Button(self.scrollable_frame, text="Begin", command=option1)
+        self.setup_button.pack(pady=40)
         
+        self.on_resize()
 
-        self.second_row_left_sub_info = tk.Label(self.left_frame, 
-                                    text="Please ensure all end device(s) that you want ADAM to monitor is powered on with the neccessary application on and presented in the main screen", 
-                                    font=("Arial",20),
-                                    wraplength=400,
-                                    justify="left",
-                                    bg=BG_COLOUR
-                                    )
+    def on_resize(self, event=None):
+        width = max(self.parent.winfo_width(), 1)
+        height = max(self.parent.winfo_height(), 1)
+        min_dimension = max(min(width, height), 1)
+
+        header_font_size = max(10, min(58, min_dimension // 20))
+        subheader_font_size = max(10, min(20, min_dimension // 50))
+        step_font_size = max(10, min(30, min_dimension // 40))
+        button_font_size = max(10, min(26, min_dimension // 40))
+        image_size = max(50, min(200, min_dimension // 10))
+
+        self.logo_label_header.config(font=("Terminal", header_font_size))
+        self.logo_label_subheader.config(font=("Malgun Gothic Semilight", subheader_font_size))
+        self.logo_label_before_you_begin.config(font=("Malgun Gothic Semilight", subheader_font_size))
+
+        for label in self.step_labels:
+            label.config(font=("Arial", step_font_size, "bold"))
+        for text in self.step_texts:
+            text.config(font=("Arial", subheader_font_size), wraplength=width // 2)
+        for i, img_label in enumerate(self.step_images):
+            resized_img = self.images[i].resize((image_size, image_size))
+            img_label.image = ImageTk.PhotoImage(resized_img)
+            img_label.config(image=img_label.image)
         
-        # Use grid to arrange the widgets
-        self.second_row_left_header.grid(row=0, column=0, sticky="ew", padx=20,pady=(10,0))
-        self.left_image_label.grid(row=1, column=0, sticky="ew",padx=20, pady=(0,10))
-        self.second_row_left_sub_info.grid(row=0, column=1, rowspan=2, sticky="ew", padx=20,pady=(10,10))
-
-
-        #info in middle_frame
-        self.second_row_middle_header=tk.Label(self.middle_frame,
-                                        text="STEP 2",
-                                        font=("Arial",30,"bold"),
-                                        justify="left",
-                                        fg=TEXT_COLOUR,
-                                        bg=BG_COLOUR
-                                        )
-
-        self.middle_image_label = tk.Label(self.middle_frame, image=self.middle_image, bg=BG_COLOUR)
-
-        self.second_row_middle_sub_info = tk.Label(self.middle_frame,
-                                    text="Connect the USB video capture card to the rear of ADAM. Then, ensure the device to be monitored is conneted to the input of the usb video capture device", 
-                                    font=("Arial",20),
-                                    wraplength=400,
-                                    justify="left",
-                                    fg=TEXT_COLOUR,
-                                    bg=BG_COLOUR    
-                                    )
-        self.second_row_middle_header.grid(row=0, column=0, sticky="ew", padx=20,pady=(10,0))
-        self.middle_image_label.grid(row=1, column=0, sticky="ew",padx=20, pady=(0,10))
-        self.second_row_middle_sub_info.grid(row=0, column=1, rowspan=2, sticky="ew", padx=20,pady=(10,10))
-    
-        #info in right_frame
-        self.second_row_right_header=tk.Label(self.right_frame,
-                                        text="STEP 3",
-                                        font=("Arial",30,"bold"),
-                                        justify="left",
-                                        fg=TEXT_COLOUR,
-                                        bg=BG_COLOUR
-                                        )
-
-        self.right_image_label = tk.Label(self.right_frame, image=self.right_image, bg=BG_COLOUR)
-
-
-        self.second_row_right_sub_info = tk.Label(self.right_frame,text="Repeat Step 1 and Step 2 till your desired devices are connected to ADAM. Press the Begin button below once you are ready.", 
-                                    font=("Arial",20),
-                                    wraplength=400,
-                                    justify="left",
-                                    fg=TEXT_COLOUR,
-                                    bg=BG_COLOUR    
-                                    )
-                                    
-        self.second_row_right_header.grid(row=0, column=0, sticky="ew", padx=20,pady=(10,0))
-        self.right_image_label.grid(row=1, column=0, sticky="ew",padx=20, pady=(0,10))
-        self.second_row_right_sub_info.grid(row=0, column=1, rowspan=2, sticky="ew", padx=20,pady=(10,10))
-
-        # Setup button (in third row)
-        begin_button_font = tkFont.Font(family='Helvetica', size=26, weight='bold')
-        self.setup_button = tk.Button(self.third_row, text="Begin", font=begin_button_font,  command=option1)
-        self.setup_button.pack(pady=60)
+        self.setup_button.config(font=("Helvetica", button_font_size, "bold"))
 
 if __name__ == "__main__":
     root = tk.Tk()
