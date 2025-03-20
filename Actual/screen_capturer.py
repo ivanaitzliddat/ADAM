@@ -1,10 +1,11 @@
-import time
-import threading
+import time, threading, traceback
 import imageio.v3 as iio
+import numpy as np
 from subthread_config import Thread_Config
 from screenshots import Screenshot
 from messages import MessageQueue
 from imageio.plugins.deviceslist import DevicesList
+from config_handler import ConfigHandler
 
 '''
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
@@ -42,9 +43,21 @@ class ScreenCapturer:
             while i < num_of_devices:
                 if not Thread_Config.running:
                     break
-
+                
+                generator = None
                 try:
-                    generator = next(iio.imiter(f"<video{i}>"))
+                    # Check if the Input Device in DevicesList.device_list[i] is set to disabled in config file.
+                    if ConfigHandler.get_cfg_disabled_input_devices(usb_alt_name = DevicesList.device_list[i]):
+                        # Define the pixel size of the square
+                        square_size = 300
+                        # Create a black square in RGB (shape: height x width x 3)
+                        black_square = np.zeros((square_size, square_size, 3), dtype=np.uint8)
+                        # Set generator to black_square
+                        generator = black_square
+                    else:
+                        # Set generator to the captured frame in <video{i}>
+                        generator = next(iio.imiter(f"<video{i}>"))
+                    
                     alt_name = DevicesList.device_list[i]
                     frame = {
                                 'current': generator,
@@ -58,8 +71,9 @@ class ScreenCapturer:
 
                     i += 1
 
-                except Exception as e:
-                    print(f"Capture Screenshot has failed with error: {e}")
+                except Exception:
+                    traceback.print_exc()
+                    print(f"Capture Screenshot has failed.")
             iteration += 1
 
     '''
