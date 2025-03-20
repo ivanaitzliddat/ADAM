@@ -5,10 +5,10 @@ import configparser
 from datetime import datetime
 
 class ConfigHandler:
-    # Config file path and default structure
+    # Config file path
     CONFIG_FILE = "config.ini"
 
-    # TODO: Modify DEFAULT_CONFIG with final default values
+    # Default config structure and default values
     DEFAULT_CONFIG = {
         "GUI": {
             "gui_fonts": "Arial 12,Times 14,ComicSans 10",
@@ -23,6 +23,7 @@ class ConfigHandler:
         "Input Device 0": {
             "usb_alt_name": "",
             "custom_name": "",
+            "device_enabled": "True",
             "triggers": {"cond0":{"condition_name": "", "keywords":["keyword1",], "tts_text": "", "bg_colour": "#FFFFFF"}},
         }
     }
@@ -30,7 +31,8 @@ class ConfigHandler:
     cp = configparser.ConfigParser()
     lock = threading.Lock()
     dirname = ""
-    
+
+    ### Initialise the ConfigHandler object. ###
     @staticmethod
     def init():
         # This if...else needs to occur first before any subsequent references to file directories
@@ -57,6 +59,7 @@ class ConfigHandler:
                 tk_msgbox.showinfo("Error in config.ini",  "The config.ini file is corrupted.\nA new config.ini has been created with default settings.")
             ConfigHandler.validate_config()
 
+    ### Create a new default config file. ###
     @staticmethod
     def create_default_config():
         """Creates a new config.ini file with default settings."""
@@ -72,7 +75,8 @@ class ConfigHandler:
             else:
                 os.rename(ConfigHandler.CONFIG_FILE, old_cfg_name)
         ConfigHandler.save_config()
-    
+
+    ### Validates the config file by matching it with DEFAULT_CONFIG. ###
     @staticmethod
     def validate_config():
         print("Validating config.ini...")
@@ -203,14 +207,15 @@ class ConfigHandler:
         # If function has run up till this point, then config.ini is fully validated. Hence, return True.
         print("\tRESULT: Config.ini is valid.")
         return True
-            
+
+    ### Saves the config file. ###         
     @staticmethod
     def save_config():
         """Saves the current config to the file."""
         with open(ConfigHandler.CONFIG_FILE, "w", encoding = "utf-8") as file:
             ConfigHandler.cp.write(file)
 
-    #DONE
+    ### Checks if it is a fresh setup of ADAM. Returns True/False accordingly. ###
     @staticmethod
     def is_fresh_setup():
         """Returns True if it detects a fresh setup (fresh setup requires user to be brought straight to setup page)"""
@@ -235,7 +240,7 @@ class ConfigHandler:
             else:
                 return False
 
-    # Returns all options and values in [GUI] section as a dictionary.
+    ### Returns all options and values in [GUI] section as a dictionary. ###
     @staticmethod
     def get_cfg_gui():
         # Check if [GUI] section exists in config.ini
@@ -243,7 +248,7 @@ class ConfigHandler:
             return {key: value for key, value in ConfigHandler.cp["GUI"].items()}
         return {}
 
-    # Returns all options and values in [TTS] section as a dictionary.
+    ### Returns all options and values in [TTS] section as a dictionary. ###
     @staticmethod
     def get_cfg_tts():
         # Check if [TTS] section exists in config.ini
@@ -251,7 +256,10 @@ class ConfigHandler:
             return {key: value for key, value in ConfigHandler.cp["TTS"].items()}
         return {}
 
-    # Returns all options and values in [Input Device X] section as a dictionary.
+    ### Returns options and values in [Input Device X] section as a dictionary. ###
+    # Accepts OPTIONAL 'usb_alt_name' kwarg.
+    # If no usb_alt_name is passed in, returns a dict of options and values for all [Input Device X].
+    # If usb_alt_name is passed in, returns a dict of options and values for specific [Input Device X]. If no matching usb_alt_name, an empty dict is returned.
     @staticmethod
     def get_cfg_input_devices(**kwargs):
         usb_alt_name = kwargs.get("usb_alt_name")
@@ -266,9 +274,9 @@ class ConfigHandler:
             if isinstance(usb_alt_name, str):
                 if ConfigHandler.cp.get(section, "usb_alt_name") == usb_alt_name:
                     for key, value in ConfigHandler.cp[section].items():
-                        if key != "triggers":
-                            input_devices_dict.setdefault(section, {}).update({key: value})
-                        else:
+                        if key == "device_enabled":
+                            input_devices_dict.setdefault(section, {}).update({key: ast.literal_eval(value)})
+                        elif key == "triggers":
                             try:
                                 cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp[section]["triggers"])
                                 if not isinstance(cfg_triggers_dict, dict):
@@ -280,13 +288,15 @@ class ConfigHandler:
                                 return {}
                             except:
                                 traceback.print_exc()
-                                return {}    
+                                return {}                        
+                        else:
+                            input_devices_dict.setdefault(section, {}).update({key: value})
             # Check if usb_alt_name kwargs was passed in (value is None if not passed in)
             elif usb_alt_name is None:
                 for key, value in ConfigHandler.cp[section].items():
-                    if key != "triggers":
-                        input_devices_dict.setdefault(section, {}).update({key: value})
-                    else:
+                    if key == "device_enabled":
+                        input_devices_dict.setdefault(section, {}).update({key: ast.literal_eval(value)})
+                    elif key == "triggers":
                         try:
                             cfg_triggers_dict = ast.literal_eval(ConfigHandler.cp[section]["triggers"])
                             if not isinstance(cfg_triggers_dict, dict):
@@ -300,6 +310,8 @@ class ConfigHandler:
                         except:
                             traceback.print_exc()
                             return {}
+                    else:
+                        input_devices_dict.setdefault(section, {}).update({key: value})
             # 'Catch-all' if usb_alt_name was somehow passed in as non-String value.
             else:
                 print("Invalid value type for 'usb_alt_name' (String needed).")
@@ -307,7 +319,34 @@ class ConfigHandler:
         else:
             return input_devices_dict
 
-    # Set values of options in [GUI] section.
+    ### Returns options and values only in ENABLED [Input Device X] section as a dictionary. ###
+    # Accepts OPTIONAL 'usb_alt_name' kwarg.
+    # If no usb_alt_name is passed in, returns a dict of options and values for all ENABLED [Input Device X].
+    # If usb_alt_name is passed in, returns a dict of options and values for specific ENABLED [Input Device X]. If no matching usb_alt_name, an empty dict is returned.
+    def get_cfg_enabled_input_devices(**kwargs):
+        enabled_devices_dict = {}
+        
+        for device, val in ConfigHandler.get_cfg_input_devices(**kwargs).items():
+            if val.get("device_enabled") == True:
+                enabled_devices_dict.setdefault(device, val)
+                
+        return enabled_devices_dict
+        
+    ### Returns options and values only in DISABLED [Input Device X] section as a dictionary. ###
+    # Accepts OPTIONAL 'usb_alt_name' kwarg.
+    # If no usb_alt_name is passed in, returns a dict of options and values for all DISABLED [Input Device X].
+    # If usb_alt_name is passed in, returns a dict of options and values for specific DISABLED [Input Device X]. If no matching usb_alt_name, an empty dict is returned.
+    def get_cfg_disabled_input_devices(**kwargs):
+        disabled_devices_dict = {}
+        
+        for device, val in ConfigHandler.get_cfg_input_devices(**kwargs).items():
+            if val.get("device_enabled") == False:
+                disabled_devices_dict.setdefault(device, val)
+                
+        return disabled_devices_dict
+
+    ### Set values of options in [GUI] section. ###
+    # Accepts OPTIONAL kwargs based on the options present in [GUI] section
     # This only sets the values, but does not write to config.ini to reduce write operations. Call save_config() separately.
     @staticmethod
     def set_cfg_gui(**kwargs):
@@ -338,7 +377,8 @@ class ConfigHandler:
             else:
                 print(f"Unable to find {key} under [GUI] section of config.ini.")
 
-    # Set values of options in [TTS] section.
+    ### Set values of options in [TTS] section. ###
+    # Accepts OPTIONAL kwargs based on the options present in [TTS] section
     # This only sets the values, but does not write to config.ini to reduce write operations. Call save_config() separately.
     @staticmethod
     def set_cfg_tts(**kwargs):
@@ -369,7 +409,9 @@ class ConfigHandler:
             else:
                 print(f"Unable to find {key} under [TTS] section of config.ini.")               
 
-    # Set values of options in [Input Device X] section.
+    ### Set values of options in [Input Device X] section. ###
+    # Requires 'usb_alt_name' argument.
+    # Accepts OPTIONAL kwargs based on the options and sub-options present in [Input Device X] section
     # This only sets the values, but does not write to config.ini to reduce write operations. Call save_config() separately.
     @staticmethod
     def set_cfg_input_device(usb_alt_name: str, **kwargs):
@@ -508,7 +550,8 @@ class ConfigHandler:
                     except:
                         traceback.print_exc()
 
-    # Add input devices
+    ### Add input device. ###
+    # Requires 'usb_alt_name' argument.
     @staticmethod
     def add_input_device(usb_alt_name: str):
         device_count = []
@@ -534,7 +577,8 @@ class ConfigHandler:
                 ConfigHandler.cp[new_device]["usb_alt_name"] = usb_alt_name_arg
                 print(f"Added [{new_device}]. You need to call save_config() separately to write to config.ini.")
 
-    # Delete input devices
+    ### Delete input device. ###
+    # Requires 'usb_alt_name' argument.
     @staticmethod
     def del_input_device(usb_alt_name: str):
         usb_alt_name_arg = str(usb_alt_name)
