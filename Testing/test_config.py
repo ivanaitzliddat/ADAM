@@ -80,7 +80,7 @@ ConfigHandler.add_input_device(usb_alt_name = "testing alt name")
 ConfigHandler.save_config()
 
 
-### Delete new Input Device ###
+### Delete Input Device ###
 # This function requires MANDATORY usb_alt_name argument of String type.
 ConfigHandler.del_input_device(usb_alt_name = "testing alt name")
 ConfigHandler.save_config()
