@@ -34,8 +34,8 @@ print(ConfigHandler.get_cfg_tts())
 
 ### Get Input Device settings. ###
 # This function accepts OPTIONAL usb_alt_name kwarg.
-# Returns a dict of all Input Device X settings if no usb_alt_name is passed in.
-# Returns a dict of a specific Input Device X's settings if usb_alt_name is passed in.
+# If no usb_alt_name is passed in, returns a dict of all Input Device X settings.
+# If usb_alt_name is passed in, returns a dict of a specific Input Device X's settings.
 device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = "aaa") # Pass in usb_alt_name argument to get settings for that device only as dict
 for key, val in device_dict.items():
     print(key)
@@ -44,6 +44,28 @@ for key, val in device_dict.items():
 
 device_dict2 = ConfigHandler.get_cfg_input_devices()    # If usb_alt_name argument not passed in, settings for all input devices will be retrieved as dict
 for key, val in device_dict2.items():
+    print(key)
+    print(val)
+    print(val["triggers"]["cond0"]["keywords"])
+
+
+### Get settings of all ENABLED Input Device ###
+# This function accepts OPTIONAL usb_alt_name kwarg.
+# If no usb_alt_name is passed in, returns a dict of options and values for all ENABLED [Input Device X].
+# If usb_alt_name is passed in, returns a dict of options and values for specific ENABLED [Input Device X]. If no matching usb_alt_name, an empty dict is returned.
+device_dict3 = ConfigHandler.get_cfg_enabled_input_devices()
+for key, val in device_dict3.items():
+    print(key)
+    print(val)
+    print(val["triggers"]["cond0"]["keywords"])
+    
+
+### Get settings of all DISABLED Input Device ###
+# This function accepts OPTIONAL usb_alt_name kwarg.
+# If no usb_alt_name is passed in, returns a dict of options and values for all DISABLED [Input Device X].
+# If usb_alt_name is passed in, returns a dict of options and values for specific DISABLED [Input Device X]. If no matching usb_alt_name, an empty dict is returned.
+device_dict4 = ConfigHandler.get_cfg_disabled_input_devices()
+for key, val in device_dict4.items():
     print(key)
     print(val)
     print(val["triggers"]["cond0"]["keywords"])
@@ -80,7 +102,7 @@ ConfigHandler.add_input_device(usb_alt_name = "testing alt name")
 ConfigHandler.save_config()
 
 
-### Delete Input Device ###
+### Delete new Input Device ###
 # This function requires MANDATORY usb_alt_name argument of String type.
 ConfigHandler.del_input_device(usb_alt_name = "testing alt name")
 ConfigHandler.save_config()
