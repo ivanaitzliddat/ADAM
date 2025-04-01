@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
 from config_handler import ConfigHandler
+from screenshots import Screenshot
+from PIL import Image, ImageTk
 
 class add_condition_page:
     def __init__(self, root, usb_alt_name, callback):
@@ -114,7 +116,40 @@ class add_condition_page:
         color_entry = tk.Entry(self.color_frame, width=20)
         color_entry.insert(0, self.temp_bg_colour)
         color_entry.config(state='readonly')
-        color_entry.pack(side="left", padx=5)    
+        color_entry.pack(side="left", padx=5)
+
+    def _from_rgb(self, rgb):
+        return "#%02x%02x%02x" % rgb
+    
+    def display_image(self, image):
+        """Display the provided image on the canvas."""
+        #convert pyimage13 to PIL
+        PIL_image = ImageTk.getimage(image).convert("RGB")
+        #resized_PIL_image = PIL_image.resize((800, 600))
+
+        #set the canvas size to the image size
+        img_width, img_height = PIL_image.size
+        self.canvas.config(width=img_width, height=img_height)
+
+        #convert PIL to ImageTk format to display on canvas
+        self.image_tk = ImageTk.PhotoImage(PIL_image)
+        
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
+        self.image = PIL_image  # Store the PIL image for color picking
+
+    def colorpic(self, event):
+        if not hasattr(self, 'image'):
+            return
+        x, y = event.x, event.y
+        # Convert canvas coordinates to image coordinates
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+        img_x = int(x * self.image.width / canvas_width)
+        img_y = int(y * self.image.height / canvas_height)
+        rgb = self.image.getpixel((img_x, img_y))
+        color_code = self._from_rgb(rgb)
+        self.color_display.config(text=f"{color_code}")
+        self.color_display.config(bg=color_code)    
 
     def display_tts(self):
         for widget in self.tts_frame.winfo_children():
@@ -207,113 +242,84 @@ class add_condition_page:
         self.center_sub_window(add_a_keyword_window)
 
     def add_color(self):
-        color_window = tk.Toplevel(self.root)
-        color_window.title("Choose a Color")
-        color_window.geometry("600x800")
-        color_window.transient(self.root)
+        add_color_window = tk.Toplevel(self.root)
+        add_color_window.title("Choose a Color")
+        add_color_window.transient(self.root)
+        add_color_window.resizable(False, False)
 
-        color_chooser_frame = tk.Frame(color_window, width=1000, pady=5)
-        color_chooser_frame.pack(fill="y", pady=5)
+        # Main container frame (ensures everything is structured properly)
+        main_frame = tk.Frame(add_color_window)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Header Label
+        header_label = tk.Label(main_frame, text="Click on the image below to get the colour code", font=("Arial", 14, "bold"))
+        header_label.pack(fill="x", pady=(5, 10))
+
+        # Content Frame (for layout organization)
+        content_frame = tk.Frame(main_frame)
+        content_frame.pack(fill="both", expand=True)
+
+        # Left Side: Canvas for Displaying Image
+        self.canvas = tk.Canvas(content_frame)
+        self.canvas.pack(side="left")
+        self.canvas.bind("<Button-1>", self.colorpic)
+
+        # Get the image dynamically from Screenshot.frames
+        image_tk = None  # Initialize to avoid NameError
+        for item in Screenshot.frames:
+            if item['alt_name'] == self.usb_alt_name:
+                frame = item["current"]
+                image = Image.fromarray(frame)
+                image_tk = ImageTk.PhotoImage(image)
+
+        if image_tk:
+            self.display_image(image_tk)
+
+        # Right Side: Color Selection & Buttons
+        color_frame = tk.Frame(content_frame)
+        color_frame.pack(side="left", padx=(20, 0), fill="y")
+
+        self.color_label = tk.Label(color_frame, text="Selected Color:", font=("Arial", 12))
+        self.color_label.pack(pady=5)
+
+        self.color_display = tk.Label(color_frame, width=20, height=10, bg="white")
+        self.color_display.config(text="None")
+        self.color_display.pack(pady=5)
+
+        # Button Frame (organized vertically)
+        button_frame = tk.Frame(color_frame)
+        button_frame.pack(fill="x", pady=10)
+
+        clear_color_button = tk.Button(button_frame, text="Clear Colour Selection", width=25, command=self.clear_colour)
+        clear_color_button.pack(fill="x", pady=5)
+
+        save_button = tk.Button(button_frame, text="Save", width=25, command=lambda: self.save_bg_colour(add_color_window))
+        save_button.pack(fill="x", pady=5)
+
+        cancel_button = tk.Button(button_frame, text="Cancel", width=25, command=add_color_window.destroy)
+        cancel_button.pack(fill="x", pady=5)
+
+        # Update the window geometry to fit the contents
+        add_color_window.update_idletasks()
+        width = add_color_window.winfo_width()
+        height = add_color_window.winfo_height()
+        x = (add_color_window.winfo_screenwidth() // 2) - (width // 2)
+        y = (add_color_window.winfo_screenheight() // 2) - (height // 2)
+        add_color_window.geometry(f"{width}x{height}+{x}+{y}")
 
         # Center the window
-        self.center_sub_window(color_window)
+        self.center_sub_window(add_color_window)
 
-        # 1st Row: Header
-        header_frame = tk.Frame(color_chooser_frame, pady=5)
-        header_frame.pack(fill="x", pady=5)
-        header_label = tk.Label(header_frame, text="Edit Background Colour", font=("Arial", 14, "bold"))
-        header_label.pack()
+    def clear_colour(self):
+        self.color_display.config(text="None", bg="white")
 
-        # 2nd Row: Store the color picker
-        color_frame = tk.Frame(color_chooser_frame, height=500, highlightbackground="grey", highlightthickness=1)
-        color_frame.pack(fill="x", expand=True, padx=5, pady=5)
-
-        self.color_label = tk.Label(color_frame, text="Selected Color: None", font=("Arial", 12))
-        self.color_label.pack(pady=20)
-
-        # Add a color display area
-        self.color_display = tk.Label(color_frame, text="Color Display", width=20, height=10, bg="white")
-        self.color_display.pack(pady=10)
-
-        # Add a clear button to remove selected colour
-        clear_button = tk.Button(color_chooser_frame, text="Clear", command=self.clear_color)
-        clear_button.pack(side="left", padx=20, pady=5)
-
-        # Add sliders for RGB values
-        self.red_slider = tk.Scale(color_frame, from_=0, to=255, orient="horizontal", label="Red", command=lambda x: self.update_color())
-        self.red_slider.pack(fill="x", padx=5, pady=2)
-        self.green_slider = tk.Scale(color_frame, from_=0, to=255, orient="horizontal", label="Green", command=lambda x: self.update_color())
-        self.green_slider.pack(fill="x", padx=5, pady=2)
-        self.blue_slider = tk.Scale(color_frame, from_=0, to=255, orient="horizontal", label="Blue", command=lambda x: self.update_color())
-        self.blue_slider.pack(fill="x", padx=5, pady=2)
-
-        # Add a color palette for quick selection
-        palette_frame = tk.Frame(color_frame)
-        palette_frame.pack(pady=10)
-
-        colors = [
-            "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
-            "#800000", "#008000", "#000080", "#808000", "#800080", "#008080",
-            "#C0C0C0", "#808080", "#999999", "#333333", "#666666", "#000000",
-            "#FF6347", "#4682B4", "#DA70D6", "#32CD32", "#FFD700", "#FF4500"
-        ]
-
-        # Display colors in a grid with 2 rows
-        num_columns = 12  # Number of columns per row
-        for index, color in enumerate(colors):
-            row = index // num_columns
-            col = index % num_columns
-            color_button = tk.Button(palette_frame, bg=color, width=2, height=1, command=lambda c=color: self.set_color_from_palette(c))
-            color_button.grid(row=row, column=col, padx=2, pady=2)
-
-        # 3rd Row: Save and Cancel buttons below the palette frame
-        button_frame = tk.Frame(color_chooser_frame, pady=5)
-        button_frame.pack(fill="x", pady=5)
-
-        # Inner frame to centralize buttons
-        inner_button_frame = tk.Frame(button_frame)
-        inner_button_frame.pack(expand=True)
-
-        save_button = tk.Button(inner_button_frame, text="Save", command=lambda: self.save_bg_colour(color_window))
-        save_button.pack(side="left", padx=20, pady=5)
-        cancel_button = tk.Button(inner_button_frame, text="Cancel", command=color_window.destroy)
-        cancel_button.pack(side="right", padx=20, pady=5)
-
-    def update_color(self):
-        r = self.red_slider.get()
-        g = self.green_slider.get()
-        b = self.blue_slider.get()
-        color_code = f'#{r:02x}{g:02x}{b:02x}'
-        self.color_label.config(text=f"Selected Color: {color_code}")
-        self.color_display.config(text="Color Display", bg=color_code)
-
-    def set_color_from_palette(self, color_code):
-        self.color_label.config(text=f"Selected Color: {color_code}", bg=color_code)
-        self.color_display.config(bg=color_code)
-        r, g, b = int(color_code[1:3], 16), int(color_code[3:5], 16), int(color_code[5:7], 16)
-        self.red_slider.set(r)
-        self.green_slider.set(g)
-        self.blue_slider.set(b)
-
-    def set_initial_color(self, color_code):
-        self.color_label.config(text=f"Selected Color: {color_code}")
-        self.color_display.config(text="Color Display", bg=color_code)
-        r, g, b = int(color_code[1:3], 16), int(color_code[3:5], 16), int(color_code[5:7], 16)
-        self.red_slider.set(r)
-        self.green_slider.set(g)
-        self.blue_slider.set(b)
-
-    def clear_color(self):
-        self.color_label.config(text="Selected Color: None")
-        self.color_display.config(text="No colour selected", bg="#FFFFFF")
-
-    def save_bg_colour(self, color_window):
-        self.bg_colour = self.color_label.cget("text").split(": ")[1]
+    def save_bg_colour(self, add_color_window):
+        self.bg_colour = self.color_display.cget("text")
         if self.bg_colour == "None":
             self.bg_colour = ""
         self.temp_bg_colour = self.bg_colour
         self.display_color()
-        color_window.destroy()
+        add_color_window.destroy()
 
     def add_tts(self):
         def on_submit():

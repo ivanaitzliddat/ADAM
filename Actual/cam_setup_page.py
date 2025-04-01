@@ -10,6 +10,8 @@ import Pmw
 import imageio.v3 as iio
 from PIL import Image, ImageTk
 from screenshots import Screenshot
+import numpy as np
+import threading
 
 
 #o request config ini to store the following theme colours:
@@ -22,51 +24,63 @@ GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
 class VideoCaptureSetupApp(tk.Frame):
     def __init__(self, parent, topbar, fresh_setup_status, proceed_to_alerts_page):
+        super().__init__(parent, bg=BG_COLOUR)
 
-        super().__init__(parent,bg=BG_COLOUR)
         # Create the main frame
         self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.pack(pady=20)
+        self.frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
         self.topbar = topbar
         self.proceed_to_alerts_page = proceed_to_alerts_page
+
         # First row (ADAM logo)
         self.first_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.first_row.pack(fill="both")
-        self.logo_label1 = tk.Label(
-            self.first_row, text="Video Capture Card Configuration", font=("Malgun Gothic Semilight", 38,), bg=BG_COLOUR
+        self.first_row.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(10, 50))
+        self.page_header = tk.Label(
+            self.first_row, text="Video Capture Card Configuration", font=("Malgun Gothic Semilight", 38), bg=BG_COLOUR
         )
-        self.logo_label1.pack(pady=(10,50))
-        
-        if fresh_setup_status == True:
+        self.page_header.grid(row=0, column=0, pady=(0, 5))
+
+        if fresh_setup_status:
             # Call the method to detect devices and save them into config.ini
             self.detect_and_save_devices()
             for child in topbar.winfo_children():
-                child.configure(state='disable')
+                child.configure(state="disable")
         else:
             for child in topbar.winfo_children():
-                child.configure(state='normal')
+                child.configure(state="normal")
 
         # Second row (scrollable area)
         self.create_scrollable_second_row()
 
         # Fourth row (Save button)
         self.fourth_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.fourth_row.pack(fill="both")
+        self.fourth_row.grid(row=2, column=0, columnspan=2, sticky="ew", pady=20)
         proceed_button = tkFont.Font(family="Helvetica", size=20, weight="bold")
         self.proceed_button = tk.Button(self.fourth_row, text="Proceed to Alerts Page", font=proceed_button, command=lambda: self.reset_topbar(topbar))
-        self.proceed_button.pack(pady=20)
+        self.proceed_button.grid(row=0, column=0, pady=20)
 
-        if not fresh_setup_status == True:
-            self.proceed_button.pack_forget()   
+        if not fresh_setup_status:
+            self.proceed_button.grid_remove()
+
+        self.refresh_video_frames()
+
+    def refresh_video_frames(self):
+        """Refresh the video frames every 5 seconds."""
+        def refresh():
+            for i, video_label in enumerate(self.video_labels):
+                usb_alt_name = video_label.usb_alt_name
+                self.get_one_frame_from_capture_device(video_label, i, usb_alt_name)
+            self.after(5000, self.refresh_video_frames)
+        threading.Thread(target=refresh).start()
 
 
     def reset_topbar(self,topbar):
-        response = messagebox.askyesno("Proceed to Alerts Page?", "Have you completed the configuration for your video input(s) and wish to proceed to Alerts Page?") 
+        response = messagebox.askyesno("Proceed to Alerts Page?", "Have you completed the configuration for your video input(s) and wish to proceed to Alerts Page?")
         if response:
             for child in topbar.winfo_children():
-                child.configure(state='normal')
+                child.configure(state="normal")
             self.proceed_to_alerts_page()
-            self.proceed_button.pack_forget()
+            self.proceed_button.grid_remove()
 
     def show_loading_popup(self):
         popup = tk.Tk()
@@ -145,24 +159,21 @@ class VideoCaptureSetupApp(tk.Frame):
             counter+=1
         # Save the updated config
         ConfigHandler.save_config()
-        
-        # Show a confirmation message
-        #messagebox.showinfo("Device Detection Complete", "Video devices have been successfully detected and configured.")
-        #return len(DevicesList.device_list)
 
     def create_scrollable_second_row(self):
         """Create a scrollable second row with detected inputs."""
-        self.second_row_frame = tk.Frame(self.frame)
-        self.second_row_frame.pack(fill="both", expand=True)
+        self.second_row_frame = tk.Frame(self.frame, bg=FRAME_COLOUR)
+        self.second_row_frame.grid(row=1, column=0, columnspan=4, sticky="nsew")
 
         # Canvas for scrollable area
         self.canvas = tk.Canvas(
-            self.second_row_frame, width=1900, height=900, highlightbackground="black", highlightthickness=2 ,bg=FRAME_COLOUR  
+            self.second_row_frame, width=1900, height=900, highlightbackground="black", highlightthickness=2, bg=FRAME_COLOUR
+            #self.second_row_frame, highlightbackground="black", highlightthickness=2, bg=FRAME_COLOUR
         )
         self.scrollbar = tk.Scrollbar(
             self.second_row_frame, orient="vertical", command=self.canvas.yview
         )
-        self.scrollable_frame = tk.Frame(self.canvas,bg=FRAME_COLOUR)
+        self.scrollable_frame = tk.Frame(self.canvas, bg=FRAME_COLOUR)
 
         # Bind scrollable frame to canvas
         self.scrollable_frame.bind(
@@ -174,31 +185,58 @@ class VideoCaptureSetupApp(tk.Frame):
         # Bind mouse wheel event to canvas
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
-        # Pack canvas and scrollbar
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.scrollbar.pack(side="right", fill="y")
+        # Add canvas and scrollbar to the grid
+        self.canvas.grid(row=0, column=0, columnspan=4, sticky="nsew")
+        self.scrollbar.grid(row=0, column=4, sticky="ns")
 
-        # retrieve the number of devices from config.ini and populate the video_inputs dictionary
+        # Retrieve the number of devices from config.ini and populate the video_inputs dictionary
         self.populate_video_inputs()
 
-    def get_one_frame_from_capture_device(self, video_label, index_num):
-        device_index = f"<video{index_num}>"
+    def get_one_frame_from_capture_device(self, video_label, index_num, usb_alt_name):
+        black_pixel_percentage = 0.95  # Define the percentage of black pixels needed to classify the frame as mostly black
+        iio_prep_end = time.time() + 2.5    # Let imageio prep for 2.5s from current time.
+        #device_index = f"<video0>"
         try:
-            frame_count = 0
-            for frame in iio.imiter(device_index):
-                # Convert the frame to an image
-                image = Image.fromarray(frame).resize((430,300))
-                image_tk = ImageTk.PhotoImage(image)
+            # Let imageio prep for 2.5s from current time.
+            while time.time() < iio_prep_end:
+                time.sleep(0.1)  # Sleep for a short duration to allow imageio to prepare
+                    
+            #get the image based on usb_alt_name
+            for item in Screenshot.frames:
+                if item['alt_name'] == usb_alt_name:
+                    frame = item["current"]
+                    # Convert the frame to an image
+                    image = Image.fromarray(frame).resize((430,300))
+                    image_tk = ImageTk.PhotoImage(image)
                 
-                video_label.config(image=image_tk)
-                video_label.image = image_tk
-                
-                frame_count += 1
-                if frame_count == 1:  # Limit to 1 frame
-                    break
+                    frame_colour_sum = np.sum(image_tk, axis=-1)  # Sum over the last axis in the Shape frame, which is the colour channel (R, G, B)
+
+                    # Identify pure black pixels (where RGB sum is exactly 0)
+                    black_pixels = frame_colour_sum == 0  # True if the pixel is exactly black
+                    black_pixel_count = np.sum(black_pixels)  # Count the number of black pixels
+
+                    # Calculate the total number of pixels in the frame
+                    total_pixels = frame.shape[0] * frame.shape[1]  # Height * Width
+                       
+                    # Calculate the percentage of black pixels
+                    black_pixel_ratio = black_pixel_count / total_pixels
+
+                    # Check if the majority of the frame is black
+                    if black_pixel_ratio > black_pixel_percentage:
+                        # Display "No signal" text instead of the image
+                        video_label.config(text="No signal", image='', bg="black", fg="white")
+                        # Change this to handle the black screen       
+                        print("Black frame detected!!")
+                        print(f"Frame {index_num}: black pixel ratio = {black_pixel_ratio:.4f}")
+                    else:
+                        video_label.config(image=image_tk)
+                        video_label.image = image_tk
+                else:
+                    video_label.config(text="No signal", image='', bg="black", fg="white")
 
         except Exception as e:
             print(f"An error occurred with device {index_num}: {e}")
+            video_label.config(text="No signal", image='', bg="black", fg="white")
 
     def _on_mousewheel(self, event):
         """Scroll the canvas content with the mouse wheel."""
@@ -206,33 +244,39 @@ class VideoCaptureSetupApp(tk.Frame):
 
     def populate_video_inputs(self):
         """Populate the scrollable frame with video input elements."""
-         
+        self.video_labels = []  # Store video labels for refreshing 
         device_dict = ConfigHandler.get_cfg_input_devices()
         i = 0
         for key, val in device_dict.items():
             usb_alt_name = val["usb_alt_name"]
             custom_name = val["custom_name"]
+            device_status = val["device_enabled"]
 
             # Create a subframe for each video input
             device_frame = tk.Frame(
                 self.scrollable_frame,
                 highlightbackground=GRAB_ATTENTION_COLOUR_1,
                 highlightthickness=4,
-                width=450,
-                height=500
+                width=430,
+                height=530
             )
+            # Store the device status in the device_frame
+            device_frame.device_status = device_status
 
             device_frame.grid_propagate(False)
             device_frame.pack_propagate(False)
             device_frame.grid(row=i // 4, column=i % 4, padx=10, pady=10)
 
-            # Video Frame Placeholder - to find a way to store a frame for each video input {usb_alt_name:1frame}
             video_label = tk.Label(
-                device_frame, text=f"Video Frame {i} = to hold 1 frame from each input", bg="black", fg="white", height=300, padx=5
+                device_frame, text=f"No Signal in Video Frame {i}", bg="black", fg="white", height=300, padx=5
             )
             video_label.pack(fill="x",pady=(0,5))
+
+            # Store the usb_alt_name in the video_label object
+            video_label.usb_alt_name = usb_alt_name
+            self.video_labels.append(video_label)
             
-            self.get_one_frame_from_capture_device(video_label,i)
+            self.get_one_frame_from_capture_device(video_label,i,usb_alt_name)
 
             # Display the device sequence number
             device_seq_num_frame = tk.Frame(device_frame)
@@ -269,7 +313,7 @@ class VideoCaptureSetupApp(tk.Frame):
             # Trigger Condition Button
             button_frame = tk.Frame(device_frame)
             button_frame.pack(fill="x")
-            trig_condition_button = tk.Button(button_frame, text="Edit Trigger Conditions", width=10, height=3, command=lambda usb_alt_name=usb_alt_name: edit_condition(usb_alt_name))
+            trig_condition_button = tk.Button(button_frame, text="Edit Trigger Conditions", width=10, command=lambda usb_alt_name=usb_alt_name: edit_condition(usb_alt_name))
             trig_condition_button.pack(fill="both")
             if custom_name == "":
                 trig_condition_button.config(state="disabled") 
@@ -281,7 +325,41 @@ class VideoCaptureSetupApp(tk.Frame):
             rename_button = tk.Button(device_given_name_frame, text="Rename", width=10, command=lambda device_label=device_given_name, usb_alt_name=usb_alt_name, trig_condition_button= trig_condition_button: self.rename_and_update_trigger_condition_button(device_label,usb_alt_name,trig_condition_button))
             rename_button.pack(side="right", padx=5)
 
+            # Create the Enable/Disable button
+            enable_disable_button = tk.Button(button_frame, text="Enable/Disable")
+            enable_disable_button.pack(fill="both")
+
+            # Update the button's command after it is created
+            enable_disable_button.config(command=lambda device_frame=device_frame, enable_disable_button=enable_disable_button, usb_alt_name=usb_alt_name: self.enable_disable_device(device_frame, enable_disable_button, usb_alt_name))
+
+            if device_status == True: 
+                device_frame.config(highlightbackground="#6bc33f")
+                enable_disable_button.config(text="Disable Device")
+            else:
+                device_frame.config(highlightbackground="RED")
+                enable_disable_button.config(text="Enable Device")
+
             i += 1
+
+    def enable_disable_device(self, device_frame, enable_disable_button, usb_alt_name):
+        device_status = device_frame.device_status
+        if device_status == True:
+            response = messagebox.askyesnocancel("Disable Device", "Are you sure you want to disable this device?\nThis will stop the video feed from this device.")
+        else:
+            response = messagebox.askyesnocancel("Enable Device", "Are you sure you want to enable this device?\nThis will start the video feed from this device.")
+        
+        """Once user clicks on yes, it will always change the device status to the opposite of what it is now and change the colour."""
+        if response:
+            device_status = not device_status
+            device_frame.device_status = device_status
+            ConfigHandler.set_cfg_input_device(usb_alt_name=usb_alt_name, device_enabled=device_status)
+            if device_status == True:
+                device_frame.config(highlightbackground="#6bc33f")
+                enable_disable_button.config(text="Disable Device")
+            else:
+                device_frame.config(highlightbackground="RED")
+                enable_disable_button.config(text="Enable Device")
+            ConfigHandler.save_config()
 
     def rename_and_update_trigger_condition_button(self, device_label, usb_alt_name,trig_condition_button):
         """Prompt the user to rename the device."""
@@ -315,7 +393,7 @@ class VideoCaptureSetupApp(tk.Frame):
                 ConfigHandler.save_config()
                 device_label.config(text=new_name)  # Update the label with the new name
                 messagebox.showinfo("Success", f"Device renamed to '{new_name}'!")
-                change_button_state = True
+                #change_button_state = True
                 trig_condition_button.config(state="normal")
 
                 rename_window.destroy()

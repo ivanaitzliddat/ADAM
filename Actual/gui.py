@@ -41,57 +41,45 @@ class ADAM:
 
         # Set up the topbar
         self.topbar = tk.Frame(self.master, height=50, bg=BG_COLOUR)
-        self.topbar.pack(side="top", fill="x")
-            
+        self.topbar.grid(row=0, column=0, columnspan=2, sticky="ew")
+
         # Buttons to switch between pages
         self.alerts_button = tk.Button(self.topbar, text="Alerts", command=self.open_alerts_page)
-        self.alerts_button.pack(side="left", padx=10)
+        self.alerts_button.grid(row=0, column=0, padx=10, pady=5)
 
-        #create a settings button and when clicked, a drop down menu will appear
+        # Create a settings button and when clicked, a drop-down menu will appear
         self.settings_button = tk.Button(self.topbar, text="Settings", command=self.show_settings_menu)
-        self.settings_button.pack(side="left", padx=10)
+        self.settings_button.grid(row=0, column=1, padx=10, pady=5)
 
-        #add options to the drop down menu when settings button is clicked
+        # Add options to the drop-down menu when settings button is clicked
         # Create the settings menu
         self.settings_menu = tk.Menu(self.master, tearoff=0)
         self.settings_menu.add_command(label="Video Capture Cards", command=self.option1)
         self.settings_menu.add_command(label="Text-to-Speech", command=self.option2)
-  
-        # button for About page
+
+        # Button for About page
         self.about_button = tk.Button(self.topbar, text="About ADAM", command=self.show_about_page)
-        self.about_button.pack(side="left", padx=10)
-        
-        # button for FAQ page
+        self.about_button.grid(row=0, column=2, padx=10, pady=5)
+
+        # Button for FAQ page
         self.FAQ_button = tk.Button(self.topbar, text="FAQ", command=self.show_FAQ_page)
-        self.FAQ_button.pack(side="left", padx=10)
+        self.FAQ_button.grid(row=0, column=3, padx=10, pady=5)
 
         # Main content area to display the current page
         self.content_frame = tk.Frame(self.master)
-        self.content_frame.pack(side="right", expand=True, fill="both")
+        self.content_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
         self.current_page = None
 
-        # self.settings_button = tk.Button(self.topbar, text="Settings", command=lambda: self.show_page("settings"))
-        # self.settings_button.pack(side="left", padx=10)
-        
-        # self.keyword_button = tk.Button(self.topbar, text="Keyword", command=lambda: self.show_page("keywords"))
-        # self.keyword_button.pack(side="left", padx=10)
-        
-        # self.color_picker_button = tk.Button(self.topbar, text="Color Picker", command=lambda: self.show_page("color_picker"))
-        # self.color_picker_button.pack(side="left", padx=10)
-        
         fresh_setup_status = ConfigHandler.is_fresh_setup()
 
         # Initialize pages
         self.pages = {
-            "welcome_page":welcomeScreen(self.content_frame, self.topbar, self.option1),
+            "welcome_page": welcomeScreen(self.content_frame, self.topbar, self.option1),
             "cam_setup_page": VideoCaptureSetupApp(self.content_frame, self.topbar, fresh_setup_status, self.open_alerts_page),
-            "tts_setup_page": TTS_setup_page(self.content_frame), 
-            "FAQ_page":FAQPage(self.content_frame),
-            "About_page":AboutPage(self.content_frame),
+            "tts_setup_page": TTS_setup_page(self.content_frame),
+            "FAQ_page": FAQPage(self.content_frame),
+            "About_page": AboutPage(self.content_frame),
             "alerts_page": AlertsPage(self.content_frame)
-            # "settings": SettingsPage(self.content_frame),  
-            # "keywords": KeywordPage(self.content_frame),
-            # "color_picker": ColorPage(self.content_frame)
         }
 
         # Show the initial page
@@ -99,6 +87,10 @@ class ADAM:
             self.show_page("welcome_page")
         else:
             self.show_page("alerts_page")
+
+        # Configure grid weights for resizing
+        self.master.grid_rowconfigure(1, weight=1)
+        self.master.grid_columnconfigure(0, weight=1)
 
         # Start the queue checking process
         self.check_queue()
@@ -147,11 +139,11 @@ class ADAM:
         """Switches to the specified page."""
         # Hide the current page if there is one
         if self.current_page:
-            self.pages[self.current_page].pack_forget()
+            self.pages[self.current_page].grid_forget()
 
         # Show the new page
         self.current_page = page_name
-        self.pages[page_name].pack(expand=True, fill="both")
+        self.pages[page_name].grid(row=0, column=0, sticky="nsew")
 
         # Force the GUI to redraw
         self.master.update_idletasks()

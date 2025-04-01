@@ -10,17 +10,20 @@ GRAB_ATTENTION_COLOUR_2 = "#C3423F"
 
 class FAQPage(tk.Frame):
     def __init__(self, parent):
-
         super().__init__(parent, bg=BG_COLOUR)
-        # ConfigHandler.init() #for testing purposes, to be removed once done
 
         # Create the main frame
         self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.pack(pady=20)
+        self.frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
         # Title
-        tk.Label(self.frame, text="Frequently Asked Questions (FAQ)",
-                 bg=BG_COLOUR, font=("Arial", 16, "bold"), pady=10).pack()
+        tk.Label(
+            self.frame,
+            text="Frequently Asked Questions (FAQ)",
+            bg=BG_COLOUR,
+            font=("Arial", 16, "bold"),
+            pady=10
+        ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
 
         # FAQs
         faqs = [
@@ -44,21 +47,39 @@ class FAQPage(tk.Frame):
 
             ("Q7: What is the maximum number of video inputs that can be connected?",
              "The max number is dependent on the hardware that is used to run this application. Some limiting factors include but are not limited to: CPU used, RAM available, and number of video input ports on motherboard.")
-
         ]
 
         # Display FAQs
-        for question, answer in faqs:
+        for i, (question, answer) in enumerate(faqs):
             # Question
-            tk.Label(self.frame, text=question, font=("Arial", 12, "bold"), bg=BG_COLOUR,
-                     wraplength=550, anchor="w", pady=5).pack(anchor="w", padx=10)
+            tk.Label(
+                self.frame,
+                text=question,
+                font=("Arial", 12, "bold"),
+                bg=BG_COLOUR,
+                wraplength=550,
+                anchor="w",
+                pady=5
+            ).grid(row=1 + 2 * i, column=0, sticky="w", padx=10)
+
             # Answer
-            tk.Label(self.frame, text=answer, font=("Arial", 11), bg=BG_COLOUR,
-                     wraplength=550, anchor="w", pady=2).pack(anchor="w", padx=20)
+            tk.Label(
+                self.frame,
+                text=answer,
+                font=("Arial", 11),
+                bg=BG_COLOUR,
+                wraplength=550,
+                anchor="w",
+                pady=2
+            ).grid(row=2 + 2 * i, column=0, sticky="w", padx=20)
+
+        # Configure grid weights for resizing
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = FAQPage(root, lambda page: print(f"switch to {page}"))
-    app.pack(fill="both", expand=True)
+    app = FAQPage(root)
+    app.grid(row=0, column=0, sticky="nsew")
     root.mainloop()

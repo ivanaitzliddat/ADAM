@@ -1,10 +1,12 @@
 import tkinter as tk
 from config_handler import ConfigHandler
+from screenshots import Screenshot
+from PIL import Image, ImageTk
 
 class edit_bg_colour_page:
     def __init__(self, root, usb_alt_name, condition, bg_colour, custom_name, callback):
         self.root = root
-        self.root.geometry("900x700")
+        #self.root.geometry("900x1000")
         self.usb_alt_name = usb_alt_name
         self.condition = condition
         self.callback = callback
@@ -13,108 +15,104 @@ class edit_bg_colour_page:
 
         self.root.grab_set()
         self.root.focus_set()
+
+        self.root.resizable(False, False)
         
         # Center the window after initializing
         self.root.after(0, self.center_window)
         self.setup_ui()
-        self.set_initial_color(bg_colour)
 
+        #get the image based on usb_alt_name
+        for item in Screenshot.frames:
+            if item['alt_name'] == usb_alt_name:
+                frame = item["current"]
+                # Convert the frame to an image
+                image = Image.fromarray(frame)
+                image_tk = ImageTk.PhotoImage(image)
+        self.display_image(image_tk)
+
+    def _from_rgb(self, rgb):
+        return "#%02x%02x%02x" % rgb
+    
     def setup_ui(self):
         self.root.title(f"Edit colour trigger for {self.custom_name} - {self.condition}")
-        color_chooser_frame = tk.Frame(self.root, width=1000, pady=5)
-        color_chooser_frame.pack(fill="y", pady=5)
-        
+        # Main container frame to hold everything
+        main_frame = tk.Frame(self.root)
+        main_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
         # 1st Row: Header
-        header_frame = tk.Frame(color_chooser_frame, pady=5)
-        header_frame.pack(fill="x", pady=5)
-        header_label = tk.Label(header_frame, text="Edit Background Colour", font=("Arial", 14, "bold"))
-        header_label.pack()
+        header_label = tk.Label(main_frame, text="Click on the image below to get the colour code", font=("Arial", 14, "bold"))
+        header_label.pack(fill="x", pady=(2,0))
 
-        # 2nd Row: Store the color picker
-        color_frame = tk.Frame(color_chooser_frame, height=500, highlightbackground="grey", highlightthickness=1)
-        color_frame.pack(fill="x", expand=True, padx=5, pady=5)
+        # 2nd Row: Content Frame (for left-aligned layout)
+        content_frame = tk.Frame(main_frame)
+        content_frame.pack(fill="both", expand=True)
 
-        self.color_label = tk.Label(color_frame, text="Selected Color: None", font=("Arial", 12))
-        self.color_label.pack(pady=20)
+        # Left Side: Canvas for Displaying Image
+        self.canvas = tk.Canvas(content_frame)
+        self.canvas.pack(side="left")
+        self.canvas.bind("<Button-1>", self.colorpic)
 
-        # Add a color display area
-        self.color_display = tk.Label(color_frame, text="Color Display", width=20, height=10, bg="white")
-        self.color_display.pack(pady=10)
+        # Right Side: Selected colour and Buttons
+        color_frame = tk.Frame(content_frame)
+        color_frame.pack(side="left", padx=(10,0))
 
-        # Add a clear button to remove selected colour
-        clear_button = tk.Button(color_chooser_frame, text="Clear", command=lambda: self.clear_color())
-        clear_button.pack(side="left", padx=20, pady=5)
+        self.color_label = tk.Label(color_frame, text="Selected Color:", font=("Arial", 12))
+        self.color_label.pack()
 
-        # Add sliders for RGB values
-        self.red_slider = tk.Scale(color_frame, from_=0, to=255, orient="horizontal", label="Red", command=lambda x: self.update_color())
-        self.red_slider.pack(fill="x", padx=5, pady=2)
-        self.green_slider = tk.Scale(color_frame, from_=0, to=255, orient="horizontal", label="Green", command=lambda x: self.update_color())
-        self.green_slider.pack(fill="x", padx=5, pady=2)
-        self.blue_slider = tk.Scale(color_frame, from_=0, to=255, orient="horizontal", label="Blue", command=lambda x: self.update_color())
-        self.blue_slider.pack(fill="x", padx=5, pady=2)
+        self.color_display = tk.Label(color_frame, width=20, height=10, bg="white")
+        if self.bg_colour == "":
+            self.color_display.config(text="None")
+        else:
+            self.color_display.config(text=self.bg_colour)
+            self.color_display.config(bg=self.bg_colour)
+        self.color_display.pack()
 
-        # Add a color palette for quick selection
-        palette_frame = tk.Frame(color_frame)
-        palette_frame.pack(pady=10)
+        button_frame = tk.Frame(color_frame)
+        button_frame.pack(side="left")
 
-        colors = [
-            "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
-            "#800000", "#008000", "#000080", "#808000", "#800080", "#008080",
-            "#C0C0C0", "#808080", "#999999", "#333333", "#666666", "#000000",
-            "#FF6347", "#4682B4", "#DA70D6", "#32CD32", "#FFD700", "#FF4500"
-        ]
+        clear_colour_button = tk.Button(button_frame, text="Clear Colour Selection", width=20, command=self.clear_colour)
+        clear_colour_button.pack(fill="x", pady=(5,0))
 
-        # Display colors in a grid with 2 rows
-        num_columns = 12  # Number of columns per row
-        for index, color in enumerate(colors):
-            row = index // num_columns
-            col = index % num_columns
-            color_button = tk.Button(palette_frame, bg=color, width=2, height=1, command=lambda c=color: self.set_color_from_palette(c))
-            color_button.grid(row=row, column=col, padx=2, pady=2)
+        save_button = tk.Button(button_frame, text="Save",width=20, command=self.save_bg_colour)
+        save_button.pack(fill="x", pady=(5,0))
 
-        # 3rd Row: Save and Cancel buttons below the palette frame
-        button_frame = tk.Frame(color_chooser_frame, pady=5)
-        button_frame.pack(fill="x", pady=5)
+        cancel_button = tk.Button(button_frame, text="Cancel",width=20, command=self.cancel)
+        cancel_button.pack(fill="x", pady=(5,0))
 
-        # Inner frame to centralize buttons
-        inner_button_frame = tk.Frame(button_frame)
-        inner_button_frame.pack(expand=True)
+    def display_image(self, image):
+        """Display the provided image on the canvas."""
+        #convert pyimage13 to PIL
+        PIL_image = ImageTk.getimage(image).convert("RGB")
+        #resized_PIL_image = PIL_image.resize((800, 600))
 
-        save_button = tk.Button(inner_button_frame, text="Save", command=self.save_bg_colour)
-        save_button.pack(side="left", padx=20, pady=5)
-        cancel_button = tk.Button(inner_button_frame, text="Cancel", command=self.cancel)
-        cancel_button.pack(side="right", padx=20, pady=5)
+        #set the canvas size to the image size
+        img_width, img_height = PIL_image.size
+        self.canvas.config(width=img_width, height=img_height)
 
-    def update_color(self):
-        r = self.red_slider.get()
-        g = self.green_slider.get()
-        b = self.blue_slider.get()
-        color_code = f'#{r:02x}{g:02x}{b:02x}'
-        self.color_label.config(text=f"Selected Color: {color_code}")
-        self.color_display.config(text="Color Display", bg=color_code)
+        #convert PIL to ImageTk format to display on canvas
+        self.image_tk = ImageTk.PhotoImage(PIL_image)
+        
+        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
+        self.image = PIL_image  # Store the PIL image for color picking
 
-    def set_color_from_palette(self, color_code):
-        self.color_label.config(text=f"Selected Color: {color_code}", bg=color_code)
+    def colorpic(self, event):
+        if not hasattr(self, 'image'):
+            return
+        x, y = event.x, event.y
+        # Convert canvas coordinates to image coordinates
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
+        img_x = int(x * self.image.width / canvas_width)
+        img_y = int(y * self.image.height / canvas_height)
+        rgb = self.image.getpixel((img_x, img_y))
+        color_code = self._from_rgb(rgb)
+        self.color_display.config(text=f"{color_code}")
         self.color_display.config(bg=color_code)
-        r, g, b = int(color_code[1:3], 16), int(color_code[3:5], 16), int(color_code[5:7], 16)
-        self.red_slider.set(r)
-        self.green_slider.set(g)
-        self.blue_slider.set(b)
-
-    def set_initial_color(self, color_code):
-        self.color_label.config(text=f"Selected Color: {color_code}")
-        self.color_display.config(text="Color Display", bg=color_code)
-        r, g, b = int(color_code[1:3], 16), int(color_code[3:5], 16), int(color_code[5:7], 16)
-        self.red_slider.set(r)
-        self.green_slider.set(g)
-        self.blue_slider.set(b)
-    
-    def clear_color(self):
-        self.color_label.config(text="Selected Color: None")
-        self.color_display.config(text="No colour selected", bg="#FFFFFF")
 
     def save_bg_colour(self):
-        self.bg_colour = self.color_label.cget("text").split(": ")[1]
+        #self.bg_colour = self.color_label.cget("text").split(": ")[1]
+        self.bg_colour = self.color_display.cget("text")
         if self.bg_colour == "None":
             self.bg_colour = ""
         ConfigHandler.set_cfg_input_device(usb_alt_name=self.usb_alt_name, condition=self.condition, bg_colour=self.bg_colour)
@@ -122,7 +120,12 @@ class edit_bg_colour_page:
         self.root.destroy()
         self.callback()
 
+    def clear_colour(self):
+        self.color_display.config(text=f"None")
+        self.color_display.config(bg="white")
+
     def cancel(self):
+        self.image = None
         self.root.grab_release()
         self.root.destroy()
 

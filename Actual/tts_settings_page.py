@@ -4,6 +4,7 @@ import pyttsx3
 import pygame
 from config_handler import ConfigHandler
 import threading, traceback
+from tkinter import messagebox
 
 #To request config ini to store the following theme colours:
 TEXT_COLOUR = "#000000"
@@ -14,23 +15,25 @@ GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
 class TTS_setup_page(tk.Frame):
     def __init__(self, parent):
-
-        super().__init__(parent,bg=BG_COLOUR)
-        #ConfigHandler.init() #for testing purposes, to be removed once done
+        super().__init__(parent, bg=BG_COLOUR)
 
         # Create the main frame
         self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.pack(pady=20)
+        self.frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+
+        # Configure grid weights for resizing
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         # Create rows
         self.first_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.first_row.pack(fill="both")
+        self.first_row.grid(row=0, column=0, sticky="ew", pady=(10, 20))
 
         self.second_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.second_row.pack(fill="both")
+        self.second_row.grid(row=1, column=0, sticky="ew", pady=(10, 20))
 
         self.third_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.third_row.pack(fill="both")
+        self.third_row.grid(row=2, column=0, sticky="ew", pady=(10, 20))
 
         # Logo (First Row)
         tk.Label(
@@ -38,13 +41,14 @@ class TTS_setup_page(tk.Frame):
             text="Text-to-Speech Settings",
             font=("Malgun Gothic Semilight", 38),
             bg=BG_COLOUR
-        ).pack()
+        ).grid(row=0, column=0, sticky="w", pady=(0, 10))
+
         tk.Label(
             self.first_row,
             text="Please customise the parameters below",
             font=("Malgun Gothic Semilight", 16),
             bg=BG_COLOUR
-        ).pack()
+        ).grid(row=1, column=0, sticky="w")
 
         # Row 1: Voice and Alert Options
         self.row1_frame = tk.Frame(self.second_row, pady=10, bg=BG_COLOUR)
@@ -97,8 +101,8 @@ class TTS_setup_page(tk.Frame):
 
         # Save button (Third Row)
         save_button_font = tkFont.Font(family="Helvetica", size=26, weight="bold")
-        self.save_button_font = tk.Button(self.third_row, text="Save", font=save_button_font, command=lambda: self.save_tts_settings())
-        self.save_button_font.pack(pady=10)
+        self.save_button_font = tk.Button(self.third_row, text="Save", font=save_button_font, command=self.save_tts_settings)
+        self.save_button_font.grid(row=0, column=0, pady=10)
 
     def play_audio_alert(self, sound_file):
         pygame.mixer.init()
@@ -172,6 +176,8 @@ class TTS_setup_page(tk.Frame):
                 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = TTS_setup_page(root, lambda page: print(f"switch to {page}"))
-    app.pack(fill="both", expand = True)
+    app = TTS_setup_page(root)
+    app.grid(row=0, column=0, sticky="nsew")
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_columnconfigure(0, weight=1)
     root.mainloop()
