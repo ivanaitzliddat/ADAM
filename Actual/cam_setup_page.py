@@ -92,7 +92,7 @@ class VideoCaptureSetupApp(tk.Frame):
             for child in topbar.winfo_children():
                 child.configure(state="normal")
             self.proceed_to_alerts_page()
-            self.proceed_button.grid_remove()
+            self.proceed_button.pack_forget()
 
     def show_loading_popup(self):
         popup = tk.Tk()
