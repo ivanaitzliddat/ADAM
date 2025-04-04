@@ -77,7 +77,7 @@ class FAQPage(tk.Frame):
                 text=question,
                 font=("Arial", 12, "bold"),
                 bg=BG_COLOUR,
-                wraplength=self.winfo_width() - 50,  # Dynamic wraplength
+                wraplength=self.winfo_width() - 100,  # Dynamic wraplength
                 anchor="w",
                 pady=5
             )
@@ -90,7 +90,7 @@ class FAQPage(tk.Frame):
                 text=answer + "\n",
                 font=("Arial", 11),
                 bg=BG_COLOUR,
-                wraplength=self.winfo_width() - 50,  # Dynamic wraplength
+                wraplength=self.winfo_width() - 100,  # Dynamic wraplength
                 anchor="w",
                 pady=2
             )
@@ -117,9 +117,9 @@ class FAQPage(tk.Frame):
         # Update dynamic labels
         for label in self.dynamic_labels:
             if "bold" in label.cget("font"):
-                label.config(font=("Arial", subheader_font_size, "bold"))
+                label.config(font=("Arial", subheader_font_size, "bold"), wraplength=width - 70) 
             else:
-                label.config(font=("Arial", body_font_size))
+                label.config(font=("Arial", body_font_size), wraplength=width - 70) 
 
     def _on_mousewheel(self, event):
         """Scroll the canvas content with the mouse wheel."""

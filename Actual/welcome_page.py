@@ -12,7 +12,6 @@ FRAME_COLOUR = "#508991"
 GRAB_ATTENTION_COLOUR_1 ="#FF934F"
 GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
-        #---------------------------------------Start of ADAM App-----------------------------------
 class welcomeScreen(tk.Frame):
     def __init__(self, parent, topbar, option1):
         super().__init__(parent, bg=BG_COLOUR)
@@ -31,10 +30,11 @@ class welcomeScreen(tk.Frame):
         self.scrollable_frame = tk.Frame(self.canvas, bg=BG_COLOUR)
 
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
-        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
         
-        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="n")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.canvas.pack(side="left",fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
         # Mouse Wheel Binding for Scroll
@@ -47,10 +47,10 @@ class welcomeScreen(tk.Frame):
         self.logo_label_header = tk.Label(self.scrollable_frame, text="WELCOME TO ADAM", bg=BG_COLOUR)
         self.logo_label_subheader = tk.Label(self.scrollable_frame, text="Auxiliary Dynamic Alert Monitor", bg=BG_COLOUR)
         self.logo_label_before_you_begin = tk.Label(self.scrollable_frame, text="Before we begin, please ensure the following steps are done", bg=BG_COLOUR)
-        
-        self.logo_label_header.pack(pady=(50, 10))
+
+        self.logo_label_header.pack(pady=(0,10))  # Reduced top padding
         self.logo_label_subheader.pack()
-        self.logo_label_before_you_begin.pack(pady=(20, 20))
+        self.logo_label_before_you_begin.pack(pady=(10, 10))  # Reduced padding
 
         # Steps Frame
         self.steps_frame = tk.Frame(self.scrollable_frame, bg=BG_COLOUR)
@@ -59,7 +59,7 @@ class welcomeScreen(tk.Frame):
         # Load images dynamically
         self.images = []
         for _ in range(3):
-            img = Image.open(ConfigHandler.dirname+"/green_monitor.png")
+            img = Image.open(ConfigHandler.dirname + "/green_monitor.png")
             self.images.append(img)
 
         # Steps Information
@@ -74,27 +74,28 @@ class welcomeScreen(tk.Frame):
 
         for i, (step, text) in enumerate(steps):
             frame = tk.Frame(self.steps_frame, bg=BG_COLOUR)
-            frame.pack(pady=20, padx=20, fill="both", expand=True)
-            
+            frame.pack(pady=10, padx=20, fill="both", expand=True)  # Reduced padding
+
             header = tk.Label(frame, text=step, bg=BG_COLOUR)
             header.pack()
             self.step_labels.append(header)
-            
+
             img_label = tk.Label(frame, bg=BG_COLOUR)
-            img_label.pack(pady=10)
+            img_label.pack(pady=5)  # Reduced padding
             self.step_images.append(img_label)
-            
+
             desc = tk.Label(frame, text=text, wraplength=500, bg=BG_COLOUR)
             desc.pack()
             self.step_texts.append(desc)
 
         # Begin Button
         self.setup_button = tk.Button(self.scrollable_frame, text="Begin", command=option1)
-        self.setup_button.pack(pady=40)
-        
-        self.on_resize()
+        self.setup_button.pack(pady=20)  # Reduced padding
+
+        self.bind("<Configure>", self.on_resize)
 
     def on_resize(self, event=None):
+        """Dynamically adjust the layout and font sizes based on window size."""
         width = max(self.parent.winfo_width(), 1)
         height = max(self.parent.winfo_height(), 1)
         min_dimension = max(min(width, height), 1)
@@ -117,19 +118,18 @@ class welcomeScreen(tk.Frame):
             resized_img = self.images[i].resize((image_size, image_size))
             img_label.image = ImageTk.PhotoImage(resized_img)
             img_label.config(image=img_label.image)
-        
+
         self.setup_button.config(font=("Helvetica", button_font_size, "bold"))
-    
+
     # Mouse Wheel Scroll Handler
     def on_mouse_wheel(self, event):
-        # Scroll up or down with the mouse wheel
-        if event.delta > 0:  # Mouse wheel scroll up
+        if event.delta > 0:
             self.canvas.yview_scroll(-1, "units")
-        else:  # Mouse wheel scroll down
+        else:
             self.canvas.yview_scroll(1, "units")
 
 if __name__ == "__main__":
     root = tk.Tk()
-    app = welcomeScreen(root, lambda page: print(f"switch to {page}"))
-    app.pack(fill="both",expand = True)
+    app = welcomeScreen(root, None, lambda: print("Begin clicked"))
+    app.pack(fill="both", expand=True)
     root.mainloop()

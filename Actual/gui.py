@@ -158,7 +158,11 @@ class ADAM:
         # Force the GUI to redraw
         self.master.update_idletasks()
 
+  
         # Resize the new page based on its own on_resize method
+        if page_name == "welcome_page":
+            self.pages[page_name].on_resize()
+            
         if page_name == "about_page":
             self.pages[page_name].on_resize()
             

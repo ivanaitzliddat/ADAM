@@ -218,7 +218,7 @@ class AboutPage(tk.Frame):
 
         # Update title font
         self.title_label.config(font=("Arial", header_font_size, "bold"))
-        self.intro_label.config(wraplength=self.parent.winfo_width() - scrollbar_width - 10)
+        self.intro_label.config(wraplength=self.parent.winfo_width() - scrollbar_width - 200)
 
         # Update dynamic labels
         for label in self.dynamic_labels:
