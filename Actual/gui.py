@@ -30,7 +30,7 @@ class ADAM:
 
         self.master = tk.Tk()
         self.master.title("ADAM")
-        self.master.geometry("1980x1080")
+        #self.master.geometry("1980x1080")
         self.master.state("zoomed")
         self.master.config(bg=BG_COLOUR)
         self.master.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -66,8 +66,17 @@ class ADAM:
         self.FAQ_button.grid(row=0, column=3, padx=10, pady=5)
 
         # Main content area to display the current page
-        self.content_frame = tk.Frame(self.master)
-        self.content_frame.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        self.content_frame = tk.Frame(self.master, bg=BG_COLOUR)
+        self.content_frame.grid(row=1, column=0, sticky="nsew")
+
+        # Set up 3 columns
+        self.content_frame.grid_columnconfigure(0, weight=1)  # Left Spacer
+        self.content_frame.grid_columnconfigure(1, weight=10) # Center Column (Main Content)
+        self.content_frame.grid_columnconfigure(2, weight=1)  # Right Spacer
+
+        # Ensure content fills the space and resizes properly
+        self.content_frame.grid_rowconfigure(0, weight=1)
+
         self.current_page = None
 
         fresh_setup_status = ConfigHandler.is_fresh_setup()
@@ -87,6 +96,7 @@ class ADAM:
             self.show_page("welcome_page")
         else:
             self.show_page("alerts_page")
+
 
         # Configure grid weights for resizing
         self.master.grid_rowconfigure(1, weight=1)
@@ -143,10 +153,23 @@ class ADAM:
 
         # Show the new page
         self.current_page = page_name
-        self.pages[page_name].grid(row=0, column=0, sticky="nsew")
+        self.pages[page_name].grid(row=0, column=1, sticky="nsew")
 
         # Force the GUI to redraw
         self.master.update_idletasks()
+
+        # Resize the new page based on its own on_resize method
+        if page_name == "about_page":
+            self.pages[page_name].on_resize()
+            
+        if page_name == "FAQ_page":
+            self.pages[page_name].on_resize()
+
+        if page_name == "cam_setup_page":
+            self.pages[page_name].on_resize()
+
+        if page_name == "tts_setup_page":
+            self.pages[page_name].on_resize()
 
     def on_closing(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):

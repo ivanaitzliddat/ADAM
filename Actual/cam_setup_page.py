@@ -28,17 +28,22 @@ class VideoCaptureSetupApp(tk.Frame):
 
         # Create the main frame
         self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        self.frame.pack(fill="both", expand=True, padx=20, pady=20)
         self.topbar = topbar
         self.proceed_to_alerts_page = proceed_to_alerts_page
 
         # First row (ADAM logo)
         self.first_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.first_row.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(10, 50))
+        self.first_row.pack(fill="x", pady=(10, 50))
+
+        # Centered Page Header
         self.page_header = tk.Label(
-            self.first_row, text="Video Capture Card Configuration", font=("Malgun Gothic Semilight", 38), bg=BG_COLOUR
+            self.first_row,
+            text="Video Capture Card Configuration",
+            font=("Arial", 38),
+            bg=BG_COLOUR
         )
-        self.page_header.grid(row=0, column=0, pady=(0, 5))
+        self.page_header.pack(pady=(0, 5))
 
         if fresh_setup_status:
             # Call the method to detect devices and save them into config.ini
@@ -54,15 +59,23 @@ class VideoCaptureSetupApp(tk.Frame):
 
         # Fourth row (Save button)
         self.fourth_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.fourth_row.grid(row=2, column=0, columnspan=2, sticky="ew", pady=20)
-        proceed_button = tkFont.Font(family="Helvetica", size=20, weight="bold")
-        self.proceed_button = tk.Button(self.fourth_row, text="Proceed to Alerts Page", font=proceed_button, command=lambda: self.reset_topbar(topbar))
-        self.proceed_button.grid(row=0, column=0, pady=20)
+        self.fourth_row.pack(fill="x", pady=20)
+        proceed_button_font = tkFont.Font(family="Helvetica", size=20, weight="bold")
+        self.proceed_button = tk.Button(
+            self.fourth_row,
+            text="Proceed to Alerts Page",
+            font=proceed_button_font,
+            command=lambda: self.reset_topbar(topbar)
+        )
+        self.proceed_button.pack(pady=20)
 
         if not fresh_setup_status:
-            self.proceed_button.grid_remove()
+            self.proceed_button.pack_forget()
 
         self.refresh_video_frames()
+        
+        # Bind the on_resize function to the <Configure> event
+        self.bind("<Configure>", self.on_resize)
 
     def refresh_video_frames(self):
         """Refresh the video frames every 5 seconds."""
@@ -72,7 +85,6 @@ class VideoCaptureSetupApp(tk.Frame):
                 self.get_one_frame_from_capture_device(video_label, i, usb_alt_name)
             self.after(5000, self.refresh_video_frames)
         threading.Thread(target=refresh).start()
-
 
     def reset_topbar(self,topbar):
         response = messagebox.askyesno("Proceed to Alerts Page?", "Have you completed the configuration for your video input(s) and wish to proceed to Alerts Page?")
@@ -163,12 +175,11 @@ class VideoCaptureSetupApp(tk.Frame):
     def create_scrollable_second_row(self):
         """Create a scrollable second row with detected inputs."""
         self.second_row_frame = tk.Frame(self.frame, bg=FRAME_COLOUR)
-        self.second_row_frame.grid(row=1, column=0, columnspan=4, sticky="nsew")
+        self.second_row_frame.pack(fill="both", expand=True)
 
         # Canvas for scrollable area
         self.canvas = tk.Canvas(
-            self.second_row_frame, width=1900, height=900, highlightbackground="black", highlightthickness=2, bg=FRAME_COLOUR
-            #self.second_row_frame, highlightbackground="black", highlightthickness=2, bg=FRAME_COLOUR
+            self.second_row_frame, highlightbackground="black", highlightthickness=2, bg=FRAME_COLOUR
         )
         self.scrollbar = tk.Scrollbar(
             self.second_row_frame, orient="vertical", command=self.canvas.yview
@@ -185,12 +196,41 @@ class VideoCaptureSetupApp(tk.Frame):
         # Bind mouse wheel event to canvas
         self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
 
-        # Add canvas and scrollbar to the grid
-        self.canvas.grid(row=0, column=0, columnspan=4, sticky="nsew")
-        self.scrollbar.grid(row=0, column=4, sticky="ns")
+        # Pack canvas and scrollbar
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
 
         # Retrieve the number of devices from config.ini and populate the video_inputs dictionary
         self.populate_video_inputs()
+
+    def on_resize(self, event=None):
+        """Dynamically adjust the layout and font sizes based on window size."""
+        # Ensure the window width is not smaller than the size of a single device_frame
+        min_width = 550  # Minimum width for to display at least one device_frame
+        min_height = 800  # Minimum height for one device_frame plus the button below (for first setup)
+        min_dimension = max(min(min_width, min_height), 1)
+
+        # Get the root window (Tk instance)
+        root = self.winfo_toplevel()
+
+        # Set the minimum size for the window
+        root.wm_minsize(min_width, min_height)
+
+        # Calculate the actual dimensions of the window
+        current_width = max(self.winfo_width(), min_width)
+        current_height = max(self.winfo_height(), min_height)
+
+        # Adjust the page header font size dynamically
+        header_font_size = max(10, min(58, current_width // 30))
+        self.page_header.config(font=("Arial", header_font_size, "bold"))
+
+        # Adjust the layout of device frames
+        available_width = self.canvas.winfo_width()
+        num_columns = max(1, available_width // 430)  # Calculate how many device_frames fit in a row
+        for i, device_frame in enumerate(self.scrollable_frame.winfo_children()):
+            row = i // num_columns
+            column = i % num_columns
+            device_frame.grid(row=row, column=column, padx=10, pady=10)
 
     def get_one_frame_from_capture_device(self, video_label, index_num, usb_alt_name):
         black_pixel_percentage = 0.95  # Define the percentage of black pixels needed to classify the frame as mostly black

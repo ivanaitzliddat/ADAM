@@ -1,6 +1,6 @@
 import tkinter as tk
 
-# o request config ini to store the following theme colours:
+# Theme colors
 TEXT_COLOUR = "#000000"
 BG_COLOUR = "#DCE0D9"
 FRAME_COLOUR = "#508991"
@@ -11,19 +11,38 @@ GRAB_ATTENTION_COLOUR_2 = "#C3423F"
 class FAQPage(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, bg=BG_COLOUR)
+        self.parent = parent
 
-        # Create the main frame
-        self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
-
-        # Title
-        tk.Label(
-            self.frame,
+        # Title (outside the scrollable frame)
+        self.title_label = tk.Label(
+            self,
             text="Frequently Asked Questions (FAQ)",
             bg=BG_COLOUR,
             font=("Arial", 16, "bold"),
             pady=10
-        ).grid(row=0, column=0, columnspan=2, sticky="w", pady=(0, 10))
+        )
+        self.title_label.pack(side="top", fill="x", pady=(10, 10))
+
+        # Scrollable Canvas
+        self.canvas = tk.Canvas(self, bg=BG_COLOUR, highlightthickness=0)
+        self.scrollbar = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas, bg=BG_COLOUR)
+
+        # Configure the canvas to use the scrollbar
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        # Pack the canvas and scrollbar
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        # Create a window inside the canvas for the scrollable frame
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
+        # Bind the scrollable frame to the canvas
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
 
         # FAQs
         faqs = [
@@ -50,36 +69,66 @@ class FAQPage(tk.Frame):
         ]
 
         # Display FAQs
+        self.dynamic_labels = []
         for i, (question, answer) in enumerate(faqs):
             # Question
-            tk.Label(
-                self.frame,
+            question_label = tk.Label(
+                self.scrollable_frame,
                 text=question,
                 font=("Arial", 12, "bold"),
                 bg=BG_COLOUR,
-                wraplength=550,
+                wraplength=self.winfo_width() - 50,  # Dynamic wraplength
                 anchor="w",
                 pady=5
-            ).grid(row=1 + 2 * i, column=0, sticky="w", padx=10)
+            )
+            question_label.pack(anchor="w", padx=10)
+            self.dynamic_labels.append(question_label)
 
             # Answer
-            tk.Label(
-                self.frame,
-                text=answer,
+            answer_label = tk.Label(
+                self.scrollable_frame,
+                text=answer + "\n",
                 font=("Arial", 11),
                 bg=BG_COLOUR,
-                wraplength=550,
+                wraplength=self.winfo_width() - 50,  # Dynamic wraplength
                 anchor="w",
                 pady=2
-            ).grid(row=2 + 2 * i, column=0, sticky="w", padx=20)
+            )
+            answer_label.pack(anchor="w", padx=20)
+            self.dynamic_labels.append(answer_label)
 
-        # Configure grid weights for resizing
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
+        # Bind resize event to dynamically adjust wraplength
+        self.bind("<Configure>", self.on_resize)
+
+    def on_resize(self, event=None):
+        """Dynamically resize fonts based on window size."""
+        width = max(self.parent.winfo_width(), 1)
+        height = max(self.parent.winfo_height(), 1)
+        min_dimension = max(min(width, height), 1)
+
+        # Dynamically adjust font sizes
+        header_font_size = max(10, min(58, min_dimension // 20))
+        subheader_font_size = max(10, min(20, min_dimension // 50))
+        body_font_size = max(10, min(14, min_dimension // 60))
+
+        # Update title font
+        self.title_label.config(font=("Arial", header_font_size, "bold"))
+
+        # Update dynamic labels
+        for label in self.dynamic_labels:
+            if "bold" in label.cget("font"):
+                label.config(font=("Arial", subheader_font_size, "bold"))
+            else:
+                label.config(font=("Arial", body_font_size))
+
+    def _on_mousewheel(self, event):
+        """Scroll the canvas content with the mouse wheel."""
+        self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
 
 if __name__ == "__main__":
     root = tk.Tk()
+    root.geometry("800x600")
     app = FAQPage(root)
-    app.grid(row=0, column=0, sticky="nsew")
+    app.pack(fill="both", expand=True)
     root.mainloop()

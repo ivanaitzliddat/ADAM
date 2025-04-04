@@ -19,90 +19,109 @@ class TTS_setup_page(tk.Frame):
 
         # Create the main frame
         self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
+        self.frame.pack(fill="both", expand=True, padx=20, pady=20)
 
-        # Configure grid weights for resizing
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        # Create rows
+        # First row (Header)
         self.first_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.first_row.grid(row=0, column=0, sticky="ew", pady=(10, 20))
+        self.first_row.pack(fill="x", pady=(10, 20))
 
-        self.second_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.second_row.grid(row=1, column=0, sticky="ew", pady=(10, 20))
-
-        self.third_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.third_row.grid(row=2, column=0, sticky="ew", pady=(10, 20))
-
-        # Logo (First Row)
-        tk.Label(
+        # Header Labels
+        self.page_header = tk.Label(
             self.first_row,
             text="Text-to-Speech Settings",
             font=("Malgun Gothic Semilight", 38),
             bg=BG_COLOUR
-        ).grid(row=0, column=0, sticky="w", pady=(0, 10))
+        )
+        self.page_header.pack(pady=(0, 10))
 
-        tk.Label(
+        self.sub_header = tk.Label(
             self.first_row,
             text="Please customise the parameters below",
             font=("Malgun Gothic Semilight", 16),
             bg=BG_COLOUR
-        ).grid(row=1, column=0, sticky="w")
+        )
+        self.sub_header.pack()
 
-        # Row 1: Voice and Alert Options
+        # Second row (Voice and Alert Options)
+        self.second_row = tk.Frame(self.frame, bg=BG_COLOUR)
+        self.second_row.pack(fill="x", pady=(10, 20))
+
         self.row1_frame = tk.Frame(self.second_row, pady=10, bg=BG_COLOUR)
-        self.row1_frame.grid(row=0, column=0, sticky="ew")
+        self.row1_frame.pack(fill="x")
 
         # Voice Gender
-        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Voice Gender:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Voice Gender:").pack(side="left", padx=5, pady=5)
         self.voice_gender_var = tk.StringVar(value="male")
         ttk.Combobox(
             self.row1_frame, textvariable=self.voice_gender_var, values=["male", "female"], state="readonly"
-        ).grid(row=0, column=1, padx=5, pady=5)
+        ).pack(side="left", padx=5, pady=5)
 
         # Volume
-        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Volume (1-10):").grid(row=0, column=2, padx=5, pady=5, sticky="w")
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Volume (1-10):").pack(side="left", padx=5, pady=5)
         self.volume_var = tk.StringVar(value="5")
-        tk.Spinbox(self.row1_frame, from_=1, to=10, textvariable=self.volume_var, width=5).grid(
-            row=0, column=3, padx=5, pady=5
-        )
+        tk.Spinbox(self.row1_frame, from_=1, to=10, textvariable=self.volume_var, width=5).pack(side="left", padx=5, pady=5)
 
         # Speech Rate
-        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Speech Rate:").grid(row=0, column=4, padx=5, pady=5, sticky="w")
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Speech Rate:").pack(side="left", padx=5, pady=5)
         self.speech_rate_var = tk.StringVar(value="normal")
         ttk.Combobox(
             self.row1_frame, textvariable=self.speech_rate_var, values=["slow", "normal", "fast"], state="readonly"
-        ).grid(row=0, column=5, padx=5, pady=5)
+        ).pack(side="left", padx=5, pady=5)
 
         # Alert Sound
-        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Alert Sound:").grid(row=0, column=6, padx=5, pady=5, sticky="w")
+        tk.Label(self.row1_frame, bg=BG_COLOUR, text="Alert Sound:").pack(side="left", padx=5, pady=5)
         self.alert_sound_var = tk.StringVar(value="buzzer")
         ttk.Combobox(
             self.row1_frame,
             textvariable=self.alert_sound_var,
             values=["buzzer", "alarm", "notification"],
             state="readonly",
-        ).grid(row=0, column=7, padx=5, pady=5)
+        ).pack(side="left", padx=5, pady=5)
 
-        # Row 2: Text Input and Simulate Button
-        row2_frame = tk.Frame(self.second_row, pady=10, bg=BG_COLOUR)
-        row2_frame.grid(row=1, column=0, sticky="ew")
+        # Third row (Text Input and Simulate Button)
+        self.third_row = tk.Frame(self.frame, bg=BG_COLOUR)
+        self.third_row.pack(fill="x", pady=(10, 20))
 
         # Text Input
-        tk.Label(row2_frame, bg=BG_COLOUR, text="Message:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-        self.text_input = tk.Entry(row2_frame, width=50)
-        self.text_input.grid(row=0, column=1, padx=5, pady=5)
+        tk.Label(self.third_row, bg=BG_COLOUR, text="Message:").pack(side="left", padx=5, pady=5)
+        self.text_input = tk.Entry(self.third_row, width=50)
+        self.text_input.pack(side="left", padx=5, pady=5)
 
         # Simulate Button
-        tk.Button(row2_frame, bg=BG_COLOUR, text="Simulate", command=self.simulate_alert).grid(
-            row=0, column=2, padx=5, pady=5
-        )
+        tk.Button(self.third_row, bg=BG_COLOUR, text="Simulate", command=self.simulate_alert).pack(side="left", padx=5, pady=5)
 
-        # Save button (Third Row)
-        save_button_font = tkFont.Font(family="Helvetica", size=26, weight="bold")
-        self.save_button_font = tk.Button(self.third_row, text="Save", font=save_button_font, command=self.save_tts_settings)
-        self.save_button_font.grid(row=0, column=0, pady=10)
+        # Fourth row (Save Button)
+        self.fourth_row = tk.Frame(self.frame, bg=BG_COLOUR)
+        self.fourth_row.pack(fill="x", pady=(10, 20))
+
+        save_button_font = tkFont.Font(family="Arial", size=16, weight="bold")
+        self.save_button = tk.Button(
+            self.fourth_row, text="Save", font=save_button_font, command=self.save_tts_settings
+        )
+        self.save_button.pack(pady=10)
+
+        # Bind the on_resize function to the <Configure> event
+        self.bind("<Configure>", self.on_resize)
+
+    def on_resize(self, event=None):
+        """Dynamically adjust the layout and font sizes based on window size."""
+        # Get the root window (Tk instance)
+        root = self.winfo_toplevel()
+
+        # Set the minimum size for the window
+        min_width = 820
+        min_height = 450
+        root.wm_minsize(min_width, min_height)
+
+        # Adjust the page header font size dynamically
+        current_width = max(self.winfo_width(), min_width)
+        header_font_size = max(16, min(38, current_width // 30))
+        self.page_header.config(font=("Malgun Gothic Semilight", header_font_size))
+
+        # Adjust the sub-header font size dynamically
+        sub_header_font_size = max(10, min(20, current_width // 50))
+        self.sub_header.config(font=("Malgun Gothic Semilight", sub_header_font_size))
+
 
     def play_audio_alert(self, sound_file):
         pygame.mixer.init()
@@ -177,7 +196,6 @@ class TTS_setup_page(tk.Frame):
 if __name__ == "__main__":
     root = tk.Tk()
     app = TTS_setup_page(root)
-    app.grid(row=0, column=0, sticky="nsew")
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_columnconfigure(0, weight=1)
+    app = TTS_setup_page(root)
+    app.pack(fill="both", expand=True)
     root.mainloop()
