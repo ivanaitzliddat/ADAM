@@ -17,6 +17,11 @@ class welcomeScreen(tk.Frame):
         super().__init__(parent, bg=BG_COLOUR)
         self.parent = parent
 
+        # Configure grid layout for 3 columns
+        self.grid_columnconfigure(0, weight=2)  # Left spacer
+        self.grid_columnconfigure(1, weight=5)  # Content column
+        self.grid_columnconfigure(2, weight=2)  # Right spacer
+
         if ConfigHandler.is_fresh_setup():
             for child in topbar.winfo_children():
                 child.configure(state='normal')
@@ -25,7 +30,7 @@ class welcomeScreen(tk.Frame):
                 child.configure(state='disable')
 
         # Scrollable Canvas
-        self.canvas = tk.Canvas(self, bg=BG_COLOUR)
+        self.canvas = tk.Canvas(self, bg=BG_COLOUR, highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = tk.Frame(self.canvas, bg=BG_COLOUR)
 
@@ -34,8 +39,11 @@ class welcomeScreen(tk.Frame):
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="n")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        self.canvas.pack(side="left",fill="both", expand=True)
-        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.grid(row=1, column=1, sticky="nsew")
+        self.scrollbar.grid(row=1, column=1, sticky="nes")
+
+        # Configure row weights for resizing
+        self.grid_rowconfigure(1, weight=1)
 
         # Mouse Wheel Binding for Scroll
         self.canvas.bind("<MouseWheel>", self.on_mouse_wheel)
@@ -91,7 +99,8 @@ class welcomeScreen(tk.Frame):
         # Begin Button
         self.setup_button = tk.Button(self.scrollable_frame, text="Begin", command=option1)
         self.setup_button.pack(pady=20)  # Reduced padding
-
+        
+        self.on_resize()
         self.bind("<Configure>", self.on_resize)
 
     def on_resize(self, event=None):
@@ -99,8 +108,7 @@ class welcomeScreen(tk.Frame):
         width = max(self.parent.winfo_width(), 1)
         height = max(self.parent.winfo_height(), 1)
         min_dimension = max(min(width, height), 1)
-
-        header_font_size = max(10, min(58, min_dimension // 20))
+        header_font_size = max(10, min(58, min_dimension // 30))
         subheader_font_size = max(10, min(20, min_dimension // 50))
         step_font_size = max(10, min(30, min_dimension // 40))
         button_font_size = max(10, min(26, min_dimension // 40))
@@ -109,6 +117,16 @@ class welcomeScreen(tk.Frame):
         self.logo_label_header.config(font=("Terminal", header_font_size))
         self.logo_label_subheader.config(font=("Malgun Gothic Semilight", subheader_font_size))
         self.logo_label_before_you_begin.config(font=("Malgun Gothic Semilight", subheader_font_size))
+        self.logo_label_before_you_begin.config(wraplength=width // 2)
+
+        min_width = 900 # Minimum width for resizing
+        min_height = 800  # Minimum height for resizing
+
+        # Get the root window (Tk instance)
+        root = self.winfo_toplevel()
+
+        # Set the minimum size for the window
+        root.wm_minsize(min_width, min_height)
 
         for label in self.step_labels:
             label.config(font=("Arial", step_font_size, "bold"))

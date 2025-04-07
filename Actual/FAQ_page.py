@@ -13,6 +13,11 @@ class FAQPage(tk.Frame):
         super().__init__(parent, bg=BG_COLOUR)
         self.parent = parent
 
+        # Configure grid layout for 3 columns
+        self.grid_columnconfigure(0, weight=2)  # Left spacer
+        self.grid_columnconfigure(1, weight=3)  # Content column
+        self.grid_columnconfigure(2, weight=2)  # Right spacer
+
         # Title (outside the scrollable frame)
         self.title_label = tk.Label(
             self,
@@ -21,7 +26,7 @@ class FAQPage(tk.Frame):
             font=("Arial", 16, "bold"),
             pady=10
         )
-        self.title_label.pack(side="top", fill="x", pady=(10, 10))
+        self.title_label.grid(row=0, column=1, sticky="nsew", pady=(10, 10))
 
         # Scrollable Canvas
         self.canvas = tk.Canvas(self, bg=BG_COLOUR, highlightthickness=0)
@@ -31,10 +36,6 @@ class FAQPage(tk.Frame):
         # Configure the canvas to use the scrollbar
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        # Pack the canvas and scrollbar
-        self.canvas.pack(side="left", fill="both", expand=True)
-        self.scrollbar.pack(side="right", fill="y")
-
         # Create a window inside the canvas for the scrollable frame
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
 
@@ -43,6 +44,13 @@ class FAQPage(tk.Frame):
             "<Configure>",
             lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
         )
+
+        # Place the canvas and scrollbar in column 1
+        self.canvas.grid(row=1, column=1, sticky="nsew")
+        self.scrollbar.grid(row=1, column=1, sticky="nes")
+
+        # Configure row weights for resizing
+        self.grid_rowconfigure(1, weight=1)
 
         # FAQs
         faqs = [
@@ -67,7 +75,7 @@ class FAQPage(tk.Frame):
             ("Q7: What is the maximum number of video inputs that can be connected?",
              "The max number is dependent on the hardware that is used to run this application. Some limiting factors include but are not limited to: CPU used, RAM available, and number of video input ports on motherboard.")
         ]
-
+        
         # Display FAQs
         self.dynamic_labels = []
         for i, (question, answer) in enumerate(faqs):
@@ -77,8 +85,8 @@ class FAQPage(tk.Frame):
                 text=question,
                 font=("Arial", 12, "bold"),
                 bg=BG_COLOUR,
-                wraplength=self.winfo_width() - 100,  # Dynamic wraplength
                 anchor="w",
+                justify="left",
                 pady=5
             )
             question_label.pack(anchor="w", padx=10)
@@ -90,36 +98,49 @@ class FAQPage(tk.Frame):
                 text=answer + "\n",
                 font=("Arial", 11),
                 bg=BG_COLOUR,
-                wraplength=self.winfo_width() - 100,  # Dynamic wraplength
                 anchor="w",
+                justify="left",
                 pady=2
             )
-            answer_label.pack(anchor="w", padx=20)
+            answer_label.pack(anchor="w", padx=20,fill="x")
             self.dynamic_labels.append(answer_label)
 
         # Bind resize event to dynamically adjust wraplength
+        self.on_resize()
         self.bind("<Configure>", self.on_resize)
 
     def on_resize(self, event=None):
-        """Dynamically resize fonts based on window size."""
+        """Dynamically resize fonts and wraplength based on column 1 width."""
         width = max(self.parent.winfo_width(), 1)
         height = max(self.parent.winfo_height(), 1)
         min_dimension = max(min(width, height), 1)
 
+        # Get the width of column 1
+        column1_width = self.grid_slaves(row=0, column=1)[0].winfo_width()
+
         # Dynamically adjust font sizes
-        header_font_size = max(10, min(58, min_dimension // 20))
+        header_font_size = max(10, min(58, min_dimension // 40))
         subheader_font_size = max(10, min(20, min_dimension // 50))
         body_font_size = max(10, min(14, min_dimension // 60))
 
         # Update title font
         self.title_label.config(font=("Arial", header_font_size, "bold"))
 
-        # Update dynamic labels
+        min_width = 500 # Minimum width for resizing
+        min_height = 800  # Minimum height for resizing
+
+        # Get the root window (Tk instance)
+        root = self.winfo_toplevel()
+
+        # Set the minimum size for the window
+        root.wm_minsize(min_width, min_height)
+
+        # Update dynamic labels with calculated wraplength
         for label in self.dynamic_labels:
             if "bold" in label.cget("font"):
-                label.config(font=("Arial", subheader_font_size, "bold"), wraplength=width - 70) 
+                label.config(font=("Arial", subheader_font_size, "bold"), wraplength=column1_width-100)
             else:
-                label.config(font=("Arial", body_font_size), wraplength=width - 70) 
+                label.config(font=("Arial", body_font_size), wraplength=column1_width-100)
 
     def _on_mousewheel(self, event):
         """Scroll the canvas content with the mouse wheel."""
@@ -128,7 +149,8 @@ class FAQPage(tk.Frame):
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.geometry("800x600")
     app = FAQPage(root)
-    app.pack(fill="both", expand=True)
+    app.grid(row=0, column=0, sticky="nsew")
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_columnconfigure(0, weight=1)
     root.mainloop()

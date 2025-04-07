@@ -17,37 +17,31 @@ class TTS_setup_page(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent, bg=BG_COLOUR)
 
-        # Create the main frame
-        self.frame = tk.Frame(self, bg=BG_COLOUR)
-        self.frame.pack(fill="both", expand=True, padx=20, pady=20)
-
-        # First row (Header)
-        self.first_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.first_row.pack(fill="x", pady=(10, 20))
+        # Configure grid layout for 3 columns
+        self.grid_columnconfigure(0, weight=2)  # Left spacer
+        self.grid_columnconfigure(1, weight=3)  # Content column
+        self.grid_columnconfigure(2, weight=2)  # Right spacer
 
         # Header Labels
         self.page_header = tk.Label(
-            self.first_row,
+            self,
             text="Text-to-Speech Settings",
             font=("Malgun Gothic Semilight", 38),
             bg=BG_COLOUR
         )
-        self.page_header.pack(pady=(0, 10))
+        self.page_header.grid(row=0, column=1, sticky="nsew", pady=(10, 10))
 
         self.sub_header = tk.Label(
-            self.first_row,
+            self,
             text="Please customise the parameters below",
             font=("Malgun Gothic Semilight", 16),
             bg=BG_COLOUR
         )
-        self.sub_header.pack()
+        self.sub_header.grid(row=1, column=1, sticky="nsew", pady=(0, 20))
 
         # Second row (Voice and Alert Options)
-        self.second_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.second_row.pack(fill="x", pady=(10, 20))
-
-        self.row1_frame = tk.Frame(self.second_row, pady=10, bg=BG_COLOUR)
-        self.row1_frame.pack(fill="x")
+        self.row1_frame = tk.Frame(self, bg=BG_COLOUR)
+        self.row1_frame.grid(row=2, column=1, sticky="nsew", pady=(10, 20))
 
         # Voice Gender
         tk.Label(self.row1_frame, bg=BG_COLOUR, text="Voice Gender:").pack(side="left", padx=5, pady=5)
@@ -79,8 +73,8 @@ class TTS_setup_page(tk.Frame):
         ).pack(side="left", padx=5, pady=5)
 
         # Third row (Text Input and Simulate Button)
-        self.third_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.third_row.pack(fill="x", pady=(10, 20))
+        self.third_row = tk.Frame(self, bg=BG_COLOUR)
+        self.third_row.grid(row=3, column=1, sticky="nsew", pady=(10, 20))
 
         # Text Input
         tk.Label(self.third_row, bg=BG_COLOUR, text="Message:").pack(side="left", padx=5, pady=5)
@@ -91,8 +85,8 @@ class TTS_setup_page(tk.Frame):
         tk.Button(self.third_row, bg=BG_COLOUR, text="Simulate", command=self.simulate_alert).pack(side="left", padx=5, pady=5)
 
         # Fourth row (Save Button)
-        self.fourth_row = tk.Frame(self.frame, bg=BG_COLOUR)
-        self.fourth_row.pack(fill="x", pady=(10, 20))
+        self.fourth_row = tk.Frame(self, bg=BG_COLOUR)
+        self.fourth_row.grid(row=4, column=1, sticky="nsew", pady=(10, 20))
 
         save_button_font = tkFont.Font(family="Arial", size=16, weight="bold")
         self.save_button = tk.Button(

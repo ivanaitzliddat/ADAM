@@ -8,11 +8,6 @@ from about_page import AboutPage
 from FAQ_page import FAQPage
 from tkinter import messagebox
 from welcome_page import welcomeScreen
-#from TEST_InitialWelcomeScreen import welcomeScreen
-#from alerts_page import AlertsPage
-#from settings_page import SettingsPage
-#from keyword_page import KeywordPage
-#from color_picker_page import ColorPage
 from config_handler import ConfigHandler
 from messages import MessageQueue
 from TTS import TTS
@@ -65,6 +60,23 @@ class ADAM:
         self.FAQ_button = tk.Button(self.topbar, text="FAQ", command=self.show_FAQ_page)
         self.FAQ_button.grid(row=0, column=3, padx=10, pady=5)
 
+        # Loading frame to show loading message
+        screen_width = self.master.winfo_screenwidth() # Get the screen width
+        screen_height = self.master.winfo_screenheight() # Get the screen height
+
+        self.loading_frame_width = int(screen_width)
+        self.loading_frame_height = int(screen_height)
+
+        # Center the loading frame
+        x = int((screen_width - self.loading_frame_width) // 2)
+        y = int((screen_height - self.loading_frame_height) // 2)
+
+        # Create a loading frame and centering it using relx and rely. The frame will cover up the whole window and will destroy once page is loaded
+        self.loading_frame = tk.Frame(self.master, bg=BG_COLOUR, width=self.loading_frame_width, height=self.loading_frame_height)
+        self.loading_frame.place(x=x, y=y)
+        self.loading_label = tk.Label(self.loading_frame, text="Please wait while ADAM is loading...", font=("Arial", 32), bg=BG_COLOUR)
+        self.loading_label.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
         # Main content area to display the current page
         self.content_frame = tk.Frame(self.master, bg=BG_COLOUR)
         self.content_frame.grid(row=1, column=0, sticky="nsew")
@@ -88,7 +100,7 @@ class ADAM:
             "tts_setup_page": TTS_setup_page(self.content_frame),
             "FAQ_page": FAQPage(self.content_frame),
             "About_page": AboutPage(self.content_frame),
-            "alerts_page": AlertsPage(self.content_frame)
+            "alerts_page": AlertsPage(self.content_frame),
         }
 
         # Show the initial page
@@ -147,6 +159,7 @@ class ADAM:
               
     def show_page(self, page_name):
         """Switches to the specified page."""
+        self.loading_frame.destroy()  # Remove the loading frame
         # Hide the current page if there is one
         if self.current_page:
             self.pages[self.current_page].grid_forget()
@@ -158,7 +171,6 @@ class ADAM:
         # Force the GUI to redraw
         self.master.update_idletasks()
 
-  
         # Resize the new page based on its own on_resize method
         if page_name == "welcome_page":
             self.pages[page_name].on_resize()
