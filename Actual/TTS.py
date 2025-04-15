@@ -1,9 +1,6 @@
 import pyttsx3
-import queue
-import threading
 import pygame
-import time
-import os
+import queue, os, time, threading, traceback
 from config_handler import ConfigHandler
 from subthread_config import Thread_Config
 
@@ -40,9 +37,8 @@ class TTS:
         while Thread_Config.running:
             alert = TTS.alert_queue.get()
             if alert:
-
                 pygame.init()
-                pygame.mixer.music.load(os.path.join(ConfigHandler.dirname))
+                pygame.mixer.music.load(os.path.join(ConfigHandler.dirname, "Sound/notification.mp3"))
                 pygame.mixer.music.play()
                 time.sleep(3)
                 for i in range(int(self.settings["repeat"])):
