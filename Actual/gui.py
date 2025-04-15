@@ -1,17 +1,17 @@
-import tkinter as tk
 import queue
+import tkinter as tk
 from tkinter import font
+from tkinter import messagebox
+
 from cam_setup_page import VideoCaptureSetupApp
 from tts_settings_page import TTS_setup_page
 from alerts_page import AlertsPage
 from about_page import AboutPage
 from FAQ_page import FAQPage
-from tkinter import messagebox
 from welcome_page import welcomeScreen
 from config_handler import ConfigHandler
 from messages import MessageQueue
 from TTS import TTS
-
 
 '''
     Represents a GUI object which allows user to control ADAM.
@@ -190,17 +190,16 @@ class ADAM:
     def on_closing(self):
         if messagebox.askokcancel("Quit", "Do you want to quit?"):
             self.master.destroy()
-    
     '''
         Starts the GUI.
     '''
+
     def run(self):
         self.master.mainloop()
-        
-
     '''
         Stops all instances of the GUI.
     '''
+
     @staticmethod
     def close():
         print("Closing all instances of ADAM.")

@@ -1,11 +1,12 @@
+import threading, traceback
+import signal
+
 from screen_capturer import ScreenCapturer
 from paddle_ocr import OCRProcessor
 from subthread_config import Thread_Config
 from config_handler import ConfigHandler
 from TTS import TTS
 from gui import ADAM
-import threading
-import signal
 
 '''
     Starts the screen capturer.
@@ -35,7 +36,8 @@ def start_TTS():
     try:
         tts.run()
     except Exception as e:
-        print(f"TTS encountered an error: {e}")
+        print(f"TTS encountered an error.")
+        traceback.print_exc()
 
 '''
     Starts the ADAM GUI application.

@@ -1,5 +1,5 @@
-import time
-import traceback
+import time, traceback
+
 import cv2
 import numpy as np
 from paddleocr import PaddleOCR
@@ -31,7 +31,7 @@ class OCRProcessor:
         while Thread_Config.running:
             time.sleep(3)
             try:
-                self.interate_screenshots()
+                self.iterate_screenshots()
             except Exception as e:
                 traceback.print_exc()
                 print(f"OCR has encountered the exception: {e}")
@@ -42,7 +42,7 @@ class OCRProcessor:
     '''
         Iterate through the screenshots captured and process a particular frame.
     '''
-    def interate_screenshots(self):
+    def iterate_screenshots(self):
         temp_index = 0
         for frame in Screenshot.frames:
             self.process_frame(frame)

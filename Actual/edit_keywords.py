@@ -1,6 +1,9 @@
+import queue
 import tkinter as tk
 from tkinter import messagebox
+
 from config_handler import ConfigHandler
+from TTS import TTS
 
 class EditKeywordsPage:
     def __init__(self, root, usb_alt_name, condition, keywords, custom_name, callback):
@@ -132,6 +135,10 @@ class EditKeywordsPage:
         self.display_keywords()
 
     def save_keywords(self):
+        # Clear TTS.alert_queue so that audio alerts with the new keywords can take effect immediately
+        with TTS.alert_queue.mutex:
+            TTS.alert_queue.queue.clear()
+
         #create a temporary list to store the keywords
         temp_array = []
         empty_keyword_found = False  # Initialize the flag

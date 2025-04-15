@@ -19,6 +19,7 @@ class ConfigHandler:
             "rate": "75",
             "volume": "0.5",
             "repeat": "1",
+            "sound_clip": "Sound/notification.mp3"
         },
         "Input Device 0": {
             "usb_alt_name": "",

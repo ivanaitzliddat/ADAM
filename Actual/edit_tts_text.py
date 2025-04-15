@@ -1,9 +1,12 @@
+import os, threading, traceback
 import tkinter as tk
 from tkinter import messagebox
-from config_handler import ConfigHandler
+
 import pyttsx3
 import pygame
-import threading, traceback
+from config_handler import ConfigHandler
+from TTS import TTS
+
 
 class Edit_TTS_Text_Page:
     def __init__(self, root, usb_alt_name, condition, tts_message, custom_name, callback):
@@ -51,7 +54,7 @@ class Edit_TTS_Text_Page:
         volume = tts_settings['volume']
 
         # 3rd Row: To store the button to test TTS readout
-        test_tts_button = tk.Button(configure_TTS_frame, text="Readout the message", command=lambda: self.test_tts(voice_gender,speech_rate,volume))
+        test_tts_button = tk.Button(configure_TTS_frame, text="Readout the message", command=lambda: self.test_tts_alert(voice_gender,speech_rate,volume))
         test_tts_button.pack(fill="x", expand=True, padx=5, pady=5)
 
         # 4th Row: Frame for Save and Cancel buttons
@@ -95,24 +98,26 @@ class Edit_TTS_Text_Page:
         pygame.mixer.music.play()
         while pygame.mixer.music.get_busy():
             continue
-
+    
+    ''' #TODO: This function may not be needed anymore as the audio is now riding on the existing TTS thread to prevent sound clip and TTS inconsistencies.
     def test_tts(self,voice_gender,speech_rate,volume, alert_sound="buzzer"):
         # Run text-to-speech and audio alert in a separate thread
         thread = threading.Thread(target=self._test_tts_alert_thread, args=(voice_gender,speech_rate,volume, alert_sound))
         thread.start()
-    
-    def _test_tts_alert_thread(self, voice_gender,speech_rate,volume, alert_sound="buzzer"):
+    '''
+
+    def test_tts_alert(self, voice_gender,speech_rate,volume, alert_sound="buzzer"):
         text_message = self.tts_entry.get().strip() or "No custom message set. ADAM will read out default message."
         #alert_sounds = {
         #    "buzzer": r"C:\Users\\bai_j\Desktop\\ADAM-main\\Testing\\GUI testing\\sound\\alarm.mp3",
         #    "alarm": r"C:\Users\\bai_j\Desktop\\ADAM-main\\Testing\\GUI testing\\sound\\alarm.mp3",
         #    "notification": r"C:\Users\\bai_j\Desktop\\ADAM-main\\Testing\\GUI testing\\sound\\alarm.mp3"}
         alert_sounds = {
-            "buzzer": ConfigHandler.dirname+'\\Sound\\buzzer.mp3',
-            "alarm": ConfigHandler.dirname+"\\Sound\\alarm.mp3",
-            "notification": ConfigHandler.dirname+"\\Sound\\notification.mp3",
+            "buzzer": os.path.join(ConfigHandler.dirname, "Sound/buzzer.mp3"),
+            "alarm": os.path.join(ConfigHandler.dirname, "Sound/alarm.mp3"),
+            "notification": os.path.join(ConfigHandler.dirname, "Sound/notification.mp3"),
         }
-        
+        ''' #TODO: This commented-out code may not be needed anymore as the audio settings are using those specified in TTS.py class.
         sound_file = alert_sounds.get(alert_sound)
         self.play_audio_alert(sound_file)
 
@@ -122,19 +127,10 @@ class Edit_TTS_Text_Page:
         engine.setProperty("voice", voices[0].id if voice_gender == "male" else voices[1].id)
         engine.setProperty("volume", volume)
         engine.setProperty("rate", speech_rate)
-
-        engine.say(text_message)
-        try:
-            # .runAndWait() blocks code from running after it until its event loop queue is cleared.
-            # However, its event loop queue never seems to clear, so it blocks indefinitely and makes it impossible to stop with .endLoop().
-            engine.runAndWait() 
-        except RuntimeError:    # engine throws RuntimeError on subsequent calls to .runAndWait() as the engine loop already exists.
-            if engine._inLoop:
-                engine.endLoop()    # Ends the existing engine loop that was created on the previous call of .runAndWait()
-                engine.say(text_message)    # Need to call .say() again 
-                engine.runAndWait()
-        except:
-            traceback.print_exc()
+        '''
+        with TTS.lock:
+            # Insert text_message to start of TTS.alert_queue so it will play immediately after currently-played audio is done
+            TTS.alert_queue.queue.insert(0, "This is a test message: "+text_message)
 
 def edit_tts_text(alt_name, condition, tts_message, custom_name, callback):
     root = tk.Toplevel()
