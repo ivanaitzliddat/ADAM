@@ -16,8 +16,8 @@ class ConfigHandler:
         "TTS": {
             "tts_enabled": "True",
             "gender": "male",
-            "rate": "75",
-            "volume": "0.5",
+            "rate": "200",
+            "volume": "1.0",
             "repeat": "1",
             "sound_clip": "Sound/notification.mp3"
         },

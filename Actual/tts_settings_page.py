@@ -1,10 +1,11 @@
+import os, threading, traceback
 import tkinter as tk
-from tkinter import ttk, font as tkFont
+from tkinter import messagebox, ttk, font as tkFont
+
 import pyttsx3
 import pygame
 from config_handler import ConfigHandler
-import threading, traceback
-from tkinter import messagebox
+from TTS import TTS
 
 #To request config ini to store the following theme colours:
 TEXT_COLOUR = "#000000"
@@ -14,8 +15,13 @@ GRAB_ATTENTION_COLOUR_1 ="#FF934F"
 GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
 class TTS_setup_page(tk.Frame):
+    speech_rate_dict = {"fast": 230, "normal": 200, "slow": 150}
+
     def __init__(self, parent):
         super().__init__(parent, bg=BG_COLOUR)
+        
+        # Create a TTS instance and store it
+        self.tts_instance = TTS()
 
         # Configure grid layout for 3 columns
         self.grid_columnconfigure(0, weight=2)  # Left spacer
@@ -125,66 +131,87 @@ class TTS_setup_page(tk.Frame):
             continue
 
     def simulate_alert(self):
-        # Run text-to-speech and audio alert in a separate thread
-        thread = threading.Thread(target=self._simulate_alert_thread)
-        thread.start()
-
-    def _simulate_alert_thread(self):
         text = self.text_input.get().strip() or "This is a default message."
         voice_gender = self.voice_gender_var.get()
-        volume = int(self.volume_var.get())
+        volume = int(self.volume_var.get())/10  # Need to divide by 10 as "volume_var" is in whole numbers whereas pyttsx3's "volume" property uses a range from 0.0 - 1.0
         speech_rate = self.speech_rate_var.get()
-        alert_sound = self.alert_sound_var.get()        
-        self.text_to_speech_with_audio(text, voice_gender, volume, speech_rate, alert_sound)
+        alert_sound = self.alert_sound_var.get()
 
-    def text_to_speech_with_audio(self, text, voice_gender="male", volume=5, speech_rate="normal", alert_sound="buzzer"):
-        alert_sounds = {
-            "buzzer": ConfigHandler.dirname+"\\Sound\\alarm.mp3",
-            "alarm": ConfigHandler.dirname+"\\Sound\\buzzer.mp3",
-            "notification": ConfigHandler.dirname+"\\Sound\\notification.mp3",
+        self.text_to_speech_with_audio(text = text, voice_gender = voice_gender, volume = volume, speech_rate = speech_rate, alert_sound = alert_sound)
+
+    def text_to_speech_with_audio(self, text, voice_gender, volume, speech_rate, alert_sound):
+        alert_sounds_dict = {
+            "buzzer": os.path.join(ConfigHandler.dirname, "Sound/buzzer.mp3"),
+            "alarm": os.path.join(ConfigHandler.dirname, "Sound/alarm.mp3"),
+            "notification": os.path.join(ConfigHandler.dirname, "Sound/notification.mp3"),
         }
+        voices = self.tts_instance.tts_engine.getProperty("voices")
 
-        sound_file = alert_sounds.get(alert_sound)
-        self.play_audio_alert(sound_file)
+        if voice_gender.lower() == "male":
+            voice = voices[0].id
+        else:
+            voice = voices[1].id
 
-        engine = pyttsx3.init()
-        voices = engine.getProperty("voices")
+        if speech_rate == "fast":
+            speech_rate = TTS_setup_page.speech_rate_dict["fast"]
+        elif speech_rate == "slow":
+            speech_rate = TTS_setup_page.speech_rate_dict["slow"]
+        else:
+            speech_rate = TTS_setup_page.speech_rate_dict["normal"]
 
-        engine.setProperty("voice", voices[0].id if voice_gender == "male" else voices[1].id)
-        engine.setProperty("volume", volume / 10)
-        rate = engine.getProperty("rate")
-        engine.setProperty("rate", rate + (50 if speech_rate == "fast" else -50 if speech_rate == "slow" else 0))
+        # Create a dict to store the TTS text and audio parameters
+        alert_audio_params_dict = {"text": "This is a test message: "+text, "voice": voice, "volume": volume,
+                                   "speech_rate": speech_rate, "alert_sound": alert_sounds_dict.get(alert_sound), "is_saved": False}
 
-        engine.say(text)
-        try:
-            # .runAndWait() blocks code from running after it until its event loop queue is cleared.
-            # However, its event loop queue never seems to clear, so it blocks indefinitely and makes it impossible to stop with .endLoop().
-            engine.runAndWait() 
-        except RuntimeError:    # engine throws RuntimeError on subsequent calls to .runAndWait() as the engine loop already exists.
-            if engine._inLoop:
-                engine.endLoop()    # Ends the existing engine loop that was created on the previous call of .runAndWait()
-                engine.say(text)    # Need to call .say() again 
-                engine.runAndWait()
-        except:
-            traceback.print_exc()
+        # Clear TTS.alert_queue so that audio alerts with the new keywords can take effect immediately
+        with TTS.alert_queue.mutex:
+            TTS.alert_queue.queue.clear()
+
+        with TTS.lock:
+            # Insert alert_audio_params_dict to start of TTS.alert_queue so it will play immediately after currently-played audio is done
+            TTS.alert_queue.queue.insert(0, alert_audio_params_dict)
 
     def save_tts_settings(self):
+        alert_sounds_dict = {
+            "buzzer": os.path.join(ConfigHandler.dirname, "Sound/buzzer.mp3"),
+            "alarm": os.path.join(ConfigHandler.dirname, "Sound/alarm.mp3"),
+            "notification": os.path.join(ConfigHandler.dirname, "Sound/notification.mp3"),
+        }
         gender = self.voice_gender_var.get()
-        vol = self.volume_var.get()
+        vol = int(self.volume_var.get())/10  # Need to divide by 10 as "volume_var" is in whole numbers whereas pyttsx3's "volume" property uses a range from 0.0 - 1.0
         speech_rate = self.speech_rate_var.get()
-        
+        alert_sound = alert_sounds_dict.get(self.alert_sound_var.get())
+
         if speech_rate == "fast":
-            speech_rate = 50
-        elif speech_rate == "normal":
-            speech_rate = 0
+            speech_rate = TTS_setup_page.speech_rate_dict["fast"]
+        elif speech_rate == "slow":
+            speech_rate = TTS_setup_page.speech_rate_dict["slow"]
         else:
-            speech_rate = -50
+            speech_rate = TTS_setup_page.speech_rate_dict["normal"]
 
         if vol == "":
             messagebox.showwarning("Warning", "Volume cannot be empty!")
         else:
             ConfigHandler.set_cfg_tts(gender = gender, volume = vol, rate = speech_rate, tts_enabled = True)
             ConfigHandler.save_config()
+            
+            voices = self.tts_instance.tts_engine.getProperty("voices")
+            if gender.lower() == "male":
+                voice = voices[0].id
+            else:
+                voice = voices[1].id
+
+            # Create a dict to store the audio parameters
+            alert_audio_params_dict = {"text": None, "voice": voice, "volume": vol,
+                                   "speech_rate": speech_rate, "alert_sound": alert_sound, "is_saved": True}
+
+            # Clear TTS.alert_queue so that audio alerts with the new audio properties can take effect immediately
+            with TTS.alert_queue.mutex:
+                TTS.alert_queue.queue.clear()
+
+            with TTS.lock:
+                # Insert alert_audio_params_dict to start of TTS.alert_queue so it will play immediately after currently-played audio is done
+                TTS.alert_queue.queue.insert(0, alert_audio_params_dict)
 
                 
 if __name__ == "__main__":
