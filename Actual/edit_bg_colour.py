@@ -4,20 +4,18 @@ from screenshots import Screenshot
 from PIL import Image, ImageTk
 
 class edit_bg_colour_page:
-    def __init__(self, root, usb_alt_name, condition, bg_colour, custom_name, callback):
+    def __init__(self, root, usb_alt_name, callback):
         self.root = root
         #self.root.geometry("900x1000")
         self.usb_alt_name = usb_alt_name
-        self.condition = condition
         self.callback = callback
-        self.bg_colour = bg_colour
-        self.custom_name = custom_name
-
         self.root.grab_set()
         self.root.focus_set()
 
         self.root.resizable(False, False)
         
+        self.bg_colour = ""  # Initialize bg_colour to an empty string
+
         # Center the window after initializing
         self.root.after(0, self.center_window)
         self.setup_ui()
@@ -35,7 +33,7 @@ class edit_bg_colour_page:
         return "#%02x%02x%02x" % rgb
     
     def setup_ui(self):
-        self.root.title(f"Edit colour trigger for {self.custom_name} - {self.condition}")
+        self.root.title("Choose your triggered colour")
         # Main container frame to hold everything
         main_frame = tk.Frame(self.root)
         main_frame.pack(fill="both", expand=True, padx=10, pady=10)
@@ -115,10 +113,7 @@ class edit_bg_colour_page:
         self.bg_colour = self.color_display.cget("text")
         if self.bg_colour == "None":
             self.bg_colour = ""
-        ConfigHandler.set_cfg_input_device(usb_alt_name=self.usb_alt_name, condition=self.condition, bg_colour=self.bg_colour)
-        ConfigHandler.save_config()
-        self.root.destroy()
-        self.callback()
+        self.callback(self.bg_colour)
 
     def clear_colour(self):
         self.color_display.config(text=f"None")
@@ -137,8 +132,14 @@ class edit_bg_colour_page:
         y = (self.root.winfo_screenheight() // 2) - (height // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}")
 
-def edit_bg_colour(alt_name, condition, bg_colour, custom_name, callback):
+def edit_bg_colour(alt_name, callback):
     root = tk.Toplevel()
-    app = edit_bg_colour_page(root, alt_name, condition, bg_colour, custom_name, callback)
+
+    def wrapped_callback(colour):
+        callback(colour)
+        root.destroy()
+
+    app = edit_bg_colour_page(root, alt_name, wrapped_callback)
     root.transient()
+    root.grab_set()
     root.wait_window(root)

@@ -3,7 +3,7 @@ from tkinter import messagebox
 from tkinter import font as tkFont
 from tkinter import ttk
 from config_handler import ConfigHandler
-from edit_condition import edit_condition
+#from edit_condition import edit_condition
 from imageio.plugins.deviceslist import DevicesList
 import time
 import Pmw
@@ -13,6 +13,8 @@ from screenshots import Screenshot
 import numpy as np
 import threading
 
+
+from edit_device_settings import DeviceSettingsEditor
 
 #o request config ini to store the following theme colours:
 TEXT_COLOUR = "#000000"
@@ -92,7 +94,7 @@ class VideoCaptureSetupApp(tk.Frame):
             for child in topbar.winfo_children():
                 child.configure(state="normal")
             self.proceed_to_alerts_page()
-            self.proceed_button.pack_forget()
+            self.proceed_button.pack_forget()   
 
     def show_loading_popup(self):
         popup = tk.Tk()
@@ -350,9 +352,12 @@ class VideoCaptureSetupApp(tk.Frame):
             )
             device_given_name.pack(side="left")
 
-            # Trigger Condition Button
+            # Frame to store the buttons below the video frame
             button_frame = tk.Frame(device_frame)
             button_frame.pack(fill="x")
+
+            #Previous trigger condition button. To delete once new one is preferred
+            '''
             trig_condition_button = tk.Button(button_frame, text="Edit Trigger Conditions", width=10, command=lambda usb_alt_name=usb_alt_name: edit_condition(usb_alt_name))
             trig_condition_button.pack(fill="both")
             if custom_name == "":
@@ -361,13 +366,25 @@ class VideoCaptureSetupApp(tk.Frame):
                 balloon = Pmw.Balloon()
                 #bind the balloon to the button
                 balloon.bind(trig_condition_button, "Please rename the device first to enable this button")
-            
-            rename_button = tk.Button(device_given_name_frame, text="Rename", width=10, command=lambda device_label=device_given_name, usb_alt_name=usb_alt_name, trig_condition_button= trig_condition_button: self.rename_and_update_trigger_condition_button(device_label,usb_alt_name,trig_condition_button))
-            rename_button.pack(side="right", padx=5)
+            '''
 
             # Create the Enable/Disable button
             enable_disable_button = tk.Button(button_frame, text="Enable/Disable")
             enable_disable_button.pack(fill="both")
+
+            #create a new test button
+            device_trigger_condition_setting_button = tk.Button(button_frame, text="Edit Trigger Condition(s)", width=10,command=lambda device_label=device_given_name.cget("text"), usb_alt_name=usb_alt_name: DeviceSettingsEditor(device_label, usb_alt_name))
+            device_trigger_condition_setting_button.pack(fill="both")
+            if custom_name == "":
+                device_trigger_condition_setting_button.config(state="disabled") 
+                #create a tooltip using balloon widget
+                balloon = Pmw.Balloon()
+                #bind the balloon to the button
+                balloon.bind(device_trigger_condition_setting_button, "Please rename the device first to enable this button")
+            
+            
+            rename_button = tk.Button(device_given_name_frame, text="Rename", width=10, command=lambda device_label=device_given_name, usb_alt_name=usb_alt_name, trig_condition_button= device_trigger_condition_setting_button: self.rename_and_update_trigger_condition_button(device_label,usb_alt_name,trig_condition_button))
+            rename_button.pack(side="right", padx=5)
 
             # Update the button's command after it is created
             enable_disable_button.config(command=lambda device_frame=device_frame, enable_disable_button=enable_disable_button, usb_alt_name=usb_alt_name: self.enable_disable_device(device_frame, enable_disable_button, usb_alt_name))
