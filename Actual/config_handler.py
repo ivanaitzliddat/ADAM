@@ -86,11 +86,13 @@ class ConfigHandler:
         default_cfg_sections = set(ConfigHandler.DEFAULT_CONFIG.keys())
         
         # Check if any sections in DEFAULT_CONFIG cannot be found in config.ini. If yes, condition is True.
-        if default_cfg_sections - cfg_file_sections:
-            print("\tSome config.ini sections are missing. A new config.ini will be created with default settings.")
-            ConfigHandler.create_default_config()
-            tk_msgbox.showinfo("Error in config.ini",  "Some config.ini sections are missing.\nA new config.ini has been created with default settings.")
-            return False    # Overwriting with default config only needs to happen once, and checks on remaining sections/options are not needed.
+        if diff_sections := default_cfg_sections - cfg_file_sections:
+            for val in diff_sections:
+                if not val.startswith("Input Device "):
+                    print("\tSome config.ini sections are missing. A new config.ini will be created with default settings.")
+                    ConfigHandler.create_default_config()
+                    tk_msgbox.showinfo("Error in config.ini",  "Some config.ini sections are missing.\nA new config.ini has been created with default settings.")
+                    return False    # Overwriting with default config only needs to happen once, and checks on remaining sections/options are not needed.
         # Check if any sections in config.ini cannot be found in DEFAULT_CONFIG. If yes, condition is True.
         elif diff_sections := cfg_file_sections - default_cfg_sections:
             for val in diff_sections:
