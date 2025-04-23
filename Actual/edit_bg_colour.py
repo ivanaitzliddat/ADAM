@@ -85,11 +85,11 @@ class edit_bg_colour_page:
         resized_PIL_image = PIL_image.resize((800, 600))
 
         #set the canvas size to the image size
-        img_width, img_height = PIL_image.size
+        img_width, img_height = resized_PIL_image.size
         self.canvas.config(width=img_width, height=img_height)
 
         #convert PIL to ImageTk format to display on canvas
-        self.image_tk = ImageTk.PhotoImage(PIL_image)
+        self.image_tk = ImageTk.PhotoImage(resized_PIL_image)
         
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
         self.image = resized_PIL_image  # Store the PIL image for color picking
