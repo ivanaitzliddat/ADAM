@@ -250,7 +250,7 @@ class VideoCaptureSetupApp(tk.Frame):
                     image = Image.fromarray(frame).resize((430,300))
                     image_tk = ImageTk.PhotoImage(image)
                 
-                    frame_colour_sum = np.sum(image_tk, axis=-1)  # Sum over the last axis in the Shape frame, which is the colour channel (R, G, B)
+                    frame_colour_sum = np.sum(frame, axis=-1)  # Sum over the last axis in the Shape frame, which is the colour channel (R, G, B)
 
                     # Identify pure black pixels (where RGB sum is exactly 0)
                     black_pixels = frame_colour_sum == 0  # True if the pixel is exactly black
