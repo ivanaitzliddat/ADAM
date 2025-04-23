@@ -45,8 +45,11 @@ class OCRProcessor:
     def iterate_screenshots(self):
         temp_index = 0
         for frame in Screenshot.frames:
-            self.process_frame(frame)
-            temp_index += 1
+            if Thread_Config.running:
+                self.process_frame(frame)
+                temp_index += 1
+            else:
+                return
 
     '''
     Process a particular frame by getting the triggers tagged to the particular capture cards
@@ -54,7 +57,8 @@ class OCRProcessor:
     def process_frame(self, frame):
         # Check if the frame is new
         processed = frame.get('processed')
-        if not processed:
+        is_black = frame.get('is_black')
+        if not processed and not is_black:
             # Convert the frame to RGB
             frame_rgb = self.convert_frame(frame)
             # Get alt_name to find the relevant triggers
