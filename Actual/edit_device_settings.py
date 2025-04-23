@@ -4,14 +4,16 @@ from edit_bg_colour import edit_bg_colour
 from config_handler import ConfigHandler
 
 
-class DeviceSettingsEditor(tk.Tk):
+class DeviceSettingsEditor(tk.Toplevel):
     def __init__(self, device_label, usb_alt_name):
         super().__init__()
         self.usb_alt_name = usb_alt_name
         self.title(f"Editing Trigger Condition(s) for {device_label}")
         self.geometry("900x600")
         self.configure(bg="#DCE0D9")
-
+        
+        self.grab_set()
+        
         self.conditions = []
         self.resizable(False, False)
 
