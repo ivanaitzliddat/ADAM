@@ -40,14 +40,18 @@ class ScreenCapturer:
             if num_of_devices == 0:
                 num_of_devices = ScreenCapturer.get_num_of_devices()
 
+            retry_counter = 0
+
             while i < num_of_devices:
                 if not Thread_Config.running:
                     break
                 
                 generator = None
                 try:
+                    alt_name = DevicesList.device_list[i]
+
                     # Check if the Input Device in DevicesList.device_list[i] is set to disabled in config file.
-                    if ConfigHandler.get_cfg_disabled_input_devices(usb_alt_name = DevicesList.device_list[i]):
+                    if ConfigHandler.get_cfg_disabled_input_devices(usb_alt_name = alt_name):
                         # Define the pixel size of the square
                         square_size = 300
                         # Create a black square in RGB (shape: height x width x 3)
@@ -58,7 +62,6 @@ class ScreenCapturer:
                         # Set generator to the captured frame in <video{i}>
                         generator = next(iio.imiter(f"<video{i}>"))
                     
-                    alt_name = DevicesList.device_list[i]
                     frame = {
                                 'current': generator,
                                 'processed': False,
@@ -69,11 +72,24 @@ class ScreenCapturer:
                         print("Successfully appended a frame.")
                         print("The current number of screenshots is", len(Screenshot.frames))
 
+                    retry_counter = 0
                     i += 1
 
+                except IndexError as e:
+                    if "No (working) camera at" in str(e):
+                        if retry_counter > 2:
+                            ConfigHandler.set_cfg_input_device(usb_alt_name=alt_name, device_enabled=False)
+                            ConfigHandler.save_config()
+                            i += 1
+
+                        else:
+                            retry_counter += 1
+
                 except Exception:
+                    i += 1
                     traceback.print_exc()
                     print(f"Capture Screenshot has failed.")
+
             iteration += 1
 
     '''
