@@ -82,7 +82,7 @@ class edit_bg_colour_page:
         """Display the provided image on the canvas."""
         #convert pyimage13 to PIL
         PIL_image = ImageTk.getimage(image).convert("RGB")
-        #resized_PIL_image = PIL_image.resize((800, 600))
+        resized_PIL_image = PIL_image.resize((800, 600))
 
         #set the canvas size to the image size
         img_width, img_height = PIL_image.size
@@ -92,7 +92,7 @@ class edit_bg_colour_page:
         self.image_tk = ImageTk.PhotoImage(PIL_image)
         
         self.canvas.create_image(0, 0, anchor=tk.NW, image=self.image_tk)
-        self.image = PIL_image  # Store the PIL image for color picking
+        self.image = resized_PIL_image  # Store the PIL image for color picking
 
     def colorpic(self, event):
         if not hasattr(self, 'image'):
