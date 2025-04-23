@@ -34,7 +34,12 @@ class TTS:
 
         # Configure the sound clip
         self.sound_clip_path = os.path.join(ConfigHandler.dirname, self.settings["sound_clip"])
-        pygame.mixer.music.load(self.sound_clip_path)
+        try:
+            pygame.mixer.init()
+            pygame.mixer.music.load(self.sound_clip_path)
+        except Exception as e:
+            print(f"Failed with error: {e}")
+
 
     def run(self):
         while Thread_Config.running:
