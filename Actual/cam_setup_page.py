@@ -237,7 +237,6 @@ class VideoCaptureSetupApp(tk.Frame):
     def get_one_frame_from_capture_device(self, video_label, index_num, usb_alt_name):
         black_pixel_percentage = 0.95  # Define the percentage of black pixels needed to classify the frame as mostly black
         iio_prep_end = time.time() + 2.5    # Let imageio prep for 2.5s from current time.
-        #device_index = f"<video0>"
         try:
             # Let imageio prep for 2.5s from current time.
             while time.time() < iio_prep_end:
@@ -273,8 +272,8 @@ class VideoCaptureSetupApp(tk.Frame):
                     else:
                         video_label.config(image=image_tk)
                         video_label.image = image_tk
-                else:
-                    video_label.config(text="No signal", image='', bg="black", fg="white")
+                #else:
+                    #video_label.config(text="No signal", image='', bg="black", fg="white")
 
         except Exception as e:
             print(f"An error occurred with device {index_num}: {e}")
