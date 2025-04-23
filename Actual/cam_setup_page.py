@@ -309,7 +309,7 @@ class VideoCaptureSetupApp(tk.Frame):
             device_frame.grid(row=i // 4, column=i % 4, padx=10, pady=10)
 
             video_label = tk.Label(
-                device_frame, text=f"No Signal in Video Frame {i}", bg="black", fg="white", height=300, padx=5
+                device_frame, text=f"No Signal in Video Frame {i}", bg="black", fg="white", height=10, padx=5
             )
             video_label.pack(fill="x",pady=(0,5))
 
