@@ -3,7 +3,6 @@ from tkinter import messagebox
 from tkinter import font as tkFont
 from tkinter import ttk
 from config_handler import ConfigHandler
-#from edit_condition import edit_condition
 from imageio.plugins.deviceslist import DevicesList
 import time
 import Pmw
@@ -12,7 +11,6 @@ from PIL import Image, ImageTk
 from screenshots import Screenshot
 import numpy as np
 import threading
-
 
 from edit_device_settings import DeviceSettingsEditor
 
@@ -49,7 +47,7 @@ class VideoCaptureSetupApp(tk.Frame):
 
         if fresh_setup_status:
             # Call the method to detect devices and save them into config.ini
-            self.detect_and_save_devices()
+            #self.detect_and_save_devices()
             for child in topbar.winfo_children():
                 child.configure(state="disable")
         else:
@@ -75,6 +73,8 @@ class VideoCaptureSetupApp(tk.Frame):
             self.proceed_button.pack_forget()
 
         self.refresh_video_frames()
+
+        self.update_device_status()
         
         # Bind the on_resize function to the <Configure> event
         self.bind("<Configure>", self.on_resize)
@@ -85,8 +85,9 @@ class VideoCaptureSetupApp(tk.Frame):
             for i, video_label in enumerate(self.video_labels):
                 usb_alt_name = video_label.usb_alt_name
                 self.get_one_frame_from_capture_device(video_label, i, usb_alt_name)
-            self.after(5000, self.refresh_video_frames)
+            self.after(5000, self.refresh_video_frames)  # Call refresh again after 5 seconds
         threading.Thread(target=refresh).start()
+        #to add refresh on reading from config.ini and update the device frame again
 
     def reset_topbar(self,topbar):
         response = messagebox.askyesno("Proceed to Alerts Page?", "Have you completed the configuration for your video input(s) and wish to proceed to Alerts Page?")
@@ -234,14 +235,12 @@ class VideoCaptureSetupApp(tk.Frame):
             column = i % num_columns
             device_frame.grid(row=row, column=column, padx=10, pady=10)
 
-    def get_one_frame_from_capture_device(self, video_label, index_num, usb_alt_name):
-        black_pixel_percentage = 0.95  # Define the percentage of black pixels needed to classify the frame as mostly black
+    def get_one_frame_from_capture_device(self, video_label, index_num, usb_alt_name):       
         iio_prep_end = time.time() + 2.5    # Let imageio prep for 2.5s from current time.
         try:
             # Let imageio prep for 2.5s from current time.
             while time.time() < iio_prep_end:
                 time.sleep(0.1)  # Sleep for a short duration to allow imageio to prepare
-                    
             #get the image based on usb_alt_name
             for item in Screenshot.frames:
                 if item['alt_name'] == usb_alt_name:
@@ -250,34 +249,10 @@ class VideoCaptureSetupApp(tk.Frame):
                     image = Image.fromarray(frame).resize((430,300))
                     image_tk = ImageTk.PhotoImage(image)
                 
-                    frame_colour_sum = np.sum(frame, axis=-1)  # Sum over the last axis in the Shape frame, which is the colour channel (R, G, B)
-
-                    # Identify pure black pixels (where RGB sum is exactly 0)
-                    black_pixels = frame_colour_sum == 0  # True if the pixel is exactly black
-                    black_pixel_count = np.sum(black_pixels)  # Count the number of black pixels
-
-                    # Calculate the total number of pixels in the frame
-                    total_pixels = frame.shape[0] * frame.shape[1]  # Height * Width
-                       
-                    # Calculate the percentage of black pixels
-                    black_pixel_ratio = black_pixel_count / total_pixels
-
-                    # Check if the majority of the frame is black
-                    if black_pixel_ratio > black_pixel_percentage:
-                        # Display "No signal" text instead of the image
-                        video_label.config(text="No signal", image='', bg="black", fg="white")
-                        # Change this to handle the black screen       
-                        print("Black frame detected!!")
-                        print(f"Frame {index_num}: black pixel ratio = {black_pixel_ratio:.4f}")
-                    else:
-                        video_label.config(image=image_tk)
-                        video_label.image = image_tk
-                #else:
-                    #video_label.config(text="No signal", image='', bg="black", fg="white")
-
+                    video_label.config(image=image_tk)
+                    video_label.image = image_tk
         except Exception as e:
-            print(f"An error occurred with device {index_num}: {e}")
-            video_label.config(text="No signal", image='', bg="black", fg="white")
+            print(f"An error has occurred with device {index_num}: {e}")
 
     def _on_mousewheel(self, event):
         """Scroll the canvas content with the mouse wheel."""
@@ -291,7 +266,15 @@ class VideoCaptureSetupApp(tk.Frame):
         for key, val in device_dict.items():
             usb_alt_name = val["usb_alt_name"]
             custom_name = val["custom_name"]
-            device_status = val["device_enabled"]
+            device_monitoring_status = val["device_enabled"]
+            device_connection_status = ""
+
+            # first check if the device in config.ini is connected
+            current_device_list = DevicesList.device_list
+            if usb_alt_name in current_device_list:
+                device_connection_status = True
+            else:
+                device_connection_status = False
 
             # Create a subframe for each video input
             device_frame = tk.Frame(
@@ -301,22 +284,20 @@ class VideoCaptureSetupApp(tk.Frame):
                 width=430,
                 height=530
             )
-            # Store the device status in the device_frame
-            device_frame.device_status = device_status
 
             device_frame.grid_propagate(False)
             device_frame.pack_propagate(False)
             device_frame.grid(row=i // 4, column=i % 4, padx=10, pady=10)
 
             video_label = tk.Label(
-                device_frame, text=f"No Signal in Video Frame {i}", bg="black", fg="white", height=10, padx=5
+                device_frame, text=f"", bg="black", fg="white", height=20, padx=5
             )
             video_label.pack(fill="x",pady=(0,5))
 
             # Store the usb_alt_name in the video_label object
             video_label.usb_alt_name = usb_alt_name
             self.video_labels.append(video_label)
-            
+                      
             self.get_one_frame_from_capture_device(video_label,i,usb_alt_name)
 
             # Display the device sequence number
@@ -332,22 +313,46 @@ class VideoCaptureSetupApp(tk.Frame):
             name_frame.pack(fill="x")
 
             # Display the alt device name
-            unique_name_label = tk.Label(name_frame, text=f"Device Default Name: ", font=("Arial", 10, "bold"), height=3)
+            unique_name_label = tk.Label(name_frame, text=f"Device Default Name: ", font=("Arial", 10, "bold"), height=2)
             unique_name_label.pack(side="left")
             device_label = tk.Label(
-                name_frame, text=usb_alt_name, font=("Arial", 10, "bold"), height=3
+                name_frame, text=usb_alt_name, font=("Arial", 10, "bold"), height=2
             )
             device_label.pack(side="left")
 
+            #device connection status
+            device_connection_status_frame = tk.Frame(device_frame)
+            device_connection_status_frame.pack(fill="x")
+            device_connection_status_label = tk.Label(device_connection_status_frame, text="Connection Status: ", font=("Arial", 10, "bold"), height=2)
+            device_connection_status_label.pack(side="left")
+            device_connection_status_entry = tk.Label(
+                device_connection_status_frame, text="", font=("Arial", 10, "bold"), height=2
+            )
+            device_connection_status_entry.pack(side="left")
+
+            #device monitoring status
+            device_monitoring_status_frame = tk.Frame(device_frame)
+            device_monitoring_status_frame.pack(fill="x")
+            device_monitoring_status_label = tk.Label(device_monitoring_status_frame, text="Monitoring Status: ", font=("Arial", 10, "bold"), height=2)
+            device_monitoring_status_label.pack(side="left")
+            device_monitoring_status_entry = tk.Label(
+                device_monitoring_status_frame, text="", font=("Arial", 10, "bold"), height=2
+            )
+            device_monitoring_status_entry.pack(side="left")
+
+            # Create the Enable/Disable button
+            enable_disable_monitoring_button = tk.Button(device_monitoring_status_frame, text="Enable/Disable")
+            enable_disable_monitoring_button.pack(side="right",padx=5)
+
             # Desired Device Name Frame
             device_given_name_frame = tk.Frame(device_frame)
-            device_given_name_frame.pack(fill="x", pady=5)
+            device_given_name_frame.pack(fill="x")
 
             # Display the desired given name (user-defined name)
-            device_given_name_label = tk.Label(device_given_name_frame, text="Given Name: ", font=("Arial", 10, "bold"), height=3)
+            device_given_name_label = tk.Label(device_given_name_frame, text="Given Name: ", font=("Arial", 10, "bold"), height=2)
             device_given_name_label.pack(side="left")
             device_given_name = tk.Label(
-                device_given_name_frame, text=custom_name, font=("Arial", 10, "bold"), height=3
+                device_given_name_frame, text=custom_name, font=("Arial", 10, "bold"), height=2
             )
             device_given_name.pack(side="left")
 
@@ -355,23 +360,7 @@ class VideoCaptureSetupApp(tk.Frame):
             button_frame = tk.Frame(device_frame)
             button_frame.pack(fill="x")
 
-            #Previous trigger condition button. To delete once new one is preferred
-            '''
-            trig_condition_button = tk.Button(button_frame, text="Edit Trigger Conditions", width=10, command=lambda usb_alt_name=usb_alt_name: edit_condition(usb_alt_name))
-            trig_condition_button.pack(fill="both")
-            if custom_name == "":
-                trig_condition_button.config(state="disabled") 
-                #create a tooltip using balloon widget
-                balloon = Pmw.Balloon()
-                #bind the balloon to the button
-                balloon.bind(trig_condition_button, "Please rename the device first to enable this button")
-            '''
-
-            # Create the Enable/Disable button
-            enable_disable_button = tk.Button(button_frame, text="Enable/Disable")
-            enable_disable_button.pack(fill="both")
-
-            #create a new test button
+            # Create the Edit Trigger Condition button
             device_trigger_condition_setting_button = tk.Button(button_frame, text="Edit Trigger Condition(s)", width=10,command=lambda device_label=device_given_name.cget("text"), usb_alt_name=usb_alt_name: DeviceSettingsEditor(device_label, usb_alt_name))
             device_trigger_condition_setting_button.pack(fill="both")
             if custom_name == "":
@@ -381,41 +370,138 @@ class VideoCaptureSetupApp(tk.Frame):
                 #bind the balloon to the button
                 balloon.bind(device_trigger_condition_setting_button, "Please rename the device first to enable this button")
             
-            
             rename_button = tk.Button(device_given_name_frame, text="Rename", width=10, command=lambda device_label=device_given_name, usb_alt_name=usb_alt_name, trig_condition_button= device_trigger_condition_setting_button: self.rename_and_update_trigger_condition_button(device_label,usb_alt_name,trig_condition_button))
             rename_button.pack(side="right", padx=5)
 
-            # Update the button's command after it is created
-            enable_disable_button.config(command=lambda device_frame=device_frame, enable_disable_button=enable_disable_button, usb_alt_name=usb_alt_name: self.enable_disable_device(device_frame, enable_disable_button, usb_alt_name))
-
-            if device_status == True: 
-                device_frame.config(highlightbackground="#6bc33f")
-                enable_disable_button.config(text="Disable Device")
+            # Display the device connection status
+            if device_connection_status == True: 
+                device_connection_status_entry.config(text="Connected", fg="#6bc33f")
+                #device_monitoring_status.config(text="Enabled", fg="#6bc33f")
+                enable_disable_monitoring_button.config(state="normal")
             else:
-                device_frame.config(highlightbackground="RED")
-                enable_disable_button.config(text="Enable Device")
+                device_connection_status_entry.config(text="Disconnected", fg="RED")
+                #device_monitoring_status.config(text="Disabled", fg="RED")
+                enable_disable_monitoring_button.config(state="disabled")
+
+            # Display the device monitoring status
+            if device_monitoring_status == True: 
+                device_monitoring_status_entry.config(text="Enabled", fg="#6bc33f")
+                enable_disable_monitoring_button.config(text="Disable Monitoring")
+            else:
+                device_monitoring_status_entry.config(text="Disabled", fg="RED")
+                enable_disable_monitoring_button.config(text="Enable Monitoring")
+
+            # Store the usb_alt_name in the device_frame object
+            device_frame.usb_alt_name = usb_alt_name
+            # Store the connection status in the device_frame object
+            device_frame.device_connection_status = device_connection_status
+            # store the connection status entry in the device_frame object
+            device_frame.device_connection_status_entry = device_connection_status_entry
+
+            # Store the device monitoring status in the device_frame object
+            device_frame.device_monitoring_status = device_monitoring_status
+            # Store the device monitoring status entry in the device_frame object
+            device_frame.device_monitoring_status_entry = device_monitoring_status_entry
+            # Store the device monitoring status button in the device_frame object
+            device_frame.enable_disable_monitoring_button = enable_disable_monitoring_button
+
+            # Update the button's command after it is created
+            enable_disable_monitoring_button.config(command=lambda device_frame=device_frame, usb_alt_name=usb_alt_name: self.enable_disable_device(device_frame, usb_alt_name))
 
             i += 1
 
-    def enable_disable_device(self, device_frame, enable_disable_button, usb_alt_name):
-        device_status = device_frame.device_status
-        if device_status == True:
-            response = messagebox.askyesnocancel("Disable Device", "Are you sure you want to disable this device?\nThis will stop the video feed from this device.")
+    def enable_disable_device(self, device_frame, usb_alt_name):
+        device_monitoring_status = device_frame.device_monitoring_status
+        if device_monitoring_status == True:
+            response = messagebox.askyesnocancel("Disable monitoring on this device", "Are you sure you want to disable monitoring on this device?\nThis will stop the video feed from this device.")
         else:
-            response = messagebox.askyesnocancel("Enable Device", "Are you sure you want to enable this device?\nThis will start the video feed from this device.")
+            response = messagebox.askyesnocancel("Enable monitoring on this device", "Are you sure you want to enable monitoring on this device?\nThis will start the video feed from this device.")
         
         """Once user clicks on yes, it will always change the device status to the opposite of what it is now and change the colour."""
         if response:
-            device_status = not device_status
-            device_frame.device_status = device_status
-            ConfigHandler.set_cfg_input_device(usb_alt_name=usb_alt_name, device_enabled=device_status)
-            if device_status == True:
-                device_frame.config(highlightbackground="#6bc33f")
-                enable_disable_button.config(text="Disable Device")
+            device_monitoring_status = not device_monitoring_status
+            device_frame.device_monitoring_status = device_monitoring_status
+            ConfigHandler.set_cfg_input_device(usb_alt_name=usb_alt_name, device_enabled=device_monitoring_status)
+            if device_monitoring_status == True:
+                device_frame.device_monitoring_status_entry.config(text="Enabled", fg="#6bc33f")
+                device_frame.enable_disable_monitoring_button.config(text="Disable Monitoring")
             else:
-                device_frame.config(highlightbackground="RED")
-                enable_disable_button.config(text="Enable Device")
+                device_frame.device_monitoring_status_entry.config(text="Disabled", fg="RED")
+                device_frame.enable_disable_monitoring_button.config(text="Enable Monitoring")
             ConfigHandler.save_config()
+    
+    def update_device_status(self):
+        """Update the device status based on the current device list."""
+        #get the current device list from DevicesList
+        device_list = DevicesList.device_list
+
+        #get the current devices populated in the scrollable frame
+        existing_device_list = []
+
+        #loop through the populated device frames and check if the usb_alt_name is in the current device list
+        for device_frame in self.scrollable_frame.winfo_children():
+            if hasattr(device_frame, 'usb_alt_name'):
+                usb_alt_name = device_frame.usb_alt_name
+                existing_device_list.append(usb_alt_name)
+                if usb_alt_name in device_list:
+                    #print(f"Device {device_alt_name} is connected")
+                    # Update the device connection status
+                    device_frame.device_connection_status = True
+                    device_frame.device_connection_status_entry.config(text="Connected", fg="#6bc33f")
+                    device_frame.enable_disable_monitoring_button.config(state="normal")
+                else:
+                    #print(f"Device {device_alt_name} is disconnected")
+                    # Update the device connection status
+                    device_frame.device_connection_status = False
+                    device_frame.device_connection_status_entry.config(text="Disconnected", fg="RED")
+                    device_frame.enable_disable_monitoring_button.config(state="disabled")
+                    device_frame.device_monitoring_status = False
+                    device_frame.enable_disable_monitoring_button.config(text="Enable Monitoring")
+                    device_frame.device_monitoring_status_entry.config(text="Disabled", fg="RED")
+            self.update_monitoring_status(device_frame,usb_alt_name)
+        
+        self.check_for_new_device(device_list,existing_device_list)
+
+        # Schedule the next call to poll_for_device_changes after 5000ms (5 seconds)
+        self.after(5000, self.update_device_status)
+
+    def check_for_new_device(self,current_device_list,existing_device_list):
+        """Check for new devices and update the UI accordingly."""
+        # Check if any new devices are connected
+        for device in current_device_list:
+            if device not in existing_device_list:
+                # New device detected, prompt the user of the new device, click on Ok and refresh the cam_setup_page
+                # Show a message box with the new device information
+                response = messagebox.showinfo("New Device Detected", f"New device detected: {device}")
+                if response:
+                    self.refresh_cam_setup_page()
+                break
+
+    def update_monitoring_status(self, device_frame, usb_alt_name):
+        """Update the monitoring status of the device."""
+        device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = usb_alt_name)
+        for key, val in device_dict.items():
+            usb_alt_name = val["usb_alt_name"]
+            custom_name = val["custom_name"]
+            device_monitoring_status = val["device_enabled"]
+            if device_monitoring_status == False:
+                device_frame.enable_disable_monitoring_button.config(text="Enable Monitoring")
+                device_frame.device_monitoring_status_entry.config(text="Disabled", fg="RED")
+            else:
+                device_frame.enable_disable_monitoring_button.config(text="Disable Monitoring")
+                device_frame.device_monitoring_status_entry.config(text="Enabled", fg="#6bc33f")
+
+    def refresh_cam_setup_page(self):
+        """Refresh the camera setup page."""
+        # Destroy the current scrollable frame
+        for widget in self.scrollable_frame.winfo_children():
+            widget.destroy()
+
+        # Repopulate the scrollable frame with updated video input
+        self.populate_video_inputs()
+
+        # Update the device status
+        self.update_device_status()
 
     def rename_and_update_trigger_condition_button(self, device_label, usb_alt_name,trig_condition_button):
         """Prompt the user to rename the device."""

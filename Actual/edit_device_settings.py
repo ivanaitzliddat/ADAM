@@ -179,18 +179,22 @@ class DeviceSettingsEditor(tk.Toplevel):
     def save_config(self):
         """Save the configuration to config.ini."""
         device_custom_name = self.device_custom_name
-        #to overwrite the existing trigger conditions, we need to remove the existing conditions first
-        ConfigHandler.del_input_device(usb_alt_name = self.usb_alt_name)
-
-        #create a new input device with the same usb_alt_name
-        ConfigHandler.add_input_device(usb_alt_name = self.usb_alt_name)
-
-        #set the custom name for the input device
-        ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, custom_name = device_custom_name)
-
+        counter = 0
+        #to delete all the existing conditions and re-add the conditions in the GUI
+        device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name=self.usb_alt_name)
+        for key, val in device_dict.items():
+            triggers = val["triggers"] #return a dictionary of triggers
+            for condition, trigger_condition in triggers.items():
+                condition_seq = condition 
+                if condition_seq == "cond0":
+                    ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition = condition_seq, condition_name = "", keywords = [], bg_colour = "", tts_text = "")
+                else:
+                    ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition = condition_seq, del_condition = True)
+        ConfigHandler.save_config()
+        
         #iterate through all each condition card and save them to config.ini
         for cond in self.conditions:
-            condition_seq = str(cond.condition_seq_label.cget("text"))
+            condition_seq = "cond"+str(counter)
             condition_name = str(cond.name_entry.get().strip())
             keywords = list(cond.keyword_list.get(0, tk.END))
             colour = cond.color_display.cget("text")
@@ -198,13 +202,11 @@ class DeviceSettingsEditor(tk.Toplevel):
 
             if colour == "None":
                 colour = ""
+ 
+            ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition = condition_seq, condition_name = condition_name, keywords = keywords, bg_colour = colour, tts_text = tts_message)
             
-            if len(self.conditions) == 1:
-            #if only one condition card is present, set the condition name to the custom name of the device
-                ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition = "cond0", condition_name = condition_name, keywords = keywords, bg_colour = colour, tts_text = tts_message)
-            else:
-                ConfigHandler.set_cfg_input_device(usb_alt_name = self.usb_alt_name, condition = condition_seq, condition_name = condition_name, keywords = keywords, bg_colour = colour, tts_text = tts_message)
-        
+            counter += 1
+
         ConfigHandler.save_config()
         tk.messagebox.showinfo("Success", "Device settings saved successfully!")
         self.destroy()
@@ -228,7 +230,7 @@ class ConditionCard(tk.Frame):
 
         # Use the provided condition_seq or generate a new one
         if condition_seq == None:
-            last_seq_number_of_conditions = len(self.controller.conditions)
+            last_seq_number_of_conditions = len(self.controller.conditions) + 1 
             self.condition_seq = "cond" + str(last_seq_number_of_conditions)
         else:
             self.condition_seq = condition_seq
