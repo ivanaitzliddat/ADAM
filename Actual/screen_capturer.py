@@ -27,19 +27,28 @@ class ScreenCapturer:
     def capture_screenshots(self):
 
         iteration = 0
+
         while Thread_Config.running:
             time.sleep(3)
-            print(f"Going for iteration number {iteration}")
-            i = 0
-            num_of_devices = len(DevicesList.device_list)
-
-            if num_of_devices == 0:
-                num_of_devices = ScreenCapturer.get_num_of_devices()
             ScreenCapturer.get_devices()
 
-            retry_counter = 0
+            if ConfigHandler.get_cfg_input_devices(usb_alt_name = ""):
+                ConfigHandler.del_input_device(usb_alt_name = "")
+                print("Successfully deleted input device")
 
-            while i < num_of_devices:
+            for device in DevicesList.device_list:
+                if(len(ConfigHandler.get_cfg_input_devices(usb_alt_name = device)) == 0): # does not exist in config.ini, need to add device
+                    with ConfigHandler.lock:
+                        default_custom_name = "Input Device " + str(len(DevicesList.device_list) - 1)
+                        default_condition_name = "Default Condition Name " + str(len(DevicesList.device_list) - 1)
+                        ConfigHandler.add_input_device(usb_alt_name=device)
+                        ConfigHandler.set_cfg_input_device(usb_alt_name=device, custom_name=default_custom_name)
+                        ConfigHandler.set_cfg_input_device(usb_alt_name=device, condition = "cond0", condition_name = default_condition_name)
+                        ConfigHandler.save_config()
+
+            retry_counter = 0
+            i = 0
+            while i < len(DevicesList.device_list):
                 if not Thread_Config.running:
                     break
                 
@@ -62,14 +71,14 @@ class ScreenCapturer:
                         generator = next(iio.imiter(f"<video{i}>"))
                     
                     if not is_black:
-                        frame_colour_sum = np.sum(frame, axis=-1)  # Sum over the last axis in the Shape frame, which is the colour channel (R, G, B)
-
+                        frame_colour_sum = np.sum(generator, axis=-1)  # Sum over the last axis in the Shape frame, which is the colour channel (R, G, B)
+ 
                         # Identify pure black pixels (where RGB sum is exactly 0)
                         black_pixels = frame_colour_sum == 0  # True if the pixel is exactly black
                         black_pixel_count = np.sum(black_pixels)  # Count the number of black pixels
 
                         # Calculate the total number of pixels in the frame
-                        total_pixels = frame.shape[0] * frame.shape[1]  # Height * Width
+                        total_pixels = generator.shape[0] * generator.shape[1]  # Height * Width
                         
                         # Calculate the percentage of black pixels
                         black_pixel_ratio = black_pixel_count / total_pixels
@@ -77,7 +86,6 @@ class ScreenCapturer:
                         # Check if the majority of the frame is black
                         if black_pixel_ratio > 0.95:
                             is_black = True
-                    
                     frame = {
                                 'current': generator,
                                 'processed': False,
@@ -85,8 +93,10 @@ class ScreenCapturer:
                                 'is_black': is_black
                             }
                     with Screenshot.lock:
+                        for screenshot in Screenshot.frames:
+                            if screenshot.get('processed') or screenshot.get('is_black'):
+                                Screenshot.frames.remove(screenshot)
                         Screenshot.frames.append(frame)
-                        print("Successfully appended a frame.")
                         print("The current number of screenshots is", len(Screenshot.frames))
 
                     retry_counter = 0
@@ -95,16 +105,18 @@ class ScreenCapturer:
                 except IndexError as e:
                     if "No (working) camera at" in str(e):
                         if retry_counter > 2:
-                            ConfigHandler.set_cfg_input_device(usb_alt_name=alt_name, device_enabled=False)
-                            ConfigHandler.save_config()
+                            with ConfigHandler.lock:
+                                ConfigHandler.set_cfg_input_device(usb_alt_name=alt_name, device_enabled=False)
+                                ConfigHandler.save_config()
                             i += 1
-
                         else:
                             retry_counter += 1
+                    if "list index out of range" in str(e):
+                        i += 1
 
                 except Exception:
                     i += 1
-                    traceback.print_exc()
+                    # traceback.print_exc()
                     print(f"Capture Screenshot has failed.")
 
             iteration += 1
