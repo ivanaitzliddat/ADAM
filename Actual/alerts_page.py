@@ -119,13 +119,14 @@ class AlertsPage(tk.Frame):
     def update_device_display(self):
         # Add devices that are not yet added to the UI
         for device in self.starting_device_list:
+            device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = device)
+            custom_name = ""
+            for key, val in device_dict.items():
+                custom_name = val["custom_name"]
+            
             if device not in self.device_labels:
                 # Decide which icon to show based on device state
                 icon = self.green_icon if self.device_states.get(device, False) else self.red_icon
-                device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = device)
-                custom_name = ""
-                for key, val in device_dict.items():
-                    custom_name = val["custom_name"]
                 device_label = tk.Label(self.top_frame, text=custom_name, image=icon, compound="left", font=("Arial", 12))
                 device_label.pack(anchor="w", pady=5)
                 self.device_labels[device] = device_label
@@ -133,6 +134,7 @@ class AlertsPage(tk.Frame):
             device_label = self.device_labels[device]
             icon = self.green_icon if self.device_states.get(device, False) else self.red_icon
             device_label.config(image=icon)
+            device_label.config(text=custom_name)
             device_label.image = icon
 
         # Remove devices from the UI that are no longer in starting (they are disconnected)
@@ -153,8 +155,6 @@ class AlertsPage(tk.Frame):
         for device in added_devices:
             self.starting_device_list.append(device)
             self.device_states[device] = True  # New device is connected
-            if(len(ConfigHandler.get_cfg_input_devices(usb_alt_name = device)) == 0): # does not exist in config.ini, need to add device
-                ConfigHandler.add_input_device(usb_alt_name = device)
 
         # Mark removed devices as disconnected (but don't remove them from the list)
         for device in removed_devices:
@@ -181,7 +181,7 @@ class AlertsPage(tk.Frame):
         # Using new treeview, above code is for older listbox
         date_time, alt_name, tts_text = message
         # Insert the parsed message into the Treeview
-        self.treeview.insert("", "end", values=(date_time, alt_name, tts_text))
+        self.treeview.insert("", 0, values=(date_time, alt_name, tts_text))
     
     def apply_filters(self):
         """ Function to apply the filters based on the entries """
