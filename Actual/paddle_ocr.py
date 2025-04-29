@@ -63,11 +63,6 @@ class OCRProcessor:
             frame_rgb = self.convert_frame(frame)
             # Get alt_name to find the relevant triggers
             self.perform_ocr_using_triggers(frame, frame_rgb)
-        else:
-            with Screenshot.lock:
-                Screenshot.frames.remove(frame)
-                print("Successfully removed a screenshot from the screenshot list")
-                print("The number of screenshots left is: ", len(Screenshot.frames))
 
     '''
         Converts the frame to allow the processing of frame using imageio.
