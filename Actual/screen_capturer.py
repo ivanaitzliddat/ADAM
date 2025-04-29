@@ -11,19 +11,15 @@ from config_handler import ConfigHandler
     Represents a screen capturer that checks the current availability of the capture cards and takes screenshots when called.
 '''
 class ScreenCapturer:
-    available_devices = []
-    lock = threading.Lock()
 
     '''
         Calls iio.imiter once by passing video0 so as to populate DevicesList.device_list.
     '''
-    def get_num_of_devices():
+    def get_devices():
         try:
             generator = next(iio.imiter(f"<video0>"))
         except Exception as e:
             print(f"Unable to identify any video inputs. Exited with error: {e}")
-        print("Managed to populate the first DevicesList.device_list")
-        return len(DevicesList.device_list)
 
     '''
         Iterates through the list of available devices and captures a screenshot for every device and saves it in a folder.
@@ -39,6 +35,7 @@ class ScreenCapturer:
 
             if num_of_devices == 0:
                 num_of_devices = ScreenCapturer.get_num_of_devices()
+            ScreenCapturer.get_devices()
 
             retry_counter = 0
 
