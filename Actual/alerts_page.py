@@ -157,7 +157,8 @@ class AlertsPage(tk.Frame):
         for device in removed_devices:
             self.device_states[device] = False  # Device is disconnected
             self.starting_device_list.remove(device)
-            tk_msgbox.showinfo("Device Removed", f"This device: [{device}] was removed.") # show popup for removed device
+            custom_name = self.get_custom_name_from_alt_name(device)
+            tk_msgbox.showinfo("Device Removed", f"This device: [{custom_name}] was removed.") # show popup for removed device
 
         # Update the display with the current state of the devices
         self.update_device_display()
