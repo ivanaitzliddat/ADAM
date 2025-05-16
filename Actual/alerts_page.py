@@ -143,7 +143,7 @@ class AlertsPage(tk.Frame):
             self.device_labels[device].config(image=self.red_icon)  # Set red icon for disconnected devices
             self.device_labels[device].image = self.red_icon  # Update the image reference
 
-    #Fetch device changes and update the display every 5 seconds
+    #Fetch device changes and update the display every 3 seconds
     def poll_for_device_changes(self):
         current_device_list = DevicesList.device_list # only contains alt_names
 
@@ -160,12 +160,12 @@ class AlertsPage(tk.Frame):
         for device in removed_devices:
             self.device_states[device] = False  # Device is disconnected
             self.starting_device_list.remove(device)
-            tk_msgbox.showinfo(f"This device: [{device}] was removed.") # show popup for removed device
+            tk_msgbox.showinfo("Device Removed", f"This device: [{device}] was removed.") # show popup for removed device
 
         # Update the display with the current state of the devices
         self.update_device_display()
 
-        # Schedule the next call to poll_for_device_changes after 5000ms (5 seconds)
+        # Schedule the next call to poll_for_device_changes after 3000ms (3 seconds)
         self.after(3000, self.poll_for_device_changes)
 
     def append_message(self, message):
