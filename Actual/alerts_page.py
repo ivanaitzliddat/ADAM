@@ -119,10 +119,7 @@ class AlertsPage(tk.Frame):
     def update_device_display(self):
         # Add devices that are not yet added to the UI
         for device in self.starting_device_list:
-            device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = device)
-            custom_name = ""
-            for key, val in device_dict.items():
-                custom_name = val["custom_name"]
+            custom_name = self.get_custom_name_from_alt_name(device)
             
             if device not in self.device_labels:
                 # Decide which icon to show based on device state
@@ -285,3 +282,10 @@ class AlertsPage(tk.Frame):
     def restore_default_text(self, event, entry, default_text):
         if entry.get() == "":
             entry.insert(0, default_text)
+
+    def get_custom_name_from_alt_name(self, alt_name):
+        device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = alt_name)
+        custom_name = ""
+        for key, val in device_dict.items():
+            custom_name = val["custom_name"]
+        return custom_name
