@@ -106,9 +106,9 @@ class OCRProcessor:
                     print(sentence_list)
                     existing_sentences = set(Processed_Screenshot.sentence_dict.get(alt_name, []))
                     new_sentences = [s for s in sentence_list if s not in existing_sentences]
-                    if new_sentences:
-                        Processed_Screenshot.sentence_dict.setdefault(alt_name, []).extend(new_sentences)
+                    Processed_Screenshot.sentence_dict[alt_name] = sentence_list
 
+                    if new_sentences:
                         # Get current time
                         timestamp = datetime.now().strftime("%Y%m%d %H%M%S")
 
