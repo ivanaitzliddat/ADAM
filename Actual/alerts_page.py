@@ -9,6 +9,7 @@ from tkinter import ttk
 import os
 import tkinter.messagebox as tk_msgbox
 from imageio.plugins.deviceslist import DevicesList
+from datetime import datetime
 
 class AlertsPage(tk.Frame):
     def __init__(self, parent):
@@ -177,9 +178,11 @@ class AlertsPage(tk.Frame):
         # clickable_label.bind("<Button-1>", lambda event, idx=index: self.on_message_click(idx))
 #################################################################################################
         # Using new treeview, above code is for older listbox
-        date_time, alt_name, tts_text = message
+        date_time_raw, alt_name, tts_text = message
+        date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S")
+        date_time_display = date_time.strftime("%Y/%m/%d %H:%MH")
         # Insert the parsed message into the Treeview
-        self.treeview.insert("", 0, values=(date_time, alt_name, tts_text))
+        self.treeview.insert("", 0, values=(date_time_display, alt_name, tts_text))
     
     def apply_filters(self):
         """ Function to apply the filters based on the entries """
