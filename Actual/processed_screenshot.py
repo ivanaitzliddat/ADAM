@@ -2,6 +2,7 @@ import threading
 
 class Processed_Screenshot:
     frames = {}
+    sentence_dict = {}
     lock = threading.Lock()
 
 # def upon_receive_message():
