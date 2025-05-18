@@ -63,6 +63,9 @@ class OCRProcessor:
             frame_rgb = self.convert_frame(frame)
             # Get alt_name to find the relevant triggers
             self.perform_ocr_using_triggers(frame, frame_rgb)
+            # Set to show that the frame has been processed
+            with Screenshot.lock:
+                frame['processed'] = True
 
     '''
         Converts the frame to allow the processing of frame using imageio.
@@ -87,45 +90,64 @@ class OCRProcessor:
         Obtain the keyword list from the conditions and perform the actual OCR using the keyword list.
     '''
     def perform_ocr_using_conditions(self, frame, frame_rgb, alt_name, keywords_dict):
+        # Create a list of lines that has the keywords in it
+
         for key, val in keywords_dict.items():
             for condition in val["triggers"]:
                 keyword_list = val["triggers"][condition]["keywords"]
                 tts_message = val["triggers"][condition]['tts_text']
 
                 # Perform the OCR
-                has_keyword = self.perform_ocr(frame_rgb, alt_name, keyword_list, tts_message)
-
-                # Set to show that the frame has been processed
-                with Screenshot.lock:
-                    frame['processed'] = True
-
+                has_keyword, new_frame_rgb, sentence_list = self.perform_ocr(np.copy(frame_rgb), alt_name, keyword_list)
+                
                 if not has_keyword:
                     print("No keywords Found.")
+                else:
+                    print(sentence_list)
+                    existing_sentences = set(Processed_Screenshot.sentence_dict.get(alt_name, []))
+                    new_sentences = [s for s in sentence_list if s not in existing_sentences]
+                    if new_sentences:
+                        Processed_Screenshot.sentence_dict.setdefault(alt_name, []).extend(new_sentences)
+
+                        # Get current time
+                        timestamp = datetime.now().strftime("%Y%m%d %H%M%S")
+
+                        # Save the image
+                        self.save_processed_screenshot(new_frame_rgb, alt_name, timestamp)
+
+                        # Send message to GUI
+                        self.send_message((timestamp, alt_name, tts_message))
 
     '''
         Performs OCR on a given frame using the keyword list provided.
     '''
-    def perform_ocr(self, frame, alt_name, keywords, tts_message):
+    def perform_ocr(self, frame, alt_name, keywords):
         has_keyword = False
         result = self.ocr.ocr(frame, cls=True)
         # Display OCR results that contain the keywords
         if not None in result:
-            has_keyword = self.iterate_line_in_screenshot(frame, keywords, alt_name, result, tts_message)
-        return has_keyword
+            has_keyword, frame, sentence_list = self.iterate_line_in_screenshot(frame, keywords, alt_name, result)
+        return has_keyword, frame, sentence_list
     
     '''
         Disect the screenshot by looking through the words identified line by line.
     '''
-    def iterate_line_in_screenshot(self, frame, keywords, alt_name, result, tts_message):
+    def iterate_line_in_screenshot(self, frame, keywords, alt_name, result):
+        has_keyword = False
+        sentence_list = []
         for line in result:
             for box, (text, score) in line:
-                has_keyword = self.search_keywords_in_line(frame, keywords, alt_name, box, text, score, tts_message)
-        return has_keyword
-    
+                identified_keyword, frame, filtered_texts = self.search_keywords_in_line(frame, keywords, alt_name, box, text, score)
+                has_keyword = has_keyword | identified_keyword
+                if identified_keyword:
+                    sentence_list.append(filtered_texts[0])
+                    print(sentence_list)
+        return has_keyword, frame, sentence_list
+
     '''
         Search for the keywords in a single line.
     '''
-    def search_keywords_in_line(self, frame, keywords, alt_name, box, text, score, tts_message):
+    def search_keywords_in_line(self, frame, keywords, alt_name, box, text, score):
         # Filter the results to include only texts containing the keyword
         filtered_boxes = []
         filtered_texts = []
@@ -139,23 +161,7 @@ class OCRProcessor:
             # Draw filtered OCR results on the image
             self.draw_boxes(frame, filtered_boxes)
 
-            # Get current time
-            timestamp = datetime.now().strftime("%Y%m%d %H%M%S")
-
-            # Save the image
-            self.save_processed_screenshot(frame, alt_name, timestamp)
-
-            # Send message to GUI
-            self.send_message((timestamp, alt_name, tts_message))
-
-        return identified_keyword
-
-    '''
-        Adds the message to queue and sends it to the GUI.
-    '''
-    def send_message(self, message):
-        with MessageQueue.lock:
-            MessageQueue.status_queue.put(message)
+        return identified_keyword, frame, filtered_texts
 
     '''
         Draw boxes around the identified keywords
@@ -168,17 +174,27 @@ class OCRProcessor:
             cv2.polylines(frame, [points], isClosed=True, color=(0, 0, 255), thickness=2)
 
     '''
-        Save the screenshots in the Processed Screenshot list.
+        Adds the message to queue and sends it to the GUI.
+    '''
+    def send_message(self, message):
+        with MessageQueue.lock:
+            MessageQueue.status_queue.put(message)
+
+    '''
+    Save the screenshots in the Processed Screenshot list.
     '''
     def save_processed_screenshot(self, frame, alt_name, timestamp):
         with Processed_Screenshot.lock:
+            # Insert new screenshot
             Processed_Screenshot.frames.setdefault(alt_name, {}).update({timestamp: frame})
             print("New screenshot has been added to processed screenshot")
-            Processed_Screenshot.frames = {datetime.strptime(k, "%Y%m%d %H%M%S"): v for k, v in Processed_Screenshot.frames[alt_name].items()}
-                # Get the current time
+
+            # Filter to keep only screenshots from the last 5 minutes
             now = datetime.now()
-                # Define the time threshold (5 minutes ago)
             time_threshold = now - timedelta(minutes=5)
-                # Filter dictionary to keep only recent timestamps
-            Processed_Screenshot.frames = {k: v for k, v in Processed_Screenshot.frames.items() if k >= time_threshold}
+            frames_dict = {k: v for k, v in Processed_Screenshot.frames[alt_name].items() if datetime.strptime(k, "%Y%m%d %H%M%S") >= time_threshold}
+
+            # Save back the cleaned dictionary
+            Processed_Screenshot.frames[alt_name] = frames_dict
+
             print("Successfully filtered processed screenshots such that only freshly processed screenshots are kept.")
