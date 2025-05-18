@@ -186,7 +186,7 @@ class AlertsPage(tk.Frame):
         # To format the datetime
         date_time_raw, alt_name, tts_text = message
         date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S") # formatting the string into a datetime object
-        date_time_display = date_time.strftime("%Y/%m/%d %H:%MH") # what will be showed in the treeview
+        date_time_display = date_time.strftime("%Y/%m/%d %H:%M:%S") # what will be showed in the treeview
 
         self.all_messages.append({
             "date_time": date_time,
@@ -292,46 +292,47 @@ class AlertsPage(tk.Frame):
             selected_item = self.treeview.selection()[0]
             item_data = self.treeview.item(selected_item)
             column_values = item_data['values']
-            date_time = column_values[0]
+            date_time_display = column_values[0]
             alt_name = column_values[1] 
             tts_message = column_values[2]
-            self.on_message_click(alt_name, date_time)
+            self.on_message_click(alt_name, date_time_display)
         except Exception as e:
             tk_msgbox.showinfo("Error: Clicked on an invalid row. Please try to click again on the specific alert.")
 
-    def on_message_click(self, alt_name, date_time):
-        with Processed_Screenshot.lock:
-            image_with_boxes = Processed_Screenshot.frames[alt_name][date_time]
-            sharpened_image = AlertsPage.sharpen_image(image_with_boxes)
-            # Convert image to Tkinter-compatible format
-            pil_image = Image.fromarray(sharpened_image)
+    def on_message_click(self, alt_name, date_time_display):
+        with Processed_Screenshot.lock: 
+                date_time_object = datetime.strptime(date_time_display, "%Y/%m/%d %H:%M:%S")
+                image_with_boxes = Processed_Screenshot.frames[alt_name][date_time_object.strftime("%Y%m%d %H%M%S")]
+                sharpened_image = AlertsPage.sharpen_image(image_with_boxes)
+                # Convert image to Tkinter-compatible format
+                pil_image = Image.fromarray(sharpened_image)
 
-            # Resize the image if it's too large for the screen
-            screen_width = self.winfo_screenwidth()
-            screen_height = self.winfo_screenheight()
-            max_width = screen_width * 0.8  # 80% of the screen width
-            max_height = screen_height * 0.8  # 80% of the screen height
-            
-            image_width, image_height = pil_image.size
-            if image_width > max_width or image_height > max_height:
-                scaling_factor = min(max_width / image_width, max_height / image_height)
-                new_width = int(image_width * scaling_factor)
-                new_height = int(image_height * scaling_factor)
-                pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                # Resize the image if it's too large for the screen
+                screen_width = self.winfo_screenwidth()
+                screen_height = self.winfo_screenheight()
+                max_width = screen_width * 0.8  # 80% of the screen width
+                max_height = screen_height * 0.8  # 80% of the screen height
+                
+                image_width, image_height = pil_image.size
+                if image_width > max_width or image_height > max_height:
+                    scaling_factor = min(max_width / image_width, max_height / image_height)
+                    new_width = int(image_width * scaling_factor)
+                    new_height = int(image_height * scaling_factor)
+                    pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
-            with io.BytesIO() as buffer:
-                pil_image.save(buffer, format="PNG")
-                buffer.seek(0)
-                tk_image = ImageTk.PhotoImage(Image.open(buffer))
+                with io.BytesIO() as buffer:
+                    pil_image.save(buffer, format="PNG")
+                    buffer.seek(0)
+                    tk_image = ImageTk.PhotoImage(Image.open(buffer))
 
-            # Create a new Tkinter window to display the image
-            window = tk.Toplevel(self.frame)
-            canvas = tk.Canvas(window, width=tk_image.width(), height=tk_image.height())
-            canvas.pack()
-            canvas.create_image(0, 0, anchor="nw", image=tk_image)
+                # Create a new Tkinter window to display the image
+                window = tk.Toplevel(self)
+                canvas = tk.Canvas(window, width=tk_image.width(), height=tk_image.height())
+                canvas.pack()
+                canvas.create_image(0, 0, anchor="nw", image=tk_image)
 
-            # Keep a reference to avoid garbage collection
-            window.image = tk_image
+                # Keep a reference to avoid garbage collection
+                window.image = tk_image
 
     def on_frame_configure(self, event):
         """Update the scrollable region when the frame is resized."""
