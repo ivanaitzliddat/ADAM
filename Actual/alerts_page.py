@@ -10,6 +10,7 @@ import os
 import tkinter.messagebox as tk_msgbox
 from imageio.plugins.deviceslist import DevicesList
 from datetime import datetime
+from tkcalendar import DateEntry
 
 class AlertsPage(tk.Frame):
     def __init__(self, parent):
@@ -65,8 +66,8 @@ class AlertsPage(tk.Frame):
         self.message_filter_entry.pack(side="left", padx=5, pady=5)
 
         # Apply filter button (using pack inside the filter frame)
-        apply_button = tk.Button(self.filter_frame, text="Apply Filters", command=self.apply_filters)
-        apply_button.pack(side="left", padx=5, pady=5)
+        filter_button = tk.Button(self.filter_frame, text="Filter Options", command=self.open_filter_window)
+        filter_button.pack(side="left", padx=5, pady=5)
 
         # Clear filters button (using pack inside the filter frame)
         clear_button = tk.Button(self.filter_frame, text="Clear Filters", command=self.clear_filters)
@@ -88,6 +89,9 @@ class AlertsPage(tk.Frame):
 
         # Bind the click event to the Treeview rows
         self.treeview.bind("<ButtonRelease-1>", self.on_row_click)
+
+        # To keep track of all messages passed from the MessageQueue
+        self.all_messages = []
 
         # To keep track of the row_ids that are filtered
         self.detached_rows = []
@@ -178,48 +182,104 @@ class AlertsPage(tk.Frame):
         # clickable_label.bind("<Button-1>", lambda event, idx=index: self.on_message_click(idx))
 #################################################################################################
         # Using new treeview, above code is for older listbox
+
+        # To format the datetime
         date_time_raw, alt_name, tts_text = message
-        date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S")
-        date_time_display = date_time.strftime("%Y/%m/%d %H:%MH")
+        date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S") # formatting the string into a datetime object
+        date_time_display = date_time.strftime("%Y/%m/%d %H:%MH") # what will be showed in the treeview
+
+        self.all_messages.append({
+            "date_time": date_time,
+            "alt_name": alt_name,
+            "tts_text": tts_text,
+            "date_time_display": date_time_display
+        })
         # Insert the parsed message into the Treeview
         self.treeview.insert("", 0, values=(date_time_display, alt_name, tts_text))
-    
-    def apply_filters(self):
+
+
+    def open_filter_window(self):
+        filter_window = tk.Toplevel(self)
+        filter_window.title("Filter Options")
+        filter_window.geometry("400x300")  # width x height in pixels
+        filter_window.grab_set()  # Modal behavior
+
+        # Create a horizontal container
+        date_frame = tk.Frame(filter_window)
+        date_frame.pack(pady=10)
+
+        # Start Date
+        start_label = tk.Label(date_frame, text="Start Date:")
+        start_label.pack(side="left", padx=(0, 5))
+        start_date_entry = DateEntry(date_frame, date_pattern="yyyy/mm/dd", width=12)
+        start_date_entry.pack(side="left", padx=(0, 20))
+
+        # End Date
+        end_label = tk.Label(date_frame, text="End Date:")
+        end_label.pack(side="left", padx=(0, 5))
+        end_date_entry = DateEntry(date_frame, date_pattern="yyyy/mm/dd", width=12)
+        end_date_entry.pack(side="left")
+
+        # Label above the dropdown
+        alt_name_label = tk.Label(filter_window, text="Select Device (alt_name):")
+        alt_name_label.pack(pady=(10, 0))
+
+        # Dropdown
+        alt_name_var = tk.StringVar()
+        alt_name_options = list(set(msg["alt_name"] for msg in self.all_messages))
+        alt_name_menu = ttk.Combobox(filter_window, textvariable=alt_name_var, values=alt_name_options, state="readonly")
+        alt_name_menu.set("Choose a device")
+        alt_name_menu.pack(pady=(0, 10))
+
+        # Search for text message 
+        tts_label = tk.Label(filter_window, text="Search Text")
+        tts_label.pack()
+        tts_entry = tk.Entry(filter_window)
+        tts_entry.pack()
+
+        apply_button = tk.Button(
+            filter_window,
+            text="Apply Filters",
+            command=lambda: self.apply_filters(start_date_entry, end_date_entry, alt_name_var, tts_entry, filter_window)
+        )
+        apply_button.pack()
+
+
+    def apply_filters(self, start_date_entry, end_date_entry, alt_name_var, tts_entry, filter_window):
         """ Function to apply the filters based on the entries """
-        for row_id in self.treeview.get_children():
-            row = self.treeview.item(row_id)
-            # Check each filter independently
-                        
-            # Filter by date if it is not empty
-            if self.date_filter_entry.get() and self.date_filter_entry.get() != "Enter Date (e.g., 2025-02-16)":
-                if self.date_filter_entry.get() not in row["values"][0]:  # Assuming date is in row[0]
-                    self.treeview.detach(row_id)
-                    self.detached_rows.append(row_id)
-            
-            # Filter by time if it is not empty
-            if self.time_filter_entry.get() and self.time_filter_entry.get() != "Enter Time (e.g., 01:05:38)":
-                if self.time_filter_entry.get() not in row["values"][1]:  # Assuming time is in row[1]
-                    self.treeview.detach(row_id)
-                    self.detached_rows.append(row_id)
-            
-            # Filter by message if it is not empty
-            if self.message_filter_entry.get() and self.message_filter_entry.get() != "Enter Message (e.g., Alert: Rahul detected.)":
-                if self.message_filter_entry.get() not in row["values"][2]:  # Assuming message is in row[2]
-                    self.treeview.detach(row_id)
-                    self.detached_rows.append(row_id)
+        start = datetime.strptime(start_date_entry.get(), "%Y/%m/%d")
+        end = datetime.strptime(end_date_entry.get(), "%Y/%m/%d")
+        alt_name = alt_name_var.get()
+        text = tts_entry.get()
+
+        # Clear Treeview
+        for row in self.treeview.get_children():
+            self.treeview.delete(row)
+
+        # Filter logic
+        for msg in self.all_messages:
+            if not (start <= msg["date_time"] <= end):
+                continue
+            if alt_name != "Select alt_name" and msg["alt_name"] != alt_name:
+                continue
+            if text and text not in msg["tts_text"].lower():
+                continue
+
+            self.treeview.insert("", "end", values=(msg["date_time_display"], msg["alt_name"], msg["tts_text"]))
+
+        filter_window.destroy()  # Close popup        
             
     def clear_filters(self):
         """ Function to clear the filters and restore all data """
-        # Clear the filter entry fields
-        print('clearing filters')
-        self.date_filter_entry.delete(0, tk.END)
-        self.time_filter_entry.delete(0, tk.END)
-        self.message_filter_entry.delete(0, tk.END)
+        # Clear the filter entry fields ## need it for clearing fields within the window
+        # self.date_filter_entry.delete(0, tk.END)
+        # self.time_filter_entry.delete(0, tk.END)
+        # self.message_filter_entry.delete(0, tk.END)
+        for row in self.treeview.get_children():
+            self.treeview.delete(row)
 
-        # Re-attach all detached rows back to the Treeview
-        for row_id in self.detached_rows:
-            self.treeview.reattach(row_id, "", "end")  # Reattach the row at the end
-        self.detached_rows.clear()  # Clear the list of detached rows
+        for msg in self.all_messages:
+            self.treeview.insert("", "end", values=(msg["date_time_display"], msg["alt_name"], msg["tts_text"]))
 
     def sharpen_image(image):
         kernel = np.array([[-1, -1, -1],
