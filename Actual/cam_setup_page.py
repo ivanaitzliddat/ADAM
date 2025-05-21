@@ -290,7 +290,7 @@ class VideoCaptureSetupApp(tk.Frame):
             device_frame.grid(row=i // 4, column=i % 4, padx=10, pady=10)
 
             video_label = tk.Label(
-                device_frame, text=f"", bg="black", fg="white", height=20, padx=5
+                device_frame, text=f"", bg="black", fg="white", height=300, padx=5
             )
             video_label.pack(fill="x",pady=(0,5))
 
