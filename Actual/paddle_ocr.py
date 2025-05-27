@@ -127,6 +127,8 @@ class OCRProcessor:
         # Display OCR results that contain the keywords
         if not None in result:
             has_keyword, frame, sentence_list = self.iterate_line_in_screenshot(frame, keywords, alt_name, result)
+        else:
+            sentence_list = []
         return has_keyword, frame, sentence_list
     
     '''
