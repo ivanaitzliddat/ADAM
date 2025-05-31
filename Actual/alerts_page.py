@@ -75,7 +75,7 @@ class AlertsPage(tk.Frame):
 
         # Create a Treeview widget with three columns
         self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message"), show="headings")
-        self.treeview.heading("Date & Time", text="Date & Time")
+        self.treeview.heading("Date & Time", text="Date & Time", command=lambda: self.sort_column("date_time", False))
         self.treeview.heading("Device", text="Device")
         self.treeview.heading("TTS Message", text="TTS Message")
 
@@ -288,7 +288,10 @@ class AlertsPage(tk.Frame):
         return cv2.filter2D(image, -1, kernel)
     
     def on_row_click(self, event):
-        try: 
+        try:
+            region = self.treeview.identify_region(event.x, event.y)
+            if region == "heading":
+                return  # Ignore clicks on the header
             selected_item = self.treeview.selection()[0]
             item_data = self.treeview.item(selected_item)
             column_values = item_data['values']
@@ -336,6 +339,37 @@ class AlertsPage(tk.Frame):
 
                 # Deselect the row after opening the image
                 self.treeview.selection_remove(self.treeview.selection())  # This removes selection from the row
+
+    def sort_column(self, column_key, reverse):
+        """
+        Sort the all_messages array based on the column clicked.
+        :param column_key: The key to sort by (e.g., "date_time", "alt_name", "tts_text")
+        :param reverse: If True, sort in descending order, else ascending
+        """
+        if column_key == "date_time":
+            # Sort by date/time (convert string to datetime for proper sorting)
+            self.all_messages.sort(key=lambda x: x[column_key], reverse=reverse)
+        else:
+            # Sort alphabetically (Device Name or Message)
+            self.all_messages.sort(key=lambda x: x[column_key], reverse=reverse)
+
+        # Update the Treeview after sorting
+        self.update_treeview()
+
+        # Toggle the sort direction for the next click
+        if column_key == "date_time":
+            self.treeview.heading("Date & Time", command=lambda: self.sort_column(column_key, not reverse))
+        else:
+            self.treeview.heading(column_key, command=lambda: self.sort_column(column_key, not reverse))
+
+    def update_treeview(self):
+        # Clear the Treeview
+        for row in self.treeview.get_children():
+            self.treeview.delete(row)
+
+        # Insert sorted data into the Treeview
+        for message in self.all_messages:
+            self.treeview.insert("", "end", values=(message["date_time_display"], message["alt_name"], message["tts_text"]))
 
     def on_frame_configure(self, event):
         """Update the scrollable region when the frame is resized."""
