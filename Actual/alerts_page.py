@@ -334,6 +334,9 @@ class AlertsPage(tk.Frame):
                 # Keep a reference to avoid garbage collection
                 window.image = tk_image
 
+                # Deselect the row after opening the image
+                self.treeview.selection_remove(self.treeview.selection())  # This removes selection from the row
+
     def on_frame_configure(self, event):
         """Update the scrollable region when the frame is resized."""
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
