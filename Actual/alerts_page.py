@@ -61,9 +61,9 @@ class AlertsPage(tk.Frame):
         self.message_filter_entry.bind("<FocusOut>", lambda event: self.restore_default_text(event, self.message_filter_entry, "Enter Message (e.g., Alert: Rahul detected.)"))
 
         # Pack the filter entries in the window (inside the filter frame)
-        self.date_filter_entry.pack(side="left", padx=5, pady=5)
-        self.time_filter_entry.pack(side="left", padx=5, pady=5)
-        self.message_filter_entry.pack(side="left", padx=5, pady=5)
+        # self.date_filter_entry.pack(side="left", padx=5, pady=5)
+        # self.time_filter_entry.pack(side="left", padx=5, pady=5)
+        # self.message_filter_entry.pack(side="left", padx=5, pady=5)
 
         # Apply filter button (using pack inside the filter frame)
         filter_button = tk.Button(self.filter_frame, text="Filter Options", command=self.open_filter_window)
