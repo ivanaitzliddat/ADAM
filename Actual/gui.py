@@ -125,7 +125,7 @@ class ADAM:
             while True:
                 message = MessageQueue.status_queue.get_nowait()
                 self.pages["alerts_page"].append_message(message)
-                timestamp, custom_name, tts_alert = message
+                timestamp, custom_name, tts_alert, sentence_list = message
                 with TTS.lock:
                     TTS.alert_queue.put(tts_alert)
         except queue.Empty:

@@ -116,7 +116,7 @@ class OCRProcessor:
                         self.save_processed_screenshot(new_frame_rgb, alt_name, timestamp)
 
                         # Send message to GUI
-                        self.send_message((timestamp, alt_name, tts_message))
+                        self.send_message((timestamp, alt_name, tts_message, sentence_list))
 
     '''
         Performs OCR on a given frame using the keyword list provided.

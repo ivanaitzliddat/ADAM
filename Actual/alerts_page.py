@@ -184,7 +184,7 @@ class AlertsPage(tk.Frame):
         # Using new treeview, above code is for older listbox
 
         # To format the datetime
-        date_time_raw, alt_name, tts_text = message
+        date_time_raw, alt_name, tts_text, sentence_list = message
         date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S") # formatting the string into a datetime object
         date_time_display = date_time.strftime("%Y/%m/%d %H:%M:%S") # what will be showed in the treeview
 
