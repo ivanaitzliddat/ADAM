@@ -198,8 +198,10 @@ class AlertsPage(tk.Frame):
             "date_time_display": date_time_display
         })
         # Insert the parsed message into the Treeview
-        self.treeview.insert("", 0,image=self.unmuted_icon,values=(date_time_display, alt_name, tts_text))
-
+        if tts_text != '':
+            self.treeview.insert("", 0,image=self.unmuted_icon,values=(date_time_display, alt_name, tts_text))
+        else:
+            self.treeview.insert("", 0,image=self.unmuted_icon,values=(date_time_display, alt_name, sentence_list))
 
     def open_filter_window(self):
         filter_window = tk.Toplevel(self)
