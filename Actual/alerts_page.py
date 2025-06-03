@@ -36,9 +36,11 @@ class AlertsPage(tk.Frame):
         self.bottom_frame = tk.Frame(self)
         self.bottom_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
-        # Load and resize monitor icons
+        # Load and resize icons
         self.green_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "green_monitor.png"), 50, 50)  # Resize to 50x50 pixels
         self.red_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "red_monitor.png"), 50, 50)  # Resize to 50x50 pixels
+        self.unmuted_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "green_unmute.png"), 30, 30)
+        self.muted_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "red_mute.png"), 30, 30)
 
         # Start polling for device changes (first call after initialization)
         self.poll_for_device_changes()
@@ -74,7 +76,8 @@ class AlertsPage(tk.Frame):
         clear_button.pack(side="left", padx=5, pady=5)
 
         # Create a Treeview widget with three columns
-        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message"), show="headings")
+        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message"), show="tree headings")
+        self.treeview.heading("#0", text="Mute Status")
         self.treeview.heading("Date & Time", text="Date & Time", command=lambda: self.sort_column("date_time", False))
         self.treeview.heading("Device", text="Device")
         self.treeview.heading("TTS Message", text="TTS Message")
@@ -195,7 +198,7 @@ class AlertsPage(tk.Frame):
             "date_time_display": date_time_display
         })
         # Insert the parsed message into the Treeview
-        self.treeview.insert("", 0, values=(date_time_display, alt_name, tts_text))
+        self.treeview.insert("", 0,image=self.unmuted_icon,values=(date_time_display, alt_name, tts_text))
 
 
     def open_filter_window(self):
