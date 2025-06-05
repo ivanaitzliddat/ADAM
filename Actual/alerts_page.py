@@ -9,10 +9,13 @@ from tkinter import ttk
 import os
 import tkinter.messagebox as tk_msgbox
 from imageio.plugins.deviceslist import DevicesList
-from datetime import datetime
+from datetime import datetime, timedelta
 from tkcalendar import DateEntry
 
 class AlertsPage(tk.Frame):
+
+    muted_alerts = []
+
     def __init__(self, parent):
         super().__init__(parent)
         label = tk.Label(self, text="Alerts Page Content", font=("Arial", 20))
@@ -303,7 +306,7 @@ class AlertsPage(tk.Frame):
             column_values = item_data['values']
             date_time_display = column_values[0]
             alt_name = column_values[1] 
-            tts_message = column_values[2]
+            tts_or_sentence_message = column_values[2]
             alert_options_window = tk.Toplevel(self)
             alert_options_window.title("Alert Options")
             alert_options_window.geometry("400x300")  # width x height in pixels
@@ -316,7 +319,7 @@ class AlertsPage(tk.Frame):
             mute_alerts = tk.Button(
                 alert_options_window,
                 text="Mute Alerts",
-                command=lambda: self.mute_alert(alt_name)
+                command=lambda: self.mute_alert(alt_name, date_time_display)
             )
             mute_alerts.pack()
         except Exception as e:
@@ -361,9 +364,13 @@ class AlertsPage(tk.Frame):
                 # Deselect the row after opening the image
                 self.treeview.selection_remove(self.treeview.selection())  # This removes selection from the row
 
-    def mute_alert(self, target_alt_name):
+    def mute_alert(self, target_alt_name, date_time_display):
         # Using list comprehension to find the matching object
-        matching_message = next((msg for msg in self.all_messages if msg['alt_name'] == target_alt_name), None)
+        matching_message = next(
+                        (msg for msg in self.all_messages 
+                        if msg['alt_name'] == target_alt_name and msg['date_time_display'] == date_time_display),
+                        None
+                    )
 
         if matching_message:
             sentence_list = matching_message['sentence_list']
@@ -412,8 +419,19 @@ class AlertsPage(tk.Frame):
             def confirm_mute():
                 selected = duration_var.get()
                 duration_minutes = duration_options.get(selected)
-                print(f"Muted {target_alt_name} for {duration_minutes} minutes")
-                mute_alert_window.destroy()  # Close the window
+
+                if duration_minutes is not None:
+                    expiry_time = datetime.now() + timedelta(minutes=duration_minutes)
+
+                    AlertsPage.muted_alerts.append({
+                        "alt_name": target_alt_name,
+                        "sentence_list": sentence_list,
+                        "expiry_time": expiry_time
+                    })
+
+                    print(f"Muted {target_alt_name} with sentence {sentence_list} until {expiry_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
+                mute_alert_window.destroy()
 
             def cancel_mute():
                 mute_alert_window.destroy()

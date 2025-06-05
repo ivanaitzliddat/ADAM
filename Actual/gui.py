@@ -12,6 +12,7 @@ from welcome_page import welcomeScreen
 from config_handler import ConfigHandler
 from messages import MessageQueue
 from TTS import TTS
+from datetime import datetime
 
 '''
     Represents a GUI object which allows user to control ADAM.
@@ -125,9 +126,24 @@ class ADAM:
             while True:
                 message = MessageQueue.status_queue.get_nowait()
                 self.pages["alerts_page"].append_message(message)
-                timestamp, custom_name, tts_alert, sentence_list = message
+                timestamp, alt_name, tts_alert, sentence_list = message
                 with TTS.lock:
-                    TTS.alert_queue.put(tts_alert)
+                    print('hi')
+                    #Skip if alert is muted and not expired
+                    muted = False
+                    now = datetime.now()
+
+                    for mute_entry in self.pages["alerts_page"].muted_alerts:
+                        if (
+                            mute_entry["alt_name"] == alt_name and
+                            mute_entry["sentence_list"] == sentence_list and
+                            mute_entry["expiry_time"] > now
+                        ):
+                            muted = True
+                            break
+
+                    if not muted:
+                        TTS.alert_queue.put(tts_alert)
         except queue.Empty:
             pass
         finally:
