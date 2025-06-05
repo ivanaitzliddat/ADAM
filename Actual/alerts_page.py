@@ -303,7 +303,23 @@ class AlertsPage(tk.Frame):
             date_time_display = column_values[0]
             alt_name = column_values[1] 
             tts_message = column_values[2]
-            self.on_message_click(alt_name, date_time_display)
+            alert_options_window = tk.Toplevel(self)
+            alert_options_window.title("Alert Options")
+            alert_options_window.geometry("400x300")  # width x height in pixels
+            #alert_options_window.grab_set()  # Modal behavior
+            view_screenshot = tk.Button(
+                alert_options_window,
+                text="View Screenshot",
+                command=lambda: self.on_message_click(alt_name, date_time_display)
+            )
+            view_screenshot.pack()
+            mute_alerts = tk.Button(
+                alert_options_window,
+                text="Mute Alerts",
+                command=lambda: self.on_message_click(alt_name, date_time_display)
+            )
+            mute_alerts.pack()
+            #self.on_message_click(alt_name, date_time_display)
         except Exception as e:
             tk_msgbox.showinfo("Error: Clicked on an invalid row. Please try to click again on the specific alert.")
 
@@ -335,6 +351,7 @@ class AlertsPage(tk.Frame):
 
                 # Create a new Tkinter window to display the image
                 window = tk.Toplevel(self)
+                window.grab_set()
                 canvas = tk.Canvas(window, width=tk_image.width(), height=tk_image.height())
                 canvas.pack()
                 canvas.create_image(0, 0, anchor="nw", image=tk_image)
@@ -344,6 +361,8 @@ class AlertsPage(tk.Frame):
 
                 # Deselect the row after opening the image
                 self.treeview.selection_remove(self.treeview.selection())  # This removes selection from the row
+
+    #def mute_alert(self)
 
     def sort_column(self, column_key, reverse):
         """
