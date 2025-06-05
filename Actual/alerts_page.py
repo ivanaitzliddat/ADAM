@@ -195,7 +195,8 @@ class AlertsPage(tk.Frame):
             "date_time": date_time,
             "alt_name": alt_name,
             "tts_text": tts_text,
-            "date_time_display": date_time_display
+            "date_time_display": date_time_display,
+            "sentence_list": sentence_list
         })
         # Insert the parsed message into the Treeview
         if tts_text != '':
@@ -306,7 +307,6 @@ class AlertsPage(tk.Frame):
             alert_options_window = tk.Toplevel(self)
             alert_options_window.title("Alert Options")
             alert_options_window.geometry("400x300")  # width x height in pixels
-            #alert_options_window.grab_set()  # Modal behavior
             view_screenshot = tk.Button(
                 alert_options_window,
                 text="View Screenshot",
@@ -316,10 +316,9 @@ class AlertsPage(tk.Frame):
             mute_alerts = tk.Button(
                 alert_options_window,
                 text="Mute Alerts",
-                command=lambda: self.on_message_click(alt_name, date_time_display)
+                command=lambda: self.mute_alert(alt_name)
             )
             mute_alerts.pack()
-            #self.on_message_click(alt_name, date_time_display)
         except Exception as e:
             tk_msgbox.showinfo("Error: Clicked on an invalid row. Please try to click again on the specific alert.")
 
@@ -362,7 +361,68 @@ class AlertsPage(tk.Frame):
                 # Deselect the row after opening the image
                 self.treeview.selection_remove(self.treeview.selection())  # This removes selection from the row
 
-    #def mute_alert(self)
+    def mute_alert(self, target_alt_name):
+        # Using list comprehension to find the matching object
+        matching_message = next((msg for msg in self.all_messages if msg['alt_name'] == target_alt_name), None)
+
+        if matching_message:
+            sentence_list = matching_message['sentence_list']
+
+            mute_alert_window = tk.Toplevel(self)
+            mute_alert_window.title("Mute Options")
+            mute_alert_window.geometry("400x300")
+            mute_alert_window.grab_set()
+
+            # Main label
+            mute_label = tk.Label(
+                mute_alert_window,
+                text=(
+                    f"You will be muting this sentence {sentence_list} for this device {target_alt_name}.\n"
+                    "This will still display the alert, but no sound will be played."
+                ),
+                wraplength=380,
+                justify="left"
+            )
+            mute_label.pack(pady=10)
+
+            # Frame for "Mute Duration" label + combobox
+            duration_frame = tk.Frame(mute_alert_window)
+            duration_frame.pack(pady=5)
+
+            tk.Label(duration_frame, text="Mute duration:").pack(side="left", padx=(0, 10))
+
+            duration_options = {
+                "5 minutes": 5,
+                "15 minutes": 15,
+                "1 hour": 60,
+                "6 hours": 360,
+                "1 day": 1440,
+            }
+
+            duration_var = tk.StringVar()
+            duration_menu = ttk.Combobox(duration_frame, textvariable=duration_var, state="readonly", width=20)
+            duration_menu['values'] = list(duration_options.keys())
+            duration_menu.current(0)
+            duration_menu.pack(side="left")
+
+            # Confirm/Cancel buttons
+            button_frame = tk.Frame(mute_alert_window)
+            button_frame.pack(pady=20)
+
+            def confirm_mute():
+                selected = duration_var.get()
+                duration_minutes = duration_options.get(selected)
+                print(f"Muted {target_alt_name} for {duration_minutes} minutes")
+                mute_alert_window.destroy()  # Close the window
+
+            def cancel_mute():
+                mute_alert_window.destroy()
+
+            confirm_btn = tk.Button(button_frame, text="Confirm", command=confirm_mute)
+            confirm_btn.pack(side="left", padx=10)
+
+            cancel_btn = tk.Button(button_frame, text="Cancel", command=cancel_mute)
+            cancel_btn.pack(side="left", padx=10)
 
     def sort_column(self, column_key, reverse):
         """
