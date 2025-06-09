@@ -128,7 +128,6 @@ class ADAM:
                 self.pages["alerts_page"].append_message(message)
                 timestamp, alt_name, tts_alert, sentence_list = message
                 with TTS.lock:
-                    print('hi')
                     #Skip if alert is muted and not expired
                     muted = False
                     now = datetime.now()
