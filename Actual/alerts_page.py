@@ -75,7 +75,7 @@ class AlertsPage(tk.Frame):
         filter_button.pack(side="left", padx=5, pady=5)
 
         # Clear filters button (using pack inside the filter frame)
-        clear_button = tk.Button(self.filter_frame, text="Clear Filters", command=self.clear_filters)
+        clear_button = tk.Button(self.filter_frame, text="Clear Filters", command=self.update_treeview)
         clear_button.pack(side="left", padx=5, pady=5)
 
         # Create a Treeview widget with three columns
@@ -201,24 +201,12 @@ class AlertsPage(tk.Frame):
             "date_time_display": date_time_display,
             "sentence_list": sentence_list
         })
-        now = datetime.now()
-        is_muted = any(
-            mute["alt_name"] == alt_name and
-            mute["sentence_list"] == sentence_list and
-            mute["expiry_time"] > now
-            for mute in AlertsPage.muted_alerts
-        )
         # Insert the parsed message into the Treeview 
-        if is_muted:   
-            if tts_text != '':
-                self.treeview.insert("", 0,image=self.muted_icon,values=(date_time_display, alt_name, tts_text))
-            else:
-                self.treeview.insert("", 0,image=self.muted_icon,values=(date_time_display, alt_name, sentence_list))
-        else:
-            if tts_text != '':
-                self.treeview.insert("", 0,image=self.unmuted_icon,values=(date_time_display, alt_name, tts_text))
-            else:
-                self.treeview.insert("", 0,image=self.unmuted_icon,values=(date_time_display, alt_name, sentence_list))
+        icon = self.muted_icon if self.if_muted(alt_name, sentence_list) else self.unmuted_icon
+        values = (date_time_display, alt_name, tts_text) if tts_text != '' else (date_time_display, alt_name, sentence_list)
+
+        self.treeview.insert("", 0, image=icon, values=values)
+
 
     def open_filter_window(self):
         filter_window = tk.Toplevel(self)
@@ -290,18 +278,7 @@ class AlertsPage(tk.Frame):
             self.treeview.insert("", "end", values=(msg["date_time_display"], msg["alt_name"], msg["tts_text"]))
 
         filter_window.destroy()  # Close popup        
-            
-    def clear_filters(self):
-        """ Function to clear the filters and restore all data """
-        # Clear the filter entry fields ## need it for clearing fields within the window
-        # self.date_filter_entry.delete(0, tk.END)
-        # self.time_filter_entry.delete(0, tk.END)
-        # self.message_filter_entry.delete(0, tk.END)
-        for row in self.treeview.get_children():
-            self.treeview.delete(row)
 
-        for msg in self.all_messages:
-            self.treeview.insert("", "end", values=(msg["date_time_display"], msg["alt_name"], msg["tts_text"]))
 
     def sharpen_image(image):
         kernel = np.array([[-1, -1, -1],
@@ -412,6 +389,7 @@ class AlertsPage(tk.Frame):
             tk.Label(duration_frame, text="Mute duration:").pack(side="left", padx=(0, 10))
 
             duration_options = {
+                "1 minutes": 1,
                 "5 minutes": 5,
                 "15 minutes": 15,
                 "1 hour": 60,
@@ -436,11 +414,16 @@ class AlertsPage(tk.Frame):
                 if duration_minutes is not None:
                     expiry_time = datetime.now() + timedelta(minutes=duration_minutes)
 
-                    AlertsPage.muted_alerts.append({
+                    mute_entry = {
                         "alt_name": target_alt_name,
                         "sentence_list": sentence_list,
                         "expiry_time": expiry_time
-                    })
+                    }
+                    AlertsPage.muted_alerts.append(mute_entry)
+
+                    # Schedule automatic unmute
+                    delay_ms = int(duration_minutes * 60 * 1000)
+                    self.master.after(delay_ms, lambda: self.unmute_alert(mute_entry))
 
                     print(f"Muted {target_alt_name} with sentence {sentence_list} until {expiry_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
@@ -454,6 +437,14 @@ class AlertsPage(tk.Frame):
 
             cancel_btn = tk.Button(button_frame, text="Cancel", command=cancel_mute)
             cancel_btn.pack(side="left", padx=10)
+
+    def unmute_alert(self, mute_entry):
+        try:
+            AlertsPage.muted_alerts.remove(mute_entry)
+            print(f"Unmuted {mute_entry['alt_name']} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            self.update_treeview()  # Update UI if needed
+        except ValueError:
+            pass  # Entry already removed
 
     def sort_column(self, column_key, reverse):
         """
@@ -482,9 +473,11 @@ class AlertsPage(tk.Frame):
         for row in self.treeview.get_children():
             self.treeview.delete(row)
 
-        # Insert sorted data into the Treeview
+        # Insert sorted/filtered/original data into the Treeview
         for message in self.all_messages:
-            self.treeview.insert("", "end", values=(message["date_time_display"], message["alt_name"], message["tts_text"]))
+            icon = self.muted_icon if self.if_muted(message["alt_name"], message["sentence_list"]) else self.unmuted_icon
+            values = (message["date_time_display"], message["alt_name"], message["tts_text"]) if message["tts_text"] != '' else (message["date_time_display"], message["alt_name"], message["sentence_list"])
+            self.treeview.insert("", 0, image=icon, values=values)
 
     def on_frame_configure(self, event):
         """Update the scrollable region when the frame is resized."""
@@ -499,6 +492,16 @@ class AlertsPage(tk.Frame):
     def restore_default_text(self, event, entry, default_text):
         if entry.get() == "":
             entry.insert(0, default_text)
+
+    def if_muted(self, alt_name, sentence_list):
+        now = datetime.now()
+        is_muted = any(
+            mute["alt_name"] == alt_name and
+            mute["sentence_list"] == sentence_list and
+            mute["expiry_time"] > now
+            for mute in AlertsPage.muted_alerts
+        )
+        return is_muted
 
     def get_custom_name_from_alt_name(self, alt_name):
         device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = alt_name)
