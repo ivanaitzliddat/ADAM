@@ -79,6 +79,24 @@ class VideoCaptureSetupApp(tk.Frame):
         # Bind the on_resize function to the <Configure> event
         self.bind("<Configure>", self.on_resize)
 
+        self.bind_mousewheel()
+
+    #to call this function when widget is destroyed so mousewheel can be used on the canvas
+    def bind_mousewheel(self):
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+
+    #to call this function when edit_condition button is clicked so mousewheel cannot be used on canvas
+    def unbind_mousewheel(self):
+        self.canvas.unbind_all("<MouseWheel>")
+
+    #when edit_condition button is clicked, this function will be called
+    def open_device_settings_editor(self, device_label, usb_alt_name):
+        self.unbind_mousewheel() #unbind the mousewheel on canvas
+        editor = DeviceSettingsEditor(device_label, usb_alt_name) #open the edit_conditino
+        editor.protocol("WM_DELETE_WINDOW", lambda: (editor.destroy(), self.bind_mousewheel()))
+        editor.wait_window() #when edit_condition window closed, bind mousewheel again for canvas
+        self.bind_mousewheel()
+
     def refresh_video_frames(self):
         """Refresh the video frames every 5 seconds."""
         def refresh():
@@ -361,7 +379,7 @@ class VideoCaptureSetupApp(tk.Frame):
             button_frame.pack(fill="x")
 
             # Create the Edit Trigger Condition button
-            device_trigger_condition_setting_button = tk.Button(button_frame, text="Edit Trigger Condition(s)", width=10,command=lambda device_label=device_given_name.cget("text"), usb_alt_name=usb_alt_name: DeviceSettingsEditor(device_label, usb_alt_name))
+            device_trigger_condition_setting_button = tk.Button(button_frame, text="Edit Trigger Condition(s)", width=10,command=lambda device_label=device_given_name.cget("text"), usb_alt_name=usb_alt_name: self.open_device_settings_editor(device_label, usb_alt_name))
             device_trigger_condition_setting_button.pack(fill="both")
             if custom_name == "":
                 device_trigger_condition_setting_button.config(state="disabled") 
