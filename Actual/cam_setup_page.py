@@ -72,14 +72,13 @@ class VideoCaptureSetupApp(tk.Frame):
         if not fresh_setup_status:
             self.proceed_button.pack_forget()
 
-        self.refresh_video_frames()
-
         self.update_device_status()
         
         # Bind the on_resize function to the <Configure> event
         self.bind("<Configure>", self.on_resize)
 
         self.bind_mousewheel()
+        self.refresh_video_frames()
 
     #to call this function when widget is destroyed so mousewheel can be used on the canvas
     def bind_mousewheel(self):
