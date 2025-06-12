@@ -472,7 +472,7 @@ class VideoCaptureSetupApp(tk.Frame):
             if device not in existing_device_list:
                 # New device detected, prompt the user of the new device, click on Ok and refresh the cam_setup_page
                 # Show a message box with the new device information
-                response = messagebox.showinfo("New Device Detected", f"New device detected: {device}")
+                response = messagebox.showinfo("New Device Detected", f"New device detected")
                 if response:
                     self.refresh_cam_setup_page()
                 break
