@@ -93,9 +93,12 @@ class ScreenCapturer:
                                 'is_black': is_black
                             }
                     with Screenshot.lock:
+                        '''
                         for screenshot in Screenshot.frames:
                             if screenshot.get('processed') or screenshot.get('is_black'):
                                 Screenshot.frames.remove(screenshot)
+                        '''
+                        Screenshot.frames = [f for f in Screenshot.frames if not f.get("processed") and not f.get("is_black")]
                         Screenshot.frames.append(frame)
                         print("The current number of screenshots is", len(Screenshot.frames))
 
