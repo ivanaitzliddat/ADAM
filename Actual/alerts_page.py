@@ -22,7 +22,7 @@ class AlertsPage(tk.Frame):
         label.pack(pady=20, padx=20)
 
         # Create a label to display the number of devices
-        self.device_count_label = tk.Label(self, text="Connected Devices: 0", font=("Arial", 12))
+        self.device_count_label = tk.Label(self, text="Connected Devices: Loading...", font=("Arial", 12))
         self.device_count_label.pack(pady=10)
 
         self.starting_device_list = []
@@ -154,6 +154,7 @@ class AlertsPage(tk.Frame):
     #Fetch device changes and update the display every 3 seconds
     def poll_for_device_changes(self):
         current_device_list = DevicesList.device_list # only contains alt_names
+        self.device_count_label["text"] = f"Connected Devices: {len(current_device_list)}"
 
         # Compare the starting device list with the new list
         added_devices = set(current_device_list) - set(self.starting_device_list)

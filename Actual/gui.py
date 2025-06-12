@@ -142,7 +142,10 @@ class ADAM:
                             break
 
                     if not muted:
-                        TTS.alert_queue.put(tts_alert)
+                        if not tts_alert == '':
+                            TTS.alert_queue.put(tts_alert)
+                        else: 
+                            TTS.alert_queue.put(sentence_list)
         except queue.Empty:
             pass
         finally:
