@@ -312,8 +312,11 @@ class AlertsPage(tk.Frame):
                 command=lambda: self.mute_alert(alt_name, date_time_display)
             )
             mute_alerts.pack()
+        except IndexError as e:
+            print("User clicked on an invalid row")
+            # Optionally, handle the specific error, like logging or custom behavior.
         except Exception as e:
-            tk_msgbox.showinfo("Error: Clicked on an invalid row. Please try to click again on the specific alert.")
+            print(f"An unexpected error occurred: {e}")
 
     def on_message_click(self, alt_name, date_time_display):
         with Processed_Screenshot.lock: 
