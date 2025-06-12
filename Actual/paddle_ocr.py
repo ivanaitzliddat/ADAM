@@ -107,6 +107,7 @@ class OCRProcessor:
                     existing_sentences = set(Processed_Screenshot.sentence_dict.get(alt_name, []))
                     new_sentences = [s for s in sentence_list if s not in existing_sentences]
                     Processed_Screenshot.sentence_dict[alt_name] = sentence_list
+                    Processed_Screenshot.sentence_dict[alt_name][condition] = [s.strip() for s in sentence_list]
 
                     if new_sentences:
                         # Get current time
