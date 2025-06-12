@@ -319,7 +319,8 @@ class AlertsPage(tk.Frame):
             print(f"An unexpected error occurred: {e}")
 
     def on_message_click(self, alt_name, date_time_display):
-        with Processed_Screenshot.lock: 
+        with Processed_Screenshot.lock:
+            try: 
                 date_time_object = datetime.strptime(date_time_display, "%Y/%m/%d %H:%M:%S")
                 image_with_boxes = Processed_Screenshot.frames[alt_name][date_time_object.strftime("%Y%m%d %H%M%S")]
                 sharpened_image = AlertsPage.sharpen_image(image_with_boxes)
@@ -356,6 +357,8 @@ class AlertsPage(tk.Frame):
 
                 # Deselect the row after opening the image
                 self.treeview.selection_remove(self.treeview.selection())  # This removes selection from the row
+            except KeyError as e:
+                tk_msgbox.showinfo("No Screenshot", "The screenshot has expired and is no longer available for viewing.")
 
     def mute_alert(self, target_alt_name, date_time_display):
         # Using list comprehension to find the matching object
