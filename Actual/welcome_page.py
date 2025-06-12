@@ -13,7 +13,7 @@ GRAB_ATTENTION_COLOUR_1 ="#FF934F"
 GRAB_ATTENTION_COLOUR_2 ="#C3423F"
 
 class welcomeScreen(tk.Frame):
-    def __init__(self, parent, topbar, option1):
+    def __init__(self, parent, topbar, option1, is_fresh_setup):
         super().__init__(parent, bg=BG_COLOUR)
         self.parent = parent
 
@@ -22,7 +22,7 @@ class welcomeScreen(tk.Frame):
         self.grid_columnconfigure(1, weight=5)  # Content column
         self.grid_columnconfigure(2, weight=2)  # Right spacer
 
-        if ConfigHandler.is_fresh_setup():
+        if is_fresh_setup:
             for child in topbar.winfo_children():
                 child.configure(state='normal')
         else:

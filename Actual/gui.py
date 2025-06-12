@@ -96,7 +96,7 @@ class ADAM:
 
         # Initialize pages
         self.pages = {
-            "welcome_page": welcomeScreen(self.content_frame, self.topbar, self.option1),
+            "welcome_page": welcomeScreen(self.content_frame, self.topbar, self.option1, fresh_setup_status),
             "cam_setup_page": VideoCaptureSetupApp(self.content_frame, self.topbar, fresh_setup_status, self.open_alerts_page),
             "tts_setup_page": TTS_setup_page(self.content_frame),
             "FAQ_page": FAQPage(self.content_frame),
