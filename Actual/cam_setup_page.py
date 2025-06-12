@@ -212,7 +212,7 @@ class VideoCaptureSetupApp(tk.Frame):
                     image = Image.fromarray(frame).resize((430,300))
                     image_tk = ImageTk.PhotoImage(image)
                 
-                    video_label.config(image=image_tk)
+                    video_label.config(image=image_tk, width=430, height=300)
                     video_label.image = image_tk
         except Exception as e:
             print(f"An error has occurred with device {index_num}: {e}")
@@ -253,7 +253,7 @@ class VideoCaptureSetupApp(tk.Frame):
             device_frame.grid(row=i // 4, column=i % 4, padx=10, pady=10)
 
             video_label = tk.Label(
-                device_frame, text=f"", bg="black", fg="white", height=300, padx=5
+                device_frame, text=f"", bg="black", fg="white", height=20, padx=5
             )
             video_label.pack(fill="x",pady=(0,5))
 
@@ -421,6 +421,9 @@ class VideoCaptureSetupApp(tk.Frame):
                     device_frame.device_monitoring_status = False
                     device_frame.enable_disable_monitoring_button.config(text="Enable Monitoring")
                     device_frame.device_monitoring_status_entry.config(text="Disabled", fg="RED")
+                    #if disconnected, set the monitoring status to false
+                    ConfigHandler.set_cfg_input_device(usb_alt_name=usb_alt_name, device_enabled=False)
+                    ConfigHandler.save_config()
             self.update_monitoring_status(device_frame,usb_alt_name)
         
         self.check_for_new_device(device_list,existing_device_list)
