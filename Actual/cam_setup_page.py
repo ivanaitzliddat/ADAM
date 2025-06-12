@@ -138,60 +138,6 @@ class VideoCaptureSetupApp(tk.Frame):
 
         return popup, progress_bar, progress_label
     
-    def detect_and_save_devices(self):
-        """Detect available video devices and update config."""
-        # Get the number of connected devices
-        number_of_devices = len(DevicesList.device_list)
-        
-        # Wait for device_list to populate... Should add in a pop up if after a few loops still no device, for user to check if any device is even plugged in.
-        counter = 0
-        while number_of_devices == 0:
-            if counter >= 5:
-                if messagebox.askretrycancel("Unable to detect any USB capture cards",  "Ensure your USB capture cards are connected and try again. "
-                                          +"You may need to restart your computer after plugging it in for the first time."):
-                    counter = 0
-                else:
-                    raise RuntimeError
-            else:
-                print("Currently still 0, so waiting for awhile...")
-                time.sleep(3)
-                number_of_devices = len(DevicesList.device_list)
-                counter += 1
-        
-        # Show loading popup
-        popup, progress_bar, progress_label = self.show_loading_popup()
-        progress_bar["maximum"] = number_of_devices
-
-        # Wait for DevicesList.device_list to fully populate
-        while len(Screenshot.frames) < number_of_devices:
-            if not popup.winfo_exists():  # Ensure the popup is still open
-                break
-
-            current_devices = len(Screenshot.frames)
-            progress_bar["value"] = current_devices
-            progress_label.config(text=f"{int((current_devices / number_of_devices) * 100)}%")
-            popup.update()
-            time.sleep(0.1)
-
-        # Close popup once device_list is fully populated
-        if popup.winfo_exists():
-            popup.destroy()
-
-        # Remove old input devices
-        ConfigHandler.del_input_device(usb_alt_name="")
-        counter = 1
-        # Add newly detected devices to Config.ini
-        for device in DevicesList.device_list:
-            default_custom_name = "Input Device " + str(counter)
-            default_condition_name = "Default Condition Name " + str(counter)
-            ConfigHandler.add_input_device(usb_alt_name=device)
-            ConfigHandler.save_config()
-            ConfigHandler.set_cfg_input_device(usb_alt_name=device, custom_name=default_custom_name)
-            ConfigHandler.set_cfg_input_device(usb_alt_name=device, condition = "cond0", condition_name = default_condition_name)
-            counter+=1
-        # Save the updated config
-        ConfigHandler.save_config()
-
     def create_scrollable_second_row(self):
         """Create a scrollable second row with detected inputs."""
         self.second_row_frame = tk.Frame(self.frame, bg=FRAME_COLOUR)
