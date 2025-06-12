@@ -169,7 +169,7 @@ class TTS_setup_page(tk.Frame):
 
         with TTS.lock:
             # Insert alert_audio_params_dict to start of TTS.alert_queue so it will play immediately after currently-played audio is done
-            TTS.alert_queue.queue.insert(0, alert_audio_params_dict)
+            TTS.alert_queue.put(alert_audio_params_dict)
 
     def save_tts_settings(self):
         alert_sounds_dict = {
