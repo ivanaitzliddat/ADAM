@@ -103,10 +103,16 @@ class OCRProcessor:
                 if not has_keyword:
                     print("No keywords Found.")
                 else:
-                    print(sentence_list)
-                    existing_sentences = set(Processed_Screenshot.sentence_dict.get(alt_name, []))
-                    new_sentences = [s for s in sentence_list if s not in existing_sentences]
-                    Processed_Screenshot.sentence_dict[alt_name] = sentence_list
+                    condition_list = Processed_Screenshot.sentence_dict.get(alt_name, [])
+                    if condition_list:
+                        existing_sentences = set(condition_list.get(condition, []))
+                    else:
+                        existing_sentences = set()
+                    print("Existing sentence list:", existing_sentences)
+                    new_sentences = [s.strip() for s in sentence_list if s.strip() not in existing_sentences]
+                    print("New sentence list:", new_sentences)
+                    if not Processed_Screenshot.sentence_dict.get(alt_name):
+                        Processed_Screenshot.sentence_dict[alt_name] = {}
                     Processed_Screenshot.sentence_dict[alt_name][condition] = [s.strip() for s in sentence_list]
 
                     if new_sentences:
@@ -144,7 +150,6 @@ class OCRProcessor:
                 has_keyword = has_keyword | identified_keyword
                 if identified_keyword:
                     sentence_list.append(filtered_texts[0])
-                    print(sentence_list)
         return has_keyword, frame, sentence_list
 
     '''
