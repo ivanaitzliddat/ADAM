@@ -27,6 +27,9 @@ This requires users to have some knowledge on setting up python system. The bene
 
 Detailed Steps:
 1. Clone the repo onto your local machine.
-1. Ensure python and pip are installed.
-1. Install the libraries using `pip install -r requirements.txt`
-1. Run the python file using `python ./Actual/main.py`
+2. Ensure python and pip are installed.
+3. Install the libraries using `pip install -r requirements.txt`
+4. Run the python file using `python ./Actual/main.py`
+
+## Known Issues:
+1. Moving the mouse/on-screen content of connected Input Devices may result in partial frames being captured by ADAM. Partial frames have solid green patch covering parts of the frame.
