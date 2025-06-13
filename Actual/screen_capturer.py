@@ -35,12 +35,12 @@ class ScreenCapturer:
             if ConfigHandler.get_cfg_input_devices(usb_alt_name = ""):
                 ConfigHandler.del_input_device(usb_alt_name = "")
                 print("Successfully deleted input device")
-
-            for device in DevicesList.device_list:
+            
+            for index, device in enumerate(DevicesList.device_list):
                 if(len(ConfigHandler.get_cfg_input_devices(usb_alt_name = device)) == 0): # does not exist in config.ini, need to add device
                     with ConfigHandler.lock:
-                        default_custom_name = "Input Device " + str(len(DevicesList.device_list) - 1)
-                        default_condition_name = "Default Condition Name " + str(len(DevicesList.device_list) - 1)
+                        default_custom_name = "Input Device " + str(index)
+                        default_condition_name = "Default Condition Name"
                         ConfigHandler.add_input_device(usb_alt_name=device)
                         ConfigHandler.set_cfg_input_device(usb_alt_name=device, custom_name=default_custom_name)
                         ConfigHandler.set_cfg_input_device(usb_alt_name=device, condition = "cond0", condition_name = default_condition_name)

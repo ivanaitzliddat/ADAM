@@ -230,7 +230,7 @@ class ConditionCard(tk.Frame):
 
         # Use the provided condition_seq or generate a new one
         if condition_seq == None:
-            last_seq_number_of_conditions = len(self.controller.conditions) + 1 
+            last_seq_number_of_conditions = len(self.controller.conditions) 
             self.condition_seq = "cond" + str(last_seq_number_of_conditions)
         else:
             self.condition_seq = condition_seq
