@@ -18,10 +18,12 @@ from datetime import datetime, timedelta
     - use_angle_cls (bool): Whether to use angle classification.
     - font_path (str): Path to a .ttf font file for text rendering in draw_ocr.
 '''
-class OCRProcessor:
 
-    def __init__(self, lang='en', use_angle_cls=True, font_path=None):
-        self.ocr = PaddleOCR(use_angle_cls=use_angle_cls, lang=lang)
+class OCRProcessor:
+    def __init__(self, lang = 'en', use_angle_cls = True, font_path = None,
+                 cls_model_dir = "./paddleocr/whl/cls/", det_model_dir = "./paddleocr/whl/det/en/", rec_model_dir = "./paddleocr/whl/rec/en/"):
+        self.ocr = PaddleOCR(use_angle_cls=use_angle_cls, lang=lang,
+                             cls_model_dir = cls_model_dir, det_model_dir = det_model_dir, rec_model_dir = rec_model_dir)
         self.font_path = font_path
 
     '''
