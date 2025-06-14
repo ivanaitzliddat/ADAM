@@ -1,4 +1,4 @@
-import threading, traceback
+import os, threading, traceback
 import signal
 
 from screen_capturer import ScreenCapturer
@@ -22,7 +22,10 @@ def start_screen_capturer():
     Starts the ocr.
 '''
 def start_ocr():
-    ocr = OCRProcessor(font_path="./Actual/arial.ttf")
+    ocr = OCRProcessor(font_path="./Actual/arial.ttf",
+                       cls_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddleocr/whl/cls/",
+                       det_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddleocr/whl/det/en/",
+                       rec_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddleocr/whl/rec/en/")
     try:
         ocr.run()
     except Exception as e:
