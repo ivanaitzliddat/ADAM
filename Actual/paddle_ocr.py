@@ -62,11 +62,12 @@ class OCRProcessor:
         # Check if the frame is new
         processed = frame.get('processed')
         is_black = frame.get('is_black')
+        alt_name = frame.get('alt_name')
         if not processed and not is_black:
             # Convert the frame to RGB
             frame_rgb = self.convert_frame(frame)
             # Get alt_name to find the relevant triggers
-            self.perform_ocr_using_triggers(frame, frame_rgb)
+            self.perform_ocr_using_triggers(alt_name, frame_rgb)
             # Set to show that the frame has been processed
             with Screenshot.lock:
                 frame['processed'] = True
@@ -82,99 +83,80 @@ class OCRProcessor:
     '''
         Iterate through the triggers that are tagged to the capture cards and process via the conditions.
     '''
-    def perform_ocr_using_triggers(self, frame, frame_rgb):
-        alt_name = frame.get('alt_name')
+    def perform_ocr_using_triggers(self, alt_name, frame_rgb):
         keywords_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = alt_name)
+
         if not bool(keywords_dict):
             print("The keywords dictionary is empty.")
-        else:
-            self.perform_ocr_using_conditions(frame, frame_rgb, alt_name, keywords_dict)
+            return
+        
+        for key, val in keywords_dict.items():
+            for condition in val["triggers"]:
+                self.perform_ocr_using_conditions(val, condition, frame_rgb, alt_name)
     
     '''
         Obtain the keyword list from the conditions and perform the actual OCR using the keyword list.
     '''
-    def perform_ocr_using_conditions(self, frame, frame_rgb, alt_name, keywords_dict):
-        # Create a list of lines that has the keywords in it
+    def perform_ocr_using_conditions(self, val, condition, frame_rgb, alt_name):
+        # Identify the keywords for the condition, as well as the tts message for each condition
+        keyword_list = val["triggers"][condition]["keywords"]
+        tts_message = val["triggers"][condition]['tts_text']
 
-        for key, val in keywords_dict.items():
-            for condition in val["triggers"]:
-                keyword_list = val["triggers"][condition]["keywords"]
-                tts_message = val["triggers"][condition]['tts_text']
+        # Perform the OCR
+        result = self.ocr.ocr(frame_rgb, cls=True)
+        if None in result:
+            print("This screenshot has no words.")
+            return
+        
+        # Create a dictionary with the text as the key, and the boxes in an array
+        text_to_boxes = {}
 
-                # Perform the OCR
-                has_keyword, new_frame_rgb, sentence_list = self.perform_ocr(np.copy(frame_rgb), alt_name, keyword_list)
-                
-                if not has_keyword:
-                    print("No keywords Found.")
-                else:
-                    condition_list = Processed_Screenshot.sentence_dict.get(alt_name, [])
-                    if condition_list:
-                        existing_sentences = set(condition_list.get(condition, []))
-                    else:
-                        existing_sentences = set()
-                    print("Existing sentence list:", existing_sentences)
-                    new_sentences = [s.strip() for s in sentence_list if s.strip() not in existing_sentences]
-                    print("New sentence list:", new_sentences)
-                    if not Processed_Screenshot.sentence_dict.get(alt_name):
-                        Processed_Screenshot.sentence_dict[alt_name] = {}
-                    Processed_Screenshot.sentence_dict[alt_name][condition] = [s.strip() for s in sentence_list]
-
-                    if new_sentences:
-                        # Get current time
-                        timestamp = datetime.now().strftime("%Y%m%d %H%M%S")
-
-                        # Save the image
-                        self.save_processed_screenshot(new_frame_rgb, alt_name, timestamp)
-
-                        # Send message to GUI
-                        self.send_message((timestamp, alt_name, tts_message, sentence_list))
-
-    '''
-        Performs OCR on a given frame using the keyword list provided.
-    '''
-    def perform_ocr(self, frame, alt_name, keywords):
-        has_keyword = False
-        result = self.ocr.ocr(frame, cls=True)
-        # Display OCR results that contain the keywords
-        if not None in result:
-            has_keyword, frame, sentence_list = self.iterate_line_in_screenshot(frame, keywords, alt_name, result)
-        else:
-            sentence_list = []
-        return has_keyword, frame, sentence_list
-    
-    '''
-        Disect the screenshot by looking through the words identified line by line.
-    '''
-    def iterate_line_in_screenshot(self, frame, keywords, alt_name, result):
-        has_keyword = False
-        sentence_list = []
+        # Iterate through each line of the results to identify sentences that contain the keywords
         for line in result:
             for box, (text, score) in line:
-                identified_keyword, frame, filtered_texts = self.search_keywords_in_line(frame, keywords, alt_name, box, text, score)
-                has_keyword = has_keyword | identified_keyword
-                if identified_keyword:
-                    sentence_list.append(filtered_texts[0])
-        return has_keyword, frame, sentence_list
+                if all(keyword.lower() in text.lower() for keyword in keyword_list):
+                    text_to_boxes.setdefault(text, []).append(box)
 
-    '''
-        Search for the keywords in a single line.
-    '''
-    def search_keywords_in_line(self, frame, keywords, alt_name, box, text, score):
-        # Filter the results to include only texts containing the keyword
-        filtered_boxes = []
-        filtered_texts = []
-        filtered_scores = []
-        identified_keyword = all(keyword.lower() in text.lower() for keyword in keywords)
-        if identified_keyword:
-            filtered_boxes.append(box)
-            filtered_texts.append(text)
-            filtered_scores.append(score)
+        print("This is the entire text_to_boxes:")
+        print(text_to_boxes)
+        print("This is just the keys:")
+        print(text_to_boxes.keys())
+        print("This is the keys stripped:")
+        print([s.strip() for s in text_to_boxes.keys()])
 
-            # Draw filtered OCR results on the image
-            self.draw_boxes(frame, filtered_boxes)
+        # Identify the sentence_list tagged to the condition of the current screenshot
+        condition_list = Processed_Screenshot.sentence_dict.get(alt_name, [])
+        if condition_list:
+            existing_sentences = set(condition_list.get(condition, []))
+        else:
+            existing_sentences = set()
+        print("Existing sentence list:\n", existing_sentences)
 
-        return identified_keyword, frame, filtered_texts
+        # Check what are the new sentences in text_to_boxes
+        new_sentences = list(set(set(text_to_boxes.keys()) - existing_sentences))
+        print("New sentence list:\n", new_sentences)
 
+        if not new_sentences:
+            return
+
+        # Draw boxes around those new sentences
+        for sentence in new_sentences:
+            boxes = text_to_boxes[sentence]
+            print("The current box that I am drawing is:")
+            print(boxes)
+            frame_rgb_copy = frame_rgb.copy()
+            self.draw_boxes(frame_rgb_copy, boxes)
+            
+            # Save the screenshot
+            timestamp = datetime.now().strftime("%Y%m%d %H%M%S")
+            self.save_processed_screenshot(alt_name, frame_rgb_copy, timestamp, sentence)
+        
+        # Update the sentence_list
+        self.update_sentence_list(alt_name, condition, text_to_boxes.keys())
+            
+        # Send message to GUI
+        self.send_message((timestamp, sentence, alt_name, tts_message))
+        
     '''
         Draw boxes around the identified keywords
     '''
@@ -186,27 +168,38 @@ class OCRProcessor:
             cv2.polylines(frame, [points], isClosed=True, color=(0, 0, 255), thickness=2)
 
     '''
-        Adds the message to queue and sends it to the GUI.
-    '''
-    def send_message(self, message):
-        with MessageQueue.lock:
-            MessageQueue.status_queue.put(message)
-
-    '''
     Save the screenshots in the Processed Screenshot list.
     '''
-    def save_processed_screenshot(self, frame, alt_name, timestamp):
+    def save_processed_screenshot(self, alt_name, frame, timestamp, sentence):
         with Processed_Screenshot.lock:
             # Insert new screenshot
-            Processed_Screenshot.frames.setdefault(alt_name, {}).update({timestamp: frame})
+            Processed_Screenshot.frames.setdefault(alt_name, {}).update({(timestamp, sentence): frame})
             print("New screenshot has been added to processed screenshot")
 
             # Filter to keep only screenshots from the last 5 minutes
             now = datetime.now()
             time_threshold = now - timedelta(minutes=5)
-            frames_dict = {k: v for k, v in Processed_Screenshot.frames[alt_name].items() if datetime.strptime(k, "%Y%m%d %H%M%S") >= time_threshold}
+            frames_dict = {k: v for k, v in Processed_Screenshot.frames[alt_name].items() if datetime.strptime(k[0], "%Y%m%d %H%M%S") >= time_threshold}
 
             # Save back the cleaned dictionary
             Processed_Screenshot.frames[alt_name] = frames_dict
 
             print("Successfully filtered processed screenshots such that only freshly processed screenshots are kept.")
+
+    '''
+    Update the sentence_list in Processed_Screenshot class.
+    '''
+    def update_sentence_list(self, alt_name, condition, sentences):
+        # Update the sentence_list
+        if not Processed_Screenshot.sentence_dict.get(alt_name):
+            Processed_Screenshot.sentence_dict[alt_name] = {}
+        Processed_Screenshot.sentence_dict[alt_name][condition] = sentences
+
+    '''
+        Adds the message to queue and sends it to the GUI.
+    '''
+    def send_message(self, message):
+        with MessageQueue.lock:
+            print("The message that I am sending is:")
+            print(message)
+            MessageQueue.status_queue.put(message)
