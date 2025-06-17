@@ -433,16 +433,18 @@ class VideoCaptureSetupApp(tk.Frame):
 
     def check_for_new_device(self,current_device_list,existing_device_list):
         """Check for new devices and update the UI accordingly."""
+        count_new_devices = 0
         # Check if any new devices are connected
         for device in current_device_list:
             if device not in existing_device_list:
-                # New device detected, prompt the user of the new device, click on Ok and refresh the cam_setup_page
-                # Show a message box with the new device information
-                response = messagebox.showinfo("New Device Detected", f"New device detected")
-                if response:
-                    self.refresh_cam_setup_page()
-                break
-
+                #new device detected, increase the count_new_devices counter
+                count_new_devices += 1
+        if count_new_devices > 0:
+            # Show a message box to inform the user about the new devices
+            messagebox.showinfo("New Device(s) Detected", f"{count_new_devices} new device(s) detected")
+            # Refresh the camera setup page to show the new devices
+            self.refresh_cam_setup_page()
+            
     def update_monitoring_status(self, device_frame, usb_alt_name):
         """Update the monitoring status of the device."""
         device_dict = ConfigHandler.get_cfg_input_devices(usb_alt_name = usb_alt_name)
