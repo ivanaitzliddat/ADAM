@@ -31,5 +31,6 @@ Detailed Steps:
 3. Install the libraries using `pip install -r requirements.txt`
 4. Run the python file using `python ./Actual/main.py`
 
-## Known Issues:
+## Limitations:
 1. Moving the mouse/on-screen content of connected Input Devices may result in partial frames being captured by ADAM. Partial frames have solid green patch covering parts of the frame.
+2. ADAM sees only the screen content of the connected Input Devices. If the Input Device currently displays the desktop, then ADAM will only see the desktop.
