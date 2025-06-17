@@ -102,7 +102,7 @@ class AboutPage(tk.Frame):
         # Running Version
         version_label = tk.Label(
             self.scrollable_frame,
-            text="Version: 1.0.0",
+            text="Version: Unreleased - Development Phase",
             bg=BG_COLOUR,
             font=("Arial", 12, "bold"),
             pady=5
@@ -121,20 +121,12 @@ class AboutPage(tk.Frame):
         release_date_label.pack(anchor="w", padx=10)
         self.dynamic_labels.append(release_date_label)
 
-        # Developer Information
-        developer_label = tk.Label(
-            self.scrollable_frame,
-            text="Developed by the Team: The Enablers",
-            bg=BG_COLOUR,
-            font=("Arial", 12),
-            pady=5
-        )
         developer_label.pack(anchor="w", padx=10)
         self.dynamic_labels.append(developer_label)
 
         team_members_label = tk.Label(
             self.scrollable_frame,
-            text="Team Members:",
+            text="Development Team:",
             font=("Arial", 12, "bold"),
             bg=BG_COLOUR,
             pady=5
@@ -142,7 +134,7 @@ class AboutPage(tk.Frame):
         team_members_label.pack(anchor="w", padx=10)
         self.dynamic_labels.append(team_members_label)
 
-        team_members = ["Rahul", "Ivan Tan", "Bryan", "Kairos", "Russell", "Jun Long", "Cephas"]
+        team_members = ["Rahul", "Ivan", "Kairos", "Russell", "Jun Long", "Cephas"]
         for member in team_members:
             member_label = tk.Label(
                 self.scrollable_frame,
