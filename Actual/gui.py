@@ -126,16 +126,19 @@ class ADAM:
             while True:
                 message = MessageQueue.status_queue.get_nowait()
                 self.pages["alerts_page"].append_message(message)
-                timestamp, alt_name, tts_alert, sentence_list = message
+                
                 with TTS.lock:
                     #Skip if alert is muted and not expired
                     muted = False
                     now = datetime.now()
-
+                    timestamp = message[0]
+                    sentence = message[1]
+                    alt_name = message[2]
+                    tts_alert = message[3]
                     for mute_entry in self.pages["alerts_page"].muted_alerts:
                         if (
                             mute_entry["alt_name"] == alt_name and
-                            mute_entry["sentence_list"] == sentence_list and
+                            mute_entry["sentence_list"] == sentence and
                             mute_entry["expiry_time"] > now
                         ):
                             muted = True
@@ -145,7 +148,7 @@ class ADAM:
                         if not tts_alert == '':
                             TTS.alert_queue.put(tts_alert)
                         else: 
-                            TTS.alert_queue.put(sentence_list)
+                            TTS.alert_queue.put(sentence)
         except queue.Empty:
             pass
         finally:

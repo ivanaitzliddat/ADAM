@@ -79,11 +79,13 @@ class AlertsPage(tk.Frame):
         clear_button.pack(side="left", padx=5, pady=5)
 
         # Create a Treeview widget with three columns
-        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message"), show="tree headings")
+        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message / Sentence", "Hidden Sentence"), show="tree headings")
         self.treeview.heading("#0", text="Mute Status")
         self.treeview.heading("Date & Time", text="Date & Time", command=lambda: self.sort_column("date_time", False))
         self.treeview.heading("Device", text="Device")
-        self.treeview.heading("TTS Message", text="TTS Message")
+        self.treeview.heading("TTS Message / Sentence", text="TTS Message / Sentence")
+        self.treeview.heading("Hidden Sentence", text="Hidden Sentence")
+        self.treeview.column("Hidden Sentence", width=0, stretch=False)
 
         # Add a vertical scrollbar for the Treeview
         self.scrollbar = ttk.Scrollbar(self.bottom_frame, orient="vertical", command=self.treeview.yview)
@@ -191,7 +193,10 @@ class AlertsPage(tk.Frame):
         # Using new treeview, above code is for older listbox
 
         # To format the datetime
-        date_time_raw, alt_name, tts_text, sentence_list = message
+        date_time_raw = message[0]
+        sentence_list = message[1]
+        alt_name = message[2]
+        tts_text = message[3]
         date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S") # formatting the string into a datetime object
         date_time_display = date_time.strftime("%Y/%m/%d %H:%M:%S") # what will be showed in the treeview
 
@@ -204,7 +209,7 @@ class AlertsPage(tk.Frame):
         })
         # Insert the parsed message into the Treeview 
         icon = self.muted_icon if self.if_muted(alt_name, sentence_list) else self.unmuted_icon
-        values = (date_time_display, alt_name, tts_text) if tts_text != '' else (date_time_display, alt_name, sentence_list)
+        values = (date_time_display, alt_name, tts_text, sentence_list) if tts_text != '' else (date_time_display, alt_name, sentence_list, sentence_list)
 
         self.treeview.insert("", 0, image=icon, values=values)
 
@@ -297,14 +302,14 @@ class AlertsPage(tk.Frame):
             column_values = item_data['values']
             date_time_display = column_values[0]
             alt_name = column_values[1] 
-            tts_or_sentence_message = column_values[2]
+            sentence_list = column_values[3]
             alert_options_window = tk.Toplevel(self)
             alert_options_window.title("Alert Options")
             alert_options_window.geometry("400x300")  # width x height in pixels
             view_screenshot = tk.Button(
                 alert_options_window,
                 text="View Screenshot",
-                command=lambda: self.on_message_click(alt_name, date_time_display)
+                command=lambda: self.on_message_click(alt_name, date_time_display, sentence_list)
             )
             view_screenshot.pack()
             mute_alerts = tk.Button(
@@ -319,11 +324,11 @@ class AlertsPage(tk.Frame):
         except Exception as e:
             print(f"An unexpected error occurred: {e}")
 
-    def on_message_click(self, alt_name, date_time_display):
+    def on_message_click(self, alt_name, date_time_display, sentence_list):
         with Processed_Screenshot.lock:
             try: 
                 date_time_object = datetime.strptime(date_time_display, "%Y/%m/%d %H:%M:%S")
-                image_with_boxes = Processed_Screenshot.frames[alt_name][date_time_object.strftime("%Y%m%d %H%M%S")]
+                image_with_boxes = Processed_Screenshot.frames[alt_name][(date_time_object.strftime("%Y%m%d %H%M%S"), sentence_list)]
                 sharpened_image = AlertsPage.sharpen_image(image_with_boxes)
                 # Convert image to Tkinter-compatible format
                 pil_image = Image.fromarray(sharpened_image)
