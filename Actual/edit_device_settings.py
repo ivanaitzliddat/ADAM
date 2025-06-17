@@ -246,20 +246,19 @@ class ConditionCard(tk.Frame):
             self.keywords = []  # Default to empty list if not provided
             self.tts_text = ""  # Default to empty string if not provided      
 
-        #print(f"ConditionCard initialized with condition_name: {self.condition_name}, bg_colour: {self.bg_colour}, keywords: {self.keywords}, tts_text: {self.tts_text}")
         # Condition Sequence
-        tk.Label(self, text="Condition Sequence:", bg="white").grid(row=0, column=0, sticky="w", padx=10, pady=5)
+        tk.Label(self, text="Condition Sequence:", font=("Helvetica", 10, "bold"), bg="white").grid(row=0, column=0, sticky="w", padx=10, pady=5)
         self.condition_seq_label = tk.Label(self, text=self.condition_seq, bg="white")
         self.condition_seq_label.grid(row=0, column=1, sticky="w", padx=10, pady=5)
 
         # Condition Name
-        tk.Label(self, text="Condition Name:", bg="white").grid(row=1, column=0, sticky="w", padx=10, pady=5)
+        tk.Label(self, text="Condition Name:", font=("Helvetica", 10, "bold"), bg="white").grid(row=1, column=0, sticky="w", padx=10, pady=5)
         self.name_entry = tk.Entry(self)
         self.name_entry.insert(0, str(self.condition_name))
-        self.name_entry.grid(row=1, column=1, sticky="ew", padx=10, pady=5)
+        self.name_entry.grid(row=1, column=1, columnspan=3, sticky="ew", padx=10, pady=5)
 
         # Trigger Color
-        tk.Label(self, text="Trigger Color:", bg="white").grid(row=2, column=0, sticky="w", padx=10, pady=5)
+        tk.Label(self, text="Trigger Color:", font=("Helvetica", 10, "bold"), bg="white").grid(row=2, column=0, sticky="w", padx=10, pady=5)
         if self.bg_colour != "":
             self.color_display = tk.Label(self, bg=self.bg_colour, text=self.bg_colour, fg="black", width=20, relief="sunken")
         else:
@@ -269,30 +268,37 @@ class ConditionCard(tk.Frame):
         tk.Button(self, text="Pick Color", command=self.pick_color).grid(row=2, column=2, padx=10, pady=5)
 
         # Keywords
-        tk.Label(self, text="Keywords", bg="white").grid(row=3, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
+        tk.Label(self, text="Please enter a keyword",font=("Helvetica", 10, "bold"), bg="white").grid(row=3, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
         self.keyword_entry = tk.Entry(self)
-        self.keyword_entry.grid(row=4, column=0, columnspan=2, sticky="ew", padx=10, pady=5)
+        self.keyword_entry.grid(row=4, column=0, columnspan=3, sticky="ew", padx=10, pady=5)
 
+        #Button to add the keyword
+        tk.Button(self, text="Add the keyword", command=self.add_keyword).grid(row=5, column=0, padx=10, pady=5, sticky="w")
+
+        #List the entered keyword(s)
+        tk.Label(self, text="The keyword(s) below will trigger this condition sequence",font=("Helvetica", 10, "bold"), bg="white").grid(row=7, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
         self.keyword_list = tk.Listbox(self, height=4)
-        self.keyword_list.grid(row=5, column=0, columnspan=3, sticky="ew", padx=10)
+        self.keyword_list.grid(row=8, column=0, columnspan=3, sticky="ew", padx=10)
 
         # Populate keywords if available
         if len(self.keywords) > 0:
             for keyword in self.keywords:
                 self.keyword_list.insert(tk.END, keyword)
+                
+        #Button to remove the selected keyword
+        tk.Button(self, text="Delete the selected keyword", command=self.delete_keyword).grid(row=9, column=0, padx=10, pady=5, sticky="w")
 
-        tk.Button(self, text="Add", command=self.add_keyword, width=8).grid(row=6, column=0, padx=10, pady=5, sticky="w")
-        tk.Button(self, text="Delete", command=self.delete_keyword, width=8).grid(row=6, column=1, pady=5, sticky="w")
 
         # Custom TTS
-        tk.Label(self, text="Custom TTS Message:", bg="white").grid(row=7, column=0, sticky="w", padx=10, pady=5)
+        tk.Label(self, text="Custom TTS Message:", font=("Helvetica", 10, "bold"), bg="white").grid(row=10, column=0, sticky="w", padx=10, pady=5)
         self.tts_entry = tk.Entry(self)
         self.tts_entry.insert(0, str(self.tts_text))
-        self.tts_entry.grid(row=7, column=1, columnspan=2, sticky="ew", padx=10, pady=5)
+        self.tts_entry.grid(row=10, column=1, columnspan=2, sticky="ew", padx=10, pady=5)
+        tk.Label(self, text="(If no custom TTS message is provided, ADAM will read a predefined system message.)", bg="white").grid(row=11, column=1, sticky="w", padx=10, pady=5)
 
         # Delete Condition Button
         tk.Button(self, text="Delete This Condition", command=self.delete_card, bg="#C3423F", fg="white").grid(
-            row=8, column=0, columnspan=3, pady=10
+            row=12, column=0, columnspan=3, pady=10
         )
 
         self.columnconfigure(1, weight=1)
