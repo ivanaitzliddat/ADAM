@@ -268,7 +268,7 @@ class ConditionCard(tk.Frame):
         tk.Button(self, text="Pick Color", command=self.pick_color).grid(row=2, column=2, padx=10, pady=5)
 
         # Keywords
-        tk.Label(self, text="Please enter a keyword",font=("Helvetica", 10, "bold"), bg="white").grid(row=3, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
+        tk.Label(self, text="Enter a keyword/phrase for detection:",font=("Helvetica", 10, "bold"), bg="white").grid(row=3, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
         self.keyword_entry = tk.Entry(self)
         self.keyword_entry.grid(row=4, column=0, columnspan=3, sticky="ew", padx=10, pady=5)
 
@@ -276,7 +276,7 @@ class ConditionCard(tk.Frame):
         tk.Button(self, text="Add the keyword", command=self.add_keyword).grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
         #List the entered keyword(s)
-        tk.Label(self, text="The keyword(s) below will trigger this condition sequence",font=("Helvetica", 10, "bold"), bg="white").grid(row=7, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
+        tk.Label(self, text="Saved keywords:\n(All keywords below must be detected to trigger the condition sequence)",font=("Helvetica", 10, "bold"), bg="white", justify = "left").grid(row=7, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
         self.keyword_list = tk.Listbox(self, height=4)
         self.keyword_list.grid(row=8, column=0, columnspan=3, sticky="ew", padx=10)
 
@@ -294,7 +294,7 @@ class ConditionCard(tk.Frame):
         self.tts_entry = tk.Entry(self)
         self.tts_entry.insert(0, str(self.tts_text))
         self.tts_entry.grid(row=10, column=1, columnspan=2, sticky="ew", padx=10, pady=5)
-        tk.Label(self, text="(If no custom TTS message is provided, ADAM will read a predefined system message.)", bg="white").grid(row=11, column=1, sticky="w", padx=10, pady=5)
+        tk.Label(self, text="(If left empty, the full sentence with detected keywords will be spoken)", bg="white", wraplength =  400, justify = "left").grid(row=11, column=1, columnspan = 2, sticky="w", padx=10)
 
         # Delete Condition Button
         tk.Button(self, text="Delete This Condition", command=self.delete_card, bg="#C3423F", fg="white").grid(
