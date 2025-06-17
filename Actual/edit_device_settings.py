@@ -273,10 +273,10 @@ class ConditionCard(tk.Frame):
         self.keyword_entry.grid(row=4, column=0, columnspan=3, sticky="ew", padx=10, pady=5)
 
         #Button to add the keyword
-        tk.Button(self, text="Add the keyword", command=self.add_keyword).grid(row=5, column=0, padx=10, pady=5, sticky="w")
+        tk.Button(self, text="Add", command=self.add_keyword, width = 10).grid(row=5, column=0, padx=10, pady=5, sticky="w")
 
         #List the entered keyword(s)
-        tk.Label(self, text="Saved keywords:\n(All keywords below must be detected to trigger the condition sequence)",font=("Helvetica", 10, "bold"), bg="white", justify = "left").grid(row=7, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
+        tk.Label(self, text="Saved keywords/phrases:\n(All keywords/phrases below must be detected to trigger the condition sequence)",font=("Helvetica", 10, "bold"), bg="white", justify = "left").grid(row=7, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
         self.keyword_list = tk.Listbox(self, height=4)
         self.keyword_list.grid(row=8, column=0, columnspan=3, sticky="ew", padx=10)
 
@@ -286,7 +286,7 @@ class ConditionCard(tk.Frame):
                 self.keyword_list.insert(tk.END, keyword)
                 
         #Button to remove the selected keyword
-        tk.Button(self, text="Delete the selected keyword", command=self.delete_keyword).grid(row=9, column=0, padx=10, pady=5, sticky="w")
+        tk.Button(self, text="Delete", command=self.delete_keyword, width = 10).grid(row=9, column=0, padx=10, pady=5, sticky="w")
 
 
         # Custom TTS
