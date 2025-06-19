@@ -2,7 +2,6 @@ import time, traceback
 
 import cv2
 import numpy as np
-import paddle
 from paddleocr import PaddleOCR
 from screenshots import Screenshot
 from processed_screenshot import Processed_Screenshot
@@ -37,22 +36,32 @@ class OCRProcessor:
         self.det_model_dir = det_model_dir
         self.rec_model_dir = rec_model_dir
     '''
+
+    '''
+    # This init function is for PaddleOCR version v3.0.0 onwards
+    '''
     def __init__(self, lang = 'en', font_path = None,
+                 text_detection_model_name = None,
                  text_detection_model_dir = None,
+                 text_recognition_model_name = None,
                  text_recognition_model_dir = None,
                  use_doc_orientation_classify=None,
                  use_doc_unwarping=None,
                  use_textline_orientation=None,
                  ):
         self.ocr = PaddleOCR(lang=lang,
+                             text_detection_model_name = text_detection_model_name,
                              text_detection_model_dir = text_detection_model_dir,
+                             text_recognition_model_name = text_recognition_model_name,
                              text_recognition_model_dir = text_recognition_model_dir,
                              use_doc_orientation_classify = use_doc_orientation_classify,
                              use_doc_unwarping = use_doc_unwarping,
                              use_textline_orientation = use_textline_orientation
                              )
         self.font_path = font_path
+        self.text_detection_model_name = text_detection_model_name
         self.text_detection_model_dir = text_detection_model_dir
+        self.text_recognition_model_name = text_recognition_model_name
         self.text_recognition_model_dir = text_recognition_model_dir
         self.use_doc_orientation_classify = use_doc_orientation_classify
         self.use_doc_unwarping = use_doc_unwarping
