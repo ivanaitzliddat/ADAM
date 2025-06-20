@@ -20,9 +20,17 @@ class DeviceSettingsEditor(tk.Toplevel):
         # Center the window
         self.center_window()
 
+        # Top frame to contain the Add Condition, Save and Cancel buttons
+        self.top_frame = tk.Frame(self, bg="#DCE0D9")
+        self.top_frame.pack(fill="x", pady=10)
+
         # Add New Condition Button
-        self.add_button = tk.Button(self, text="Add New Condition", command=self.add_condition)
-        self.add_button.pack(pady=10)
+        self.add_button = tk.Button(self.top_frame, text="Add New Condition", command=self.add_condition)
+        self.add_button.pack(side="left", padx=10)
+
+        # Save and Cancel Buttons
+        tk.Button(self.top_frame, text="Cancel", width=10, command=self.destroy).pack(side="right", padx=10)
+        tk.Button(self.top_frame, text="Save", width=10, command=self.retrieve_form_data).pack(side="right", padx=10)
 
         # Canvas and Scrollable Frame
         self.canvas = tk.Canvas(self, bg="#DCE0D9")
@@ -48,9 +56,6 @@ class DeviceSettingsEditor(tk.Toplevel):
         # Save & Cancel Buttons
         self.bottom_frame = tk.Frame(self, bg="#DCE0D9")
         self.bottom_frame.pack(pady=10)
-
-        tk.Button(self.bottom_frame, text="Save", width=10, command=self.retrieve_form_data).pack(side="left", padx=10)
-        tk.Button(self.bottom_frame, text="Cancel", width=10, command=self.destroy).pack(side="left", padx=10)
 
         # Auto-populate conditions
         self.populate_conditions()
@@ -278,7 +283,12 @@ class ConditionCard(tk.Frame):
         #List the entered keyword(s)
         tk.Label(self, text="Saved keywords/phrases:\n(All keywords/phrases below must be detected to trigger the condition sequence)",font=("Helvetica", 10, "bold"), bg="white", justify = "left").grid(row=7, column=0, columnspan=3, sticky="w", padx=10, pady=(10, 0))
         self.keyword_list = tk.Listbox(self, height=4)
-        self.keyword_list.grid(row=8, column=0, columnspan=3, sticky="ew", padx=10)
+        self.keyword_list.grid(row=8, column=0, columnspan=3, sticky="ew", padx=(10, 0))
+
+        # Scrollbar for the keyword list
+        scrollbar = tk.Scrollbar(self, orient="vertical", command=self.keyword_list.yview)
+        scrollbar.grid(row=8, column=3, sticky="ns", padx=(0, 10))
+        self.keyword_list.config(yscrollcommand=scrollbar.set)
 
         # Populate keywords if available
         if len(self.keywords) > 0:
