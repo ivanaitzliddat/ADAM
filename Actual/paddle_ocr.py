@@ -17,17 +17,43 @@ from datetime import datetime, timedelta
     - lang (str): Language to be used by PaddleOCR.
     - use_angle_cls (bool): Whether to use angle classification.
     - font_path (str): Path to a .ttf font file for text rendering in draw_ocr.
+    - text_detection_model_dir (str): Path to the text detection model folder.
+    - text_recognition_model_dir (str): Path to the text recognition model folder.
+    - use_doc_orientation_classify (bool): Enables/disables document orientation classification model (PP-LCNet_x1_0_doc_ori). This model is mainly useful for photos of text/docs.
+    - use_doc_unwarping (bool): Enables/disables image unwarping model (UVDoc). This model is mainly useful for photos of text/docs. On an unwarped image (e.g. screenshot of computer screen), unwarping it results in a warped image.
+    - use_textline_orientation (bool): Enables/disables text line orientation classification model (PP-LCNet_x1_0_textline_ori). This model is mainly useful for photos of text/docs.
 '''
 
 class OCRProcessor:
-    def __init__(self, lang = 'en', use_angle_cls = True, font_path = None,
-                 cls_model_dir = None, det_model_dir = None, rec_model_dir = None):
-        self.ocr = PaddleOCR(use_angle_cls=use_angle_cls, lang=lang,
-                             cls_model_dir = cls_model_dir, det_model_dir = det_model_dir, rec_model_dir = rec_model_dir)
+    '''
+    # This init function is for PaddleOCR version v3.0.0 onwards
+    '''
+    def __init__(self, lang = 'en', font_path = None,
+                 text_detection_model_name = None,
+                 text_detection_model_dir = None,
+                 text_recognition_model_name = None,
+                 text_recognition_model_dir = None,
+                 use_doc_orientation_classify=None,
+                 use_doc_unwarping=None,
+                 use_textline_orientation=None,
+                 ):
+        self.ocr = PaddleOCR(lang=lang,
+                             text_detection_model_name = text_detection_model_name,
+                             text_detection_model_dir = text_detection_model_dir,
+                             text_recognition_model_name = text_recognition_model_name,
+                             text_recognition_model_dir = text_recognition_model_dir,
+                             use_doc_orientation_classify = use_doc_orientation_classify,
+                             use_doc_unwarping = use_doc_unwarping,
+                             use_textline_orientation = use_textline_orientation
+                             )
         self.font_path = font_path
-        self.cls_model_dir = cls_model_dir
-        self.det_model_dir = det_model_dir
-        self.rec_model_dir = rec_model_dir
+        self.text_detection_model_name = text_detection_model_name
+        self.text_detection_model_dir = text_detection_model_dir
+        self.text_recognition_model_name = text_recognition_model_name
+        self.text_recognition_model_dir = text_recognition_model_dir
+        self.use_doc_orientation_classify = use_doc_orientation_classify
+        self.use_doc_unwarping = use_doc_unwarping
+        self.use_textline_orientation = use_textline_orientation
     '''
         Iterates through the frames that were captured previously and runs the OCR.
     '''
@@ -102,20 +128,26 @@ class OCRProcessor:
         keyword_list = val["triggers"][condition]["keywords"]
         tts_message = val["triggers"][condition]['tts_text']
 
-        # Perform the OCR
-        result = self.ocr.ocr(frame_rgb, cls=True)
-        if None in result:
-            print("This screenshot has no words.")
-            return
-        
         # Create a dictionary with the text as the key, and the boxes in an array
         text_to_boxes = {}
 
-        # Iterate through each line of the results to identify sentences that contain the keywords
-        for line in result:
-            for box, (text, score) in line:
+        # Perform the OCR
+        # .predict() returns a list with length corresponding to the number of input images (length of 1 for 1 input image)
+        result = self.ocr.predict(frame_rgb)
+
+        for ocr_data in result:
+            texts = ocr_data.get('rec_texts', [])
+
+            if not texts:   # If screenshot is empty, there will not be any recognised text data
+                print("This screenshot has no words.")
+                return
+
+            scores = ocr_data.get('rec_scores', [])
+            boxes = ocr_data.get('rec_polys', [])
+
+            for text, score, box in zip(texts, scores, boxes):
                 if all(keyword.lower() in text.lower() for keyword in keyword_list):
-                    text_to_boxes.setdefault(text, []).append(box)
+                    text_to_boxes.setdefault(text, []).append(box.tolist())
 
         print("This is the entire text_to_boxes:")
         print(text_to_boxes)

@@ -22,10 +22,21 @@ def start_screen_capturer():
     Starts the ocr.
 '''
 def start_ocr():
+    #   Mobile detection model is ~17x smaller and 7.2x faster, but ~4.8% less accurate than server model
+    #   Mobile recognition model is 5x smaller and 1.3x faster, but ~5.09% less accurate than server model
+    ocr_model = "PP-OCRv5_mobile"
+
+    #   To force a download of OCR models to default location "%userprofile%/.paddlex/",
+    #   set text_detection_model_dir and text_recognition_model_dir to None
     ocr = OCRProcessor(font_path="./Actual/arial.ttf",
-                       cls_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddleocr/whl/cls/",
-                       det_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddleocr/whl/det/en/",
-                       rec_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddleocr/whl/rec/en/")
+                       text_detection_model_name = ocr_model+"_det",
+                       text_detection_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddlex/official_models/"+ocr_model+"_det",
+                       text_recognition_model_name = ocr_model+"_rec",
+                       text_recognition_model_dir = os.path.dirname(ConfigHandler.dirname) + "/paddlex/official_models/"+ocr_model+"_rec",
+                       use_doc_orientation_classify = False,
+                       use_doc_unwarping = False,
+                       use_textline_orientation = False,
+                       )
     try:
         ocr.run()
     except Exception as e:
