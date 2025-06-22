@@ -24,7 +24,7 @@ def start_screen_capturer():
 def start_ocr():
     #   Mobile detection model is ~17x smaller and 7.2x faster, but ~4.8% less accurate than server model
     #   Mobile recognition model is 5x smaller and 1.3x faster, but ~5.09% less accurate than server model
-    ocr_model = "PP-OCRv5_server"
+    ocr_model = "PP-OCRv5_mobile"
 
     #   To force a download of OCR models to default location "%userprofile%/.paddlex/",
     #   set text_detection_model_dir and text_recognition_model_dir to None
