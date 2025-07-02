@@ -121,9 +121,6 @@ class AboutPage(tk.Frame):
         release_date_label.pack(anchor="w", padx=10)
         self.dynamic_labels.append(release_date_label)
 
-        developer_label.pack(anchor="w", padx=10)
-        self.dynamic_labels.append(developer_label)
-
         team_members_label = tk.Label(
             self.scrollable_frame,
             text="Development Team:",
