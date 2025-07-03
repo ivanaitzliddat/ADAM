@@ -42,6 +42,7 @@ class AlertsPage(tk.Frame):
         # Load and resize icons
         self.green_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "green_monitor.png"), 50, 50)  # Resize to 50x50 pixels
         self.red_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "red_monitor.png"), 50, 50)  # Resize to 50x50 pixels
+        self.grey_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "grey_monitor.png"), 50, 50)  # Resize to 50x50 pixels
         self.unmuted_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "green_unmute.png"), 30, 30)
         self.muted_icon = self.load_resized_icon(os.path.join(ConfigHandler.dirname, "red_mute.png"), 30, 30)
 
@@ -136,13 +137,27 @@ class AlertsPage(tk.Frame):
             
             if device not in self.device_labels:
                 # Decide which icon to show based on device state
-                icon = self.green_icon if self.device_states.get(device, False) else self.red_icon
+                if self.device_states.get(device, False):
+                    print('the device should be green')
+                    if self.get_disabled_status(device):
+                        icon = self.grey_icon
+                    else:
+                        icon = self.green_icon
+                else:
+                    icon = self.red_icon
                 device_label = tk.Label(self.top_frame, text=custom_name, image=icon, compound="left", font=("Arial", 12))
                 device_label.pack(anchor="w", pady=5)
                 self.device_labels[device] = device_label
 
             device_label = self.device_labels[device]
-            icon = self.green_icon if self.device_states.get(device, False) else self.red_icon
+            if self.device_states.get(device, False):
+                print('the device should be green')
+                if self.get_disabled_status(device):
+                    icon = self.grey_icon
+                else:
+                    icon = self.green_icon
+            else:
+                icon = self.red_icon
             device_label.config(image=icon)
             device_label.config(text=custom_name)
             device_label.image = icon
@@ -521,3 +536,6 @@ class AlertsPage(tk.Frame):
         for key, val in device_dict.items():
             custom_name = val["custom_name"]
         return custom_name
+    
+    def get_disabled_status(self, alt_name):
+        return bool(ConfigHandler.get_cfg_disabled_input_devices(usb_alt_name = alt_name))
