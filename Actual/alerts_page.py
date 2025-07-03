@@ -138,7 +138,6 @@ class AlertsPage(tk.Frame):
             if device not in self.device_labels:
                 # Decide which icon to show based on device state
                 if self.device_states.get(device, False):
-                    print('the device should be green')
                     if self.get_disabled_status(device):
                         icon = self.grey_icon
                     else:
@@ -151,7 +150,6 @@ class AlertsPage(tk.Frame):
 
             device_label = self.device_labels[device]
             if self.device_states.get(device, False):
-                print('the device should be green')
                 if self.get_disabled_status(device):
                     icon = self.grey_icon
                 else:
