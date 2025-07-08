@@ -91,20 +91,12 @@ class OCRProcessor:
         alt_name = frame.get('alt_name')
         if not processed and not is_black:
             # Convert the frame to RGB
-            frame_rgb = self.convert_frame(frame)
+            frame_rgb = frame.get("current")
             # Get alt_name to find the relevant triggers
             self.perform_ocr_using_triggers(alt_name, frame_rgb)
             # Set to show that the frame has been processed
             with Screenshot.lock:
                 frame['processed'] = True
-
-    '''
-        Converts the frame to allow the processing of frame using imageio.
-    '''
-    def convert_frame(self, frame):
-        screenshot = frame.get('current')
-        frame_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
-        return frame_rgb
 
     '''
         Iterate through the triggers that are tagged to the capture cards and process via the conditions.
@@ -149,13 +141,6 @@ class OCRProcessor:
                 if all(keyword.lower() in text.lower() for keyword in keyword_list):
                     text_to_boxes.setdefault(text, []).append(box.tolist())
 
-        print("This is the entire text_to_boxes:")
-        print(text_to_boxes)
-        print("This is just the keys:")
-        print(text_to_boxes.keys())
-        print("This is the keys stripped:")
-        print([s.strip() for s in text_to_boxes.keys()])
-
         # Identify the sentence_list tagged to the condition of the current screenshot
         condition_list = Processed_Screenshot.sentence_dict.get(alt_name, [])
         if condition_list:
@@ -174,8 +159,6 @@ class OCRProcessor:
         # Draw boxes around those new sentences
         for sentence in new_sentences:
             boxes = text_to_boxes[sentence]
-            print("The current box that I am drawing is:")
-            print(boxes)
             frame_rgb_copy = frame_rgb.copy()
             self.draw_boxes(frame_rgb_copy, boxes)
             
@@ -208,9 +191,9 @@ class OCRProcessor:
             Processed_Screenshot.frames.setdefault(alt_name, {}).update({(timestamp, sentence): frame})
             print("New screenshot has been added to processed screenshot")
 
-            # Filter to keep only screenshots from the last 5 minutes
+            # Filter to keep only screenshots from the last X minutes
             now = datetime.now()
-            time_threshold = now - timedelta(minutes=5)
+            time_threshold = now - timedelta(minutes=60)
             frames_dict = {k: v for k, v in Processed_Screenshot.frames[alt_name].items() if datetime.strptime(k[0], "%Y%m%d %H%M%S") >= time_threshold}
 
             # Save back the cleaned dictionary
@@ -232,6 +215,4 @@ class OCRProcessor:
     '''
     def send_message(self, message):
         with MessageQueue.lock:
-            print("The message that I am sending is:")
-            print(message)
             MessageQueue.status_queue.put(message)
