@@ -76,9 +76,9 @@ openpyxl==3.1.5
 opt-einsum==3.3.0
 orjson==3.10.18
 packaging==24.2
-paddleocr==3.0.2
-paddlepaddle==3.0.0
-paddlex==3.0.2
+paddleocr==3.1.0
+paddlepaddle==3.1.0
+paddlex==3.1.1
 pandas==2.3.0
 pillow==11.1.0
 Pmw==2.1.1
