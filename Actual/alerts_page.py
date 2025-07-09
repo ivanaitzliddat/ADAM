@@ -1,16 +1,18 @@
+import os, traceback
 import tkinter as tk
+import tkinter.messagebox as tk_msgbox
+from tkinter import ttk
+from datetime import datetime, timedelta
+
 import numpy as np
 import cv2
 import io
 from PIL import Image, ImageTk
+from imageio.plugins.deviceslist import DevicesList
+from tkcalendar import DateEntry
+
 from config_handler import ConfigHandler
 from processed_screenshot import Processed_Screenshot
-from tkinter import ttk
-import os
-import tkinter.messagebox as tk_msgbox
-from imageio.plugins.deviceslist import DevicesList
-from datetime import datetime, timedelta
-from tkcalendar import DateEntry
 
 class AlertsPage(tk.Frame):
 
@@ -18,7 +20,7 @@ class AlertsPage(tk.Frame):
 
     def __init__(self, parent):
         super().__init__(parent)
-        label = tk.Label(self, text="Alerts Page Content", font=("Arial", 20))
+        label = tk.Label(self, text="Alerts Page", font=("Arial", 20))
         label.pack(pady=20, padx=20)
 
         # Create a label to display the number of devices
@@ -76,15 +78,16 @@ class AlertsPage(tk.Frame):
         filter_button.pack(side="left", padx=5, pady=5)
 
         # Clear filters button (using pack inside the filter frame)
-        clear_button = tk.Button(self.filter_frame, text="Clear Filters", command=self.update_treeview)
+        clear_button = tk.Button(self.filter_frame, text="Clear Filters",
+                                 command=lambda: (setattr(self, 'filtered', False), self.filter_params.clear(), self.update_treeview()))
         clear_button.pack(side="left", padx=5, pady=5)
 
         # Create a Treeview widget with three columns
-        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "TTS Message / Sentence", "Hidden Sentence"), show="tree headings")
+        self.treeview = ttk.Treeview(self.bottom_frame, columns=("Date & Time", "Device", "Detected with trigger(s)", "Hidden Sentence"), show="tree headings")
         self.treeview.heading("#0", text="Mute Status")
         self.treeview.heading("Date & Time", text="Date & Time", command=lambda: self.sort_column("date_time", False))
         self.treeview.heading("Device", text="Device")
-        self.treeview.heading("TTS Message / Sentence", text="TTS Message / Sentence")
+        self.treeview.heading("Detected with trigger(s)", text="Detected with trigger(s)")
         self.treeview.heading("Hidden Sentence", text="Hidden Sentence")
         self.treeview.column("Hidden Sentence", width=0, stretch=False)
 
@@ -104,6 +107,12 @@ class AlertsPage(tk.Frame):
 
         # To keep track of the row_ids that are filtered
         self.detached_rows = []
+
+        # To keep track of filter state (whether filter is active or not)
+        self.filtered = False
+
+        # To keep track of filter parameters
+        self.filter_params = {}
 
  ################## Old Code for clickable buttons in list ##############################
         # # Create a canvas to contain the scrollable content
@@ -222,9 +231,12 @@ class AlertsPage(tk.Frame):
         })
         # Insert the parsed message into the Treeview 
         icon = self.muted_icon if self.if_muted(alt_name, sentence_list) else self.unmuted_icon
-        values = (date_time_display, alt_name, tts_text, sentence_list) if tts_text != '' else (date_time_display, alt_name, sentence_list, sentence_list)
-
+        values = date_time_display, alt_name, sentence_list, sentence_list
         self.treeview.insert("", 0, image=icon, values=values)
+
+        if self.filtered == True:
+            # Re-apply filters
+            self.apply_filters(**self.filter_params)
 
 
     def open_filter_window(self):
@@ -256,30 +268,50 @@ class AlertsPage(tk.Frame):
         # Dropdown
         alt_name_var = tk.StringVar()
         alt_name_options = list(set(msg["alt_name"] for msg in self.all_messages))
+        alt_name_options.insert(0, "All")
         alt_name_menu = ttk.Combobox(filter_window, textvariable=alt_name_var, values=alt_name_options, state="readonly")
-        alt_name_menu.set("Choose a device")
+        alt_name_menu.current(0)
         alt_name_menu.pack(pady=(0, 10))
 
         # Search for text message 
-        tts_label = tk.Label(filter_window, text="Search Text")
-        tts_label.pack()
-        tts_entry = tk.Entry(filter_window)
-        tts_entry.pack()
+        filter_text_label = tk.Label(filter_window, text="Search Text")
+        filter_text_label.pack()
+        filter_text_entry = tk.Entry(filter_window)
+        filter_text_entry.pack()
 
         apply_button = tk.Button(
             filter_window,
             text="Apply Filters",
-            command=lambda: self.apply_filters(start_date_entry, end_date_entry, alt_name_var, tts_entry, filter_window)
+            command=lambda: self.apply_filters(start_date_entry, end_date_entry, alt_name_var, filter_text_entry, filter_window)
         )
         apply_button.pack()
 
+    """ Function to apply the filters based on the entries """
+    def apply_filters(self, start_date_entry, end_date_entry, alt_name_var, filter_text_entry, filter_window):
+        self.filtered = True
 
-    def apply_filters(self, start_date_entry, end_date_entry, alt_name_var, tts_entry, filter_window):
-        """ Function to apply the filters based on the entries """
-        start = datetime.strptime(start_date_entry.get(), "%Y/%m/%d")
-        end = datetime.strptime(end_date_entry.get(), "%Y/%m/%d")
-        alt_name = alt_name_var.get()
-        text = tts_entry.get()
+        if filter_window == None:
+            # If filter_window is None, then it means apply_filters() is being automatically re-run after a new alert appears, so the arguments do not need additional processing.
+            start = start_date_entry
+            end = end_date_entry
+            alt_name = alt_name_var
+            text = filter_text_entry
+        else:
+            # Else, it means that apply_filters() is being manually run by user, so the arguments need some additional processing.
+            start = datetime.strptime(start_date_entry.get(), "%Y/%m/%d")
+            end = datetime.strptime(end_date_entry.get(), "%Y/%m/%d")
+            end = end.replace(hour=23, minute=59, second=59)
+            alt_name = alt_name_var.get()
+            text = filter_text_entry.get().lower()
+
+        # Set filter_params so that apply_filters() can automatically be called with appropriate arguments from other functions
+        self.filter_params = {
+            "start_date_entry": start,
+            "end_date_entry": end,
+            "alt_name_var": alt_name,
+            "filter_text_entry": text,
+            "filter_window": None
+            }
 
         # Clear Treeview
         for row in self.treeview.get_children():
@@ -288,15 +320,19 @@ class AlertsPage(tk.Frame):
         # Filter logic
         for msg in self.all_messages:
             if not (start <= msg["date_time"] <= end):
+                # Go to next iteration of For.. loop if msg["date_time"] is not within user-selected start and end date
                 continue
-            if alt_name != "Select alt_name" and msg["alt_name"] != alt_name:
+            if alt_name != "All" and alt_name != msg["alt_name"]:
+                # Go to next iteration of For.. loop if user-selected alt_name is not "All" and also not equal to msg["alt_name"]
                 continue
-            if text and text not in msg["tts_text"].lower():
+            if text and text not in msg["sentence_list"].lower():
+                # Go to next iteration of For.. loop if user's input text is not in msg["sentence_list"]
                 continue
 
-            self.treeview.insert("", "end", values=(msg["date_time_display"], msg["alt_name"], msg["tts_text"]))
+            self.treeview.insert("", 0, values=(msg["date_time_display"], msg["alt_name"], msg["sentence_list"]))
 
-        filter_window.destroy()  # Close popup        
+        if filter_window != None:
+            filter_window.destroy()  # Close popup
 
 
     def sharpen_image(image):
@@ -332,10 +368,11 @@ class AlertsPage(tk.Frame):
             )
             mute_alerts.pack()
         except IndexError as e:
+            traceback.print_exc()
             print("User clicked on an invalid row")
             # Optionally, handle the specific error, like logging or custom behavior.
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
+        except Exception:
+            traceback.print_exc()
 
     def on_message_click(self, alt_name, date_time_display, sentence_list):
         with Processed_Screenshot.lock:
@@ -501,7 +538,7 @@ class AlertsPage(tk.Frame):
         # Insert sorted/filtered/original data into the Treeview
         for message in self.all_messages:
             icon = self.muted_icon if self.if_muted(message["alt_name"], message["sentence_list"]) else self.unmuted_icon
-            values = (message["date_time_display"], message["alt_name"], message["tts_text"]) if message["tts_text"] != '' else (message["date_time_display"], message["alt_name"], message["sentence_list"])
+            values = message["date_time_display"], message["alt_name"], message["sentence_list"]
             self.treeview.insert("", 0, image=icon, values=values)
 
     def on_frame_configure(self, event):

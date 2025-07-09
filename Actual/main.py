@@ -15,8 +15,9 @@ def start_screen_capturer():
     ss_object = ScreenCapturer()
     try:
         ss_object.capture_screenshots()
-    except Exception as e:
-        print(f"Screen capturer encountered an error: {e}")
+    except Exception:
+        traceback.print_exc()
+        print(f"Screen capturer encountered an error.")
 
 '''
     Starts the ocr.
@@ -39,8 +40,9 @@ def start_ocr():
                        )
     try:
         ocr.run()
-    except Exception as e:
-        print(f"OCR Processor encountered an error: {e}")
+    except Exception:
+        traceback.print_exc()
+        print(f"OCR Processor encountered an error.")
 
 '''
     Starts the TTS.
@@ -49,9 +51,9 @@ def start_TTS():
     tts = TTS()
     try:
         tts.run()
-    except Exception as e:
-        print(f"TTS encountered an error.")
+    except Exception:
         traceback.print_exc()
+        print(f"TTS encountered an error.")
 
 '''
     Starts the ADAM GUI application.
@@ -60,8 +62,9 @@ def run_ADAM():
     app = ADAM()
     try:
         app.run()
-    except Exception as e:
-        print(f"ADAM GUI application encountered an error: {e}")
+    except Exception:
+        traceback.print_exc()
+        print(f"ADAM GUI application encountered an error.")
 
 '''
     Handles the signals that are sent to the script, for example, when pressing the ctrl + c button.
@@ -95,8 +98,9 @@ if __name__ == "__main__":
         run_ADAM()
     except RuntimeError:   
         ADAM.close()
-    except Exception as e:
-        print(f"ADAM has failed to run with exception: {e}")
+    except Exception:
+        traceback.print_exc()
+        print(f"ADAM encountered an unhandled exception and failed to run.")
 
     # Shutting down all of ADAM
     finally:
