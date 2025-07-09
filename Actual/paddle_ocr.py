@@ -165,12 +165,12 @@ class OCRProcessor:
             # Save the screenshot
             timestamp = datetime.now().strftime("%Y%m%d %H%M%S")
             self.save_processed_screenshot(alt_name, frame_rgb_copy, timestamp, sentence)
+
+            # Send message to GUI
+            self.send_message((timestamp, sentence, alt_name, tts_message))
         
         # Update the sentence_list
         self.update_sentence_list(alt_name, condition, text_to_boxes.keys())
-            
-        # Send message to GUI
-        self.send_message((timestamp, sentence, alt_name, tts_message))
         
     '''
         Draw boxes around the identified keywords
