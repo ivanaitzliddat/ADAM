@@ -79,7 +79,7 @@ class AlertsPage(tk.Frame):
 
         # Clear filters button (using pack inside the filter frame)
         clear_button = tk.Button(self.filter_frame, text="Clear Filters",
-                                 command=lambda: (setattr(self, 'filtered', False), self.filter_params.clear(), self.update_treeview()))
+                                 command=lambda: (setattr(self, 'filtered', False), self.filter_params.clear(), self.clear_filters()))
         clear_button.pack(side="left", padx=5, pady=5)
 
         # Create a Treeview widget with three columns
@@ -105,32 +105,15 @@ class AlertsPage(tk.Frame):
         # To keep track of all messages passed from the MessageQueue
         self.all_messages = []
 
-        # To keep track of the row_ids that are filtered
-        self.detached_rows = []
-
         # To keep track of filter state (whether filter is active or not)
         self.filtered = False
 
+        # To keep track of date/time column sort state
+        self.current_sort_column = "date_time"
+        self.current_sort_reverse = True  # True = descending (newest first)
+
         # To keep track of filter parameters
         self.filter_params = {}
-
- ################## Old Code for clickable buttons in list ##############################
-        # # Create a canvas to contain the scrollable content
-        # self.canvas = tk.Canvas(self.bottom_frame, bg="white", bd=2, relief="solid")
-        # self.canvas.pack(side="left", fill=tk.BOTH, expand=True)
-
-        # # Create a scrollbar and associate it with the canvas
-        # self.scrollbar = tk.Scrollbar(self.bottom_frame, orient="vertical", command=self.canvas.yview)
-        # self.scrollbar.pack(side="right", fill="y")
-        # self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        # # Create a frame inside the canvas to hold the messages
-        # self.message_frame = tk.Frame(self.canvas)
-        # self.canvas.create_window((0, 0), window=self.message_frame, anchor="nw")
-
-        # Update the scrollable region whenever the frame size changes
-        # self.message_frame.bind("<Configure>", self.on_frame_configure)
-#######################################################################################
 
     # Function to load and resize an image to the given width and height
     def load_resized_icon(self, image_path, width, height):
@@ -138,7 +121,7 @@ class AlertsPage(tk.Frame):
         img = img.resize((width, height), Image.Resampling.LANCZOS)  # Resize the image
         return ImageTk.PhotoImage(img)  # Convert the resized image to a Tkinter-compatible format
      
-    # "Update the display of connected devices with the appropriate icons
+    # Update the display of connected devices with the appropriate icons
     def update_device_display(self):
         # Add devices that are not yet added to the UI
         for device in self.starting_device_list:
@@ -203,41 +186,89 @@ class AlertsPage(tk.Frame):
         self.after(3000, self.poll_for_device_changes)
 
     def append_message(self, message):
-################### Old Code for clickable events in list #######################################
-        # # Create a label for each message and make it clickable
-        # clickable_label = tk.Label(self.message_frame, text=message, fg="blue", cursor="hand2", font=("Arial", 12),relief="solid", bd=1, padx=10, pady=5, anchor="w")
-        # clickable_label.pack(padx=5, pady=5, fill="x")
-
-        # # Bind the label to call on_message_click when clicked
-        # # clickable_label.bind("<Button-1>", lambda event, msg=message: self.on_message_click(msg))
-        # clickable_label.bind("<Button-1>", lambda event, idx=index: self.on_message_click(idx))
-#################################################################################################
-        # Using new treeview, above code is for older listbox
-
-        # To format the datetime
         date_time_raw = message[0]
         sentence_list = message[1]
         alt_name = message[2]
         tts_text = message[3]
-        date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S") # formatting the string into a datetime object
-        date_time_display = date_time.strftime("%Y/%m/%d %H:%M:%S") # what will be showed in the treeview
 
-        self.all_messages.append({
+        date_time = datetime.strptime(date_time_raw, "%Y%m%d %H%M%S")
+        date_time_display = date_time.strftime("%Y/%m/%d %H:%M:%S")
+
+        msg_dict = {
             "date_time": date_time,
             "alt_name": alt_name,
             "tts_text": tts_text,
             "date_time_display": date_time_display,
             "sentence_list": sentence_list
-        })
-        # Insert the parsed message into the Treeview 
+        }
+
+        self.all_messages.append(msg_dict)
+
         icon = self.muted_icon if self.if_muted(alt_name, sentence_list) else self.unmuted_icon
-        values = date_time_display, alt_name, sentence_list, sentence_list
-        self.treeview.insert("", 0, image=icon, values=values)
+        custom_name = self.get_custom_name_from_alt_name(alt_name)
+        values = date_time_display, custom_name, sentence_list, sentence_list
+        passes_filter = True
 
-        if self.filtered == True:
-            # Re-apply filters
-            self.apply_filters(**self.filter_params)
+        # Get filter params or defaults
+        start = self.filter_params.get("start_date_entry", datetime.min)
+        end = self.filter_params.get("end_date_entry", datetime.max)
+        alt_name_filter = self.filter_params.get("alt_name_var", "All")
+        text_filter = self.filter_params.get("filter_text_entry", "").lower()
+        
+        # Check if specified date_time is not within start and end date/time
+        if not (start <= date_time <= end):
+            passes_filter = False
 
+        # Check if specified custom name is not "All"
+        if alt_name_filter != "All":
+            selected_alt = next(
+                (msg["alt_name"] for msg in self.all_messages
+                 if self.get_custom_name_from_alt_name(msg["alt_name"]) == alt_name_filter),
+                None
+            )
+            if selected_alt != alt_name:
+                passes_filter = False
+
+
+        # Check if specified text exists, and is not found in sentence_list
+        if text_filter and text_filter not in sentence_list.lower():
+            passes_filter = False
+
+        insert_index = 0
+        visible_items = self.treeview.get_children()
+
+        # Calculate insert_index only among visible items (those matching filter)
+        if passes_filter:
+            # Determine insert position among visible rows by sorting column
+            if self.current_sort_column == "date_time":
+                n_visible = len(visible_items)
+                for i, item_id in enumerate(visible_items):
+                    item_values = self.treeview.item(item_id, "values")
+                    existing_dt = datetime.strptime(item_values[0], "%Y/%m/%d %H:%M:%S")
+
+                    if self.current_sort_reverse:
+                        if existing_dt < date_time:
+                            insert_index = i
+                            break
+                    else:
+                        if existing_dt > date_time:
+                            insert_index = i
+                            break
+                else:
+                    insert_index = n_visible
+            else:
+                insert_index = 0
+        else:
+            # If filtered out, just insert at the end or top (won't matter as it will be detached)
+            insert_index = len(visible_items)
+
+        # Insert the new item into treeview
+        item_id = self.treeview.insert("", insert_index, image=icon, values=values)
+        msg_dict["item_id"] = item_id
+
+        # Detach if it doesn't pass filter, so it won't show
+        if not passes_filter:
+            self.treeview.detach(item_id)
 
     def open_filter_window(self):
         filter_window = tk.Toplevel(self)
@@ -267,9 +298,19 @@ class AlertsPage(tk.Frame):
 
         # Dropdown
         alt_name_var = tk.StringVar()
+        '''
         alt_name_options = list(set(msg["alt_name"] for msg in self.all_messages))
         alt_name_options.insert(0, "All")
         alt_name_menu = ttk.Combobox(filter_window, textvariable=alt_name_var, values=alt_name_options, state="readonly")
+        '''
+        custom_name_map = {
+            self.get_custom_name_from_alt_name(msg["alt_name"]): msg["alt_name"]
+            for msg in self.all_messages
+        }
+        custom_name_options = ["All"] + sorted(custom_name_map.keys())
+        alt_name_var = tk.StringVar()
+        alt_name_menu = ttk.Combobox(filter_window, textvariable=alt_name_var, values=custom_name_options, state="readonly")
+
         alt_name_menu.current(0)
         alt_name_menu.pack(pady=(0, 10))
 
@@ -312,28 +353,41 @@ class AlertsPage(tk.Frame):
             "filter_text_entry": text,
             "filter_window": None
             }
-
-        # Clear Treeview
-        for row in self.treeview.get_children():
-            self.treeview.delete(row)
-
-        # Filter logic
+        
+        # Detach or reattach treeview entries based on filter result
         for msg in self.all_messages:
+            item_id = msg.get("item_id")
+            if not item_id:
+                continue
+
+            passes_filter = True
+            # Check if specified date_time is not within start and end date/time
             if not (start <= msg["date_time"] <= end):
-                # Go to next iteration of For.. loop if msg["date_time"] is not within user-selected start and end date
-                continue
-            if alt_name != "All" and alt_name != msg["alt_name"]:
-                # Go to next iteration of For.. loop if user-selected alt_name is not "All" and also not equal to msg["alt_name"]
-                continue
+                passes_filter = False
+
+            selected_custom = alt_name_var if isinstance(alt_name_var, str) else alt_name_var.get()
+            # Check if specified custom name is not "All"
+            if selected_custom != "All":
+                selected_alt = next(
+                    (msg["alt_name"] for msg in self.all_messages
+                     if self.get_custom_name_from_alt_name(msg["alt_name"]) == selected_custom), None
+                     )
+                if selected_alt != msg["alt_name"]:
+                    passes_filter = False
+            # Check if specified text exists, and is not found in msg["sentence_list"]
             if text and text not in msg["sentence_list"].lower():
-                # Go to next iteration of For.. loop if user's input text is not in msg["sentence_list"]
-                continue
+                passes_filter = False
+                        
+            if passes_filter:
+                self.treeview.reattach(item_id, '', 0)
+            else:
+                self.treeview.detach(item_id)
 
-            self.treeview.insert("", 0, values=(msg["date_time_display"], msg["alt_name"], msg["sentence_list"]))
+        # Re-sort visible items after applying filters
+        self.sort_column(self.current_sort_column, self.current_sort_reverse)
 
-        if filter_window != None:
-            filter_window.destroy()  # Close popup
-
+        if filter_window is not None:
+            filter_window.destroy()
 
     def sharpen_image(image):
         kernel = np.array([[-1, -1, -1],
@@ -350,7 +404,16 @@ class AlertsPage(tk.Frame):
             item_data = self.treeview.item(selected_item)
             column_values = item_data['values']
             date_time_display = column_values[0]
-            alt_name = column_values[1] 
+            custom_name = column_values[1]
+
+            alt_name = next(
+                (msg["alt_name"] for msg in self.all_messages
+                 if self.get_custom_name_from_alt_name(msg["alt_name"]) == custom_name), None
+                 )
+            if alt_name is None:
+                tk_msgbox.showerror("Error", f"No matching device found for custom name '{custom_name}'")
+                return
+ 
             sentence_list = column_values[3]
             alert_options_window = tk.Toplevel(self)
             alert_options_window.title("Alert Options")
@@ -364,13 +427,12 @@ class AlertsPage(tk.Frame):
             mute_alerts = tk.Button(
                 alert_options_window,
                 text="Mute Alerts",
-                command=lambda: self.mute_alert(alt_name, date_time_display)
+                command=lambda: self.mute_alert(alt_name, date_time_display, sentence_list)
             )
             mute_alerts.pack()
         except IndexError as e:
-            traceback.print_exc()
-            print("User clicked on an invalid row")
-            # Optionally, handle the specific error, like logging or custom behavior.
+            #traceback.print_exc()
+            pass    # Do nothing as user clicked on an empty area in the treeview
         except Exception:
             traceback.print_exc()
 
@@ -412,18 +474,27 @@ class AlertsPage(tk.Frame):
                 window.image = tk_image
 
                 # Deselect the row after opening the image
-                self.treeview.selection_remove(self.treeview.selection())  # This removes selection from the row
+                self.treeview.selection_remove(self.treeview.selection())
             except KeyError as e:
                 tk_msgbox.showinfo("No Screenshot", "The screenshot has expired and is no longer available for viewing.")
 
-    def mute_alert(self, target_alt_name, date_time_display):
-        # Using list comprehension to find the matching object
-        matching_message = next(
-                        (msg for msg in self.all_messages 
-                        if msg['alt_name'] == target_alt_name and msg['date_time_display'] == date_time_display),
-                        None
-                    )
+    def refresh_mute_icons(self):
+        for msg in self.all_messages:
+            item_id = msg.get("item_id")
+            if item_id and self.treeview.exists(item_id):
+                new_icon = self.muted_icon if self.if_muted(msg["alt_name"], msg["sentence_list"]) else self.unmuted_icon
+                self.treeview.item(item_id, image=new_icon)
 
+    def mute_alert(self, target_alt_name, date_time_display, sentence_list):
+        # Find the matching message
+        matching_message = next(
+            (msg for msg in self.all_messages
+            if msg['alt_name'] == target_alt_name
+            and msg['date_time_display'] == date_time_display
+            and msg['sentence_list'] == sentence_list), None
+            )
+
+        custom_name = self.get_custom_name_from_alt_name(target_alt_name)
         if matching_message:
             sentence_list = matching_message['sentence_list']
 
@@ -435,8 +506,9 @@ class AlertsPage(tk.Frame):
             # Main label
             mute_label = tk.Label(
                 mute_alert_window,
-                text=(
-                    f"You will be muting this sentence {sentence_list} for this device {target_alt_name}.\n"
+                text = (
+                    f"Muting on: {custom_name}\n"
+                    f"Muting sentence: {sentence_list}\n\n"
                     "This will still display the alert, but no sound will be played."
                 ),
                 wraplength=380,
@@ -451,11 +523,14 @@ class AlertsPage(tk.Frame):
             tk.Label(duration_frame, text="Mute duration:").pack(side="left", padx=(0, 10))
 
             duration_options = {
-                "1 minutes": 1,
-                "5 minutes": 5,
-                "15 minutes": 15,
-                "1 hour": 60,
-                "6 hours": 360,
+                "1 min": 1,
+                "5 mins": 5,
+                "15 mins": 15,
+                "30 mins": 30,
+                "1 hr": 60,
+                "2 hrs": 120,
+                "3 hrs": 180,
+                "6 hrs": 360,
                 "1 day": 1440,
             }
 
@@ -486,9 +561,9 @@ class AlertsPage(tk.Frame):
                     # Schedule automatic unmute
                     delay_ms = int(duration_minutes * 60 * 1000)
                     self.master.after(delay_ms, lambda: self.unmute_alert(mute_entry))
+                    self.refresh_mute_icons()
 
                     print(f"Muted {target_alt_name} with sentence {sentence_list} until {expiry_time.strftime('%Y-%m-%d %H:%M:%S')}")
-
                 mute_alert_window.destroy()
 
             def cancel_mute():
@@ -504,42 +579,78 @@ class AlertsPage(tk.Frame):
         try:
             AlertsPage.muted_alerts.remove(mute_entry)
             print(f"Unmuted {mute_entry['alt_name']} at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-            self.update_treeview()  # Update UI if needed
+            self.refresh_mute_icons()
         except ValueError:
             pass  # Entry already removed
-
+    
+    # Sort visible messages in all_messages based on column_key, preserving filter state (i.e., detached rows remain detached).
     def sort_column(self, column_key, reverse):
-        """
-        Sort the all_messages array based on the column clicked.
-        :param column_key: The key to sort by (e.g., "date_time", "alt_name", "tts_text")
-        :param reverse: If True, sort in descending order, else ascending
-        """
-        if column_key == "date_time":
-            # Sort by date/time (convert string to datetime for proper sorting)
-            self.all_messages.sort(key=lambda x: x[column_key], reverse=reverse)
-        else:
-            # Sort alphabetically (Device Name or Message)
-            self.all_messages.sort(key=lambda x: x[column_key], reverse=reverse)
+        self.current_sort_column = column_key
+        self.current_sort_reverse = reverse
 
-        # Update the Treeview after sorting
-        self.update_treeview()
+        # Get currently visible item_ids (i.e. item_ids currently 'attached' to treeview)
+        visible_items = set(self.treeview.get_children())
 
-        # Toggle the sort direction for the next click
-        if column_key == "date_time":
-            self.treeview.heading("Date & Time", command=lambda: self.sort_column(column_key, not reverse))
-        else:
-            self.treeview.heading(column_key, command=lambda: self.sort_column(column_key, not reverse))
+        # Extract visible messages from all_messages based on item_id in visible_items
+        visible_messages = [msg for msg in self.all_messages if msg.get("item_id") in visible_items]
 
-    def update_treeview(self):
-        # Clear the Treeview
-        for row in self.treeview.get_children():
-            self.treeview.delete(row)
+        # Sort only visible messages
+        visible_messages.sort(
+            key=lambda x: x[column_key] if column_key != "sentence_list" else x[column_key].lower(),
+            reverse=reverse
+            )
 
-        # Insert sorted/filtered/original data into the Treeview
-        for message in self.all_messages:
-            icon = self.muted_icon if self.if_muted(message["alt_name"], message["sentence_list"]) else self.unmuted_icon
-            values = message["date_time_display"], message["alt_name"], message["sentence_list"]
-            self.treeview.insert("", 0, image=icon, values=values)
+        # Detach all visible items first (to reorder)
+        for msg in visible_messages:
+            item_id = msg.get("item_id")
+            if item_id:
+                self.treeview.detach(item_id)
+
+        # Reattach in sorted order
+        for msg in visible_messages:
+            item_id = msg.get("item_id")
+            if item_id:
+                self.treeview.reattach(item_id, '', 'end')
+
+        # Update header command to toggle sort direction next time
+        heading_text = {
+            "date_time": "Date & Time",
+            "alt_name": "Device Name",
+            "sentence_list": "Message"
+            }.get(column_key, column_key)
+        self.treeview.heading(heading_text, command=lambda: self.sort_column(column_key, not reverse))
+
+    def clear_filters(self):
+        # Mark filter as cleared
+        self.filtered = False
+        self.filter_params = {}
+
+        # Determine current sort field and direction
+        sort_key = self.current_sort_column if hasattr(self, "current_sort_column") else "date_time"
+        reverse = self.current_sort_reverse if hasattr(self, "current_sort_reverse") else True
+
+        # Sort all messages using the current sort settings
+        sorted_messages = sorted(
+            self.all_messages,
+            key=lambda m: m[sort_key] if sort_key != "sentence_list" else m[sort_key].lower(),
+            reverse=reverse
+        )
+
+        # Reattach or insert all messages
+        for msg in sorted_messages:
+            item_id = msg.get("item_id")
+
+            icon = self.muted_icon if self.if_muted(msg["alt_name"], msg["sentence_list"]) else self.unmuted_icon
+            custom_name = self.get_custom_name_from_alt_name(msg["alt_name"])
+            values = msg["date_time_display"], custom_name, msg["sentence_list"]
+
+
+            if item_id and self.treeview.exists(item_id):
+                self.treeview.reattach(item_id, '', 'end')
+                self.treeview.item(item_id, image=icon)
+            else:
+                item_id = self.treeview.insert("", 'end', image=icon, values=values)
+                msg["item_id"] = item_id
 
     def on_frame_configure(self, event):
         """Update the scrollable region when the frame is resized."""
