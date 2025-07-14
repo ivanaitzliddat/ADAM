@@ -1,4 +1,6 @@
 import queue, os, time, threading, traceback
+import comtypes.client
+comtypes.CoInitialize()  # Ensure COM library is initialised before using COM-based libraries like pyttsx3. Required for WinPython/embedded Python.
 
 import pyttsx3
 import pygame
