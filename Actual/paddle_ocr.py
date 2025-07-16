@@ -10,6 +10,9 @@ from subthread_config import Thread_Config
 from messages import MessageQueue
 from datetime import datetime, timedelta
 
+from PIL import Image, ImageDraw
+from collections import Counter
+
 '''
     An OCRProcessor using PaddleOCR.
 
@@ -119,6 +122,7 @@ class OCRProcessor:
         # Identify the keywords for the condition, as well as the tts message for each condition
         keyword_list = val["triggers"][condition]["keywords"]
         tts_message = val["triggers"][condition]['tts_text']
+        colour = val["triggers"][condition]["bg_colour"]
 
         # Create a dictionary with the text as the key, and the boxes in an array
         text_to_boxes = {}
@@ -138,8 +142,14 @@ class OCRProcessor:
             boxes = ocr_data.get('rec_polys', [])
 
             for text, score, box in zip(texts, scores, boxes):
-                if all(keyword.lower() in text.lower() for keyword in keyword_list):
+                bg_colour = self.get_box_majority_color_hex(frame_rgb, box)
+                if all(keyword.lower() in text.lower() for keyword in keyword_list) and bg_colour == colour:
                     text_to_boxes.setdefault(text, []).append(box.tolist())
+
+                    # For Testing
+                    bg_colour = self.get_box_majority_color_hex(frame_rgb, box)
+                    print("The bg_colour is:", bg_colour)
+                    print("The colour I am looking for is:", colour)
 
         # Identify the sentence_list tagged to the condition of the current screenshot
         condition_list = Processed_Screenshot.sentence_dict.get(alt_name, [])
@@ -171,7 +181,40 @@ class OCRProcessor:
         
         # Update the sentence_list
         self.update_sentence_list(alt_name, condition, text_to_boxes.keys())
-        
+    
+    """
+        Get the most frequent RGB color inside the polygon box area.
+        Returns hex string like '#aabbcc'
+    """
+    def get_box_majority_color_hex(self, frame_rgb, box):
+
+        # Convert frame to PIL image
+        image = Image.fromarray(frame_rgb)
+
+        # Create a black mask image (same size as frame)
+        mask = Image.new("L", image.size, 0)
+
+        # Draw the polygon (OCR box) as a white area (255) in the mask
+        ImageDraw.Draw(mask).polygon([tuple(p) for p in box], fill=255)
+
+        # Convert to NumPy arrays
+        np_image = np.array(image)
+        np_mask = np.array(mask)
+
+        # Extract pixels inside the polygon mask
+        masked_pixels = np_image[np_mask == 255]
+
+        if len(masked_pixels) == 0:
+            return None
+
+        # Convert each pixel to tuple and count frequencies
+        color_counts = Counter(map(tuple, masked_pixels))
+        most_common_color = color_counts.most_common(1)[0][0]  # (r, g, b)
+
+        r, g, b = most_common_color
+        return f'#{r:02x}{g:02x}{b:02x}'
+
+
     '''
         Draw boxes around the identified keywords
     '''
